@@ -27,8 +27,14 @@ composer require spatie/calendar-links
 ## Usage
 
 ``` php
-$skeleton = new Spatie\Skeleton();
-echo $skeleton->echoPhrase('Hello, Spatie!');
+$from = DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00');
+$to = DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00');
+
+$link = Link::create('Sebastian\'s birthday', $from, $to)
+    ->description('Cookies & cocktails!')
+    ->address('Samberstraat 69D, 2060 Antwerpen')
+
+echo $link->google();
 ```
 
 ## Changelog
