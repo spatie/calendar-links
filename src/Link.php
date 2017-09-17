@@ -35,7 +35,7 @@ class Link
         $this->title = $title;
 
         if ($to < $from) {
-            throw InvalidLink::invalidDateRange();
+            throw InvalidLink::invalidDateRange($from, $to);
         }
 
         $this->from = $from;
