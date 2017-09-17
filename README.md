@@ -21,8 +21,6 @@ This will output: `https://calendar.google.com/calendar/render?action=TEMPLATE&t
 
 If you follow that link (and are authenticated with Google) you'll see a screen to add the event to your calendar.
 
-This package currently only supports Google Calendars. We're open for PRs that add support for other calendar systems. 
-`
 ## Postcardware
 
 You're free to use this package (it's [MIT-licensed](LICENSE.md)), but if it makes it to your production environment we highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using.
