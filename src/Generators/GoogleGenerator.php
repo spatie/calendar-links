@@ -2,8 +2,8 @@
 
 namespace Spatie\CalendarLinks\Generators;
 
-use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Link;
+use Spatie\CalendarLinks\Generator;
 
 class GoogleGenerator implements Generator
 {
