@@ -2,6 +2,8 @@
 
 namespace Spatie\CalendarLinks\Test;
 
+use DateTime;
+use Spatie\CalendarLinks\Exceptions\InvalidLink;
 use Spatie\CalendarLinks\Link;
 
 class LinkTest extends TestCase
@@ -10,6 +12,18 @@ class LinkTest extends TestCase
     public function it_is_initializable()
     {
         $this->assertInstanceOf(Link::class, $this->createLink());
+    }
+
+    /** @test */
+    public function it_will_throw_an_exception_when_to_comes_after_from()
+    {
+        $this->expectException(InvalidLink::class);
+
+        new Link(
+            'Birthday',
+            DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00'),
+            DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00')
+        );
     }
 
     /** @test */

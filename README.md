@@ -1,4 +1,4 @@
-# Very short description of the package
+# Generate add to calendar links for Google, iCal and other calendar systems
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/spatie/calendar-links.svg?style=flat-square)](https://packagist.org/packages/spatie/calendar-links)
 [![Build Status](https://img.shields.io/travis/spatie/calendar-links/master.svg?style=flat-square)](https://travis-ci.org/spatie/calendar-links)
@@ -6,8 +6,22 @@
 [![Quality Score](https://img.shields.io/scrutinizer/g/spatie/calendar-links.svg?style=flat-square)](https://scrutinizer-ci.com/g/spatie/calendar-links)
 [![Total Downloads](https://img.shields.io/packagist/dt/spatie/calendar-links.svg?style=flat-square)](https://packagist.org/packages/spatie/calendar-links)
 
-This is where your description should go. Try and limit it to a paragraph or two, and maybe throw in a mention of what PSRs you support to avoid any confusion with users and contributors.
+Using this package you can generate links to add events to calendar systems. Here's a quick example:
 
+```php
+(new Link(
+   'Birthday',
+   DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00'),
+   DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00')
+))->google();
+```
+
+This will output: `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Birthday&dates=20180201T090000/20180201T180000&sprop=&sprop=name:`
+
+If you follow that link (and are authenticated with Google) you'll see a screen to add the event to your calendar.
+
+This package currently only supports Google Calendars. We're open for PRs that add support for other calendar systems. 
+`
 ## Postcardware
 
 You're free to use this package (it's [MIT-licensed](LICENSE.md)), but if it makes it to your production environment we highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using.
