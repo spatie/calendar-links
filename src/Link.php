@@ -83,26 +83,6 @@ class Link
         return (new GoogleGenerator())->generate($this);
     }
 
-    public function ical(): string
-    {
-        return (new IcalGenerator())->generate($this);
-    }
-
-    public function ics(): string
-    {
-        return (new IcsGenerator())->generate($this);
-    }
-
-    public function outlook(): string
-    {
-        return (new OutlookGenerator())->generate($this);
-    }
-
-    public function yahoo(): string
-    {
-        return (new YahooGenerator())->generate($this);
-    }
-
     public function __get($property)
     {
         return $this->$property;
