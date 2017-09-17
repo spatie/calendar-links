@@ -3,8 +3,8 @@
 namespace Spatie\CalendarLinks\Test;
 
 use DateTime;
-use Spatie\CalendarLinks\Exceptions\InvalidLink;
 use Spatie\CalendarLinks\Link;
+use Spatie\CalendarLinks\Exceptions\InvalidLink;
 
 class LinkTest extends TestCase
 {

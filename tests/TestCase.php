@@ -3,9 +3,9 @@
 namespace Spatie\CalendarLinks\Test;
 
 use DateTime;
-use PHPUnit\Framework\TestCase as BaseTestCase;
 use Spatie\CalendarLinks\Link;
 use Spatie\Snapshots\MatchesSnapshots;
+use PHPUnit\Framework\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
