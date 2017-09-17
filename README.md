@@ -4,6 +4,7 @@
 [![Build Status](https://img.shields.io/travis/spatie/calendar-links/master.svg?style=flat-square)](https://travis-ci.org/spatie/calendar-links)
 [![SensioLabsInsight](https://img.shields.io/sensiolabs/i/42e8586b-0234-4891-ad16-384bc31f47cd.svg?style=flat-square)](https://insight.sensiolabs.com/projects/42e8586b-0234-4891-ad16-384bc31f47cd)
 [![Quality Score](https://img.shields.io/scrutinizer/g/spatie/calendar-links.svg?style=flat-square)](https://scrutinizer-ci.com/g/spatie/calendar-links)
+[![StyleCI](https://styleci.io/repos/103638080/shield?branch=master)](https://styleci.io/repos/103638080)
 [![Total Downloads](https://img.shields.io/packagist/dt/spatie/calendar-links.svg?style=flat-square)](https://packagist.org/packages/spatie/calendar-links)
 
 Using this package you can generate links to add events to calendar systems. Here's a quick example:
