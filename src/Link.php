@@ -5,6 +5,7 @@ namespace Spatie\CalendarLinks;
 use DateTime;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
 use Spatie\CalendarLinks\Generators\GoogleGenerator;
+use Spatie\CalendarLinks\Generators\IcsGenerator;
 use Spatie\CalendarLinks\Generators\YahooGenerator;
 
 /**
@@ -82,6 +83,11 @@ class Link
     public function google(): string
     {
         return (new GoogleGenerator())->generate($this);
+    }
+
+    public function ics(): string
+    {
+        return (new IcsGenerator())->generate($this);
     }
 
     public function yahoo(): string
