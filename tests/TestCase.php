@@ -13,10 +13,10 @@ abstract class TestCase extends BaseTestCase
 
     protected function createLink(): Link
     {
-        return new Link(
+        return Link::create(
             'Birthday',
             DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00'),
             DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00')
-        );
+        )->description('With clowns and stuff')->address('Party Lane 1A, 1337 Funtown');
     }
 }
