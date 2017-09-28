@@ -47,7 +47,14 @@ $link = Link::create('Sebastian\'s birthday', $from, $to)
     ->description('Cookies & cocktails!')
     ->address('Samberstraat 69D, 2060 Antwerpen')
 
+// Generate a link to create an event on Google calendar
 echo $link->google();
+
+// Generate a link to create an event on Yahoo calendar
+echo $link->yahoo();
+
+// Generate a data uri for an ics file (for iCal & Outlook)
+echo $link->ics();
 ```
 
 ## Changelog
