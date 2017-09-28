@@ -4,9 +4,9 @@ namespace Spatie\CalendarLinks;
 
 use DateTime;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
-use Spatie\CalendarLinks\Generators\IcsGenerator;
-use Spatie\CalendarLinks\Generators\YahooGenerator;
-use Spatie\CalendarLinks\Generators\GoogleGenerator;
+use Spatie\CalendarLinks\Generators\Ics;
+use Spatie\CalendarLinks\Generators\Yahoo;
+use Spatie\CalendarLinks\Generators\Google;
 
 /**
  * @property string $title
@@ -82,17 +82,17 @@ class Link
 
     public function google(): string
     {
-        return (new GoogleGenerator())->generate($this);
+        return (new Google())->generate($this);
     }
 
     public function ics(): string
     {
-        return (new IcsGenerator())->generate($this);
+        return (new Ics())->generate($this);
     }
 
     public function yahoo(): string
     {
-        return (new YahooGenerator())->generate($this);
+        return (new Yahoo())->generate($this);
     }
 
     public function __get($property)

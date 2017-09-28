@@ -5,7 +5,7 @@ namespace Spatie\CalendarLinks\Generators;
 use Spatie\CalendarLinks\Link;
 use Spatie\CalendarLinks\Generator;
 
-class GoogleGenerator implements Generator
+class Google implements Generator
 {
     public function generate(Link $link): string
     {
