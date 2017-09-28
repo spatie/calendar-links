@@ -3,10 +3,10 @@
 namespace Spatie\CalendarLinks;
 
 use DateTime;
-use Spatie\CalendarLinks\Exceptions\InvalidLink;
 use Spatie\CalendarLinks\Generators\Ics;
 use Spatie\CalendarLinks\Generators\Yahoo;
 use Spatie\CalendarLinks\Generators\Google;
+use Spatie\CalendarLinks\Exceptions\InvalidLink;
 
 /**
  * @property string $title
