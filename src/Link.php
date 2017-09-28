@@ -4,9 +4,9 @@ namespace Spatie\CalendarLinks;
 
 use DateTime;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
-use Spatie\CalendarLinks\Generators\GoogleGenerator;
 use Spatie\CalendarLinks\Generators\IcsGenerator;
 use Spatie\CalendarLinks\Generators\YahooGenerator;
+use Spatie\CalendarLinks\Generators\GoogleGenerator;
 
 /**
  * @property string $title
