@@ -7,7 +7,7 @@ use Spatie\CalendarLinks\Generator;
 
 class Google implements Generator
 {
-    public function generate(Link $link): string
+    public function generate(Link $link)
     {
         $url = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
 

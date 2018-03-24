@@ -7,7 +7,7 @@ use Spatie\CalendarLinks\Generator;
 
 class Ics implements Generator
 {
-    public function generate(Link $link): string
+    public function generate(Link $link)
     {
         $url = 'data:text/calendar;charset=utf8,';
 
