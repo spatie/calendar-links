@@ -4,5 +4,5 @@ namespace Spatie\CalendarLinks;
 
 interface Generator
 {
-    public function generate(Link $link): string;
+    public function generate(Link $link);
 }
