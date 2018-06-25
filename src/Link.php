@@ -29,31 +29,51 @@ class Link
     /** @var string */
     protected $description;
 
+    /** @var boolean */
+    protected $allDay;
+
     /** @var string */
     protected $address;
 
-    public function __construct(string $title, DateTime $from, DateTime $to)
+    /**
+     * Link constructor.
+     * @param string $title
+     * @param DateTime $from
+     * @param DateTime $to
+     * @param bool $allDay
+     * @throws InvalidLink
+     */
+    public function __construct(string $title, DateTime $from, DateTime $to, bool $allDay = false)
     {
         $this->title = $title;
+        $this->allDay = $allDay;
 
         if ($to < $from) {
             throw InvalidLink::invalidDateRange($from, $to);
         }
 
-        $this->from = $from;
-        $this->to = $to;
+        if ($this->allDay) {
+            $this->from = $from->format('Ymd');
+            $this->to = $to->format('Ymd');
+
+        } else {
+            $this->from = $from->format('Ymd\THis');
+            $this->to = $to->format('Ymd\THis');
+        }
     }
 
     /**
      * @param string $title
      * @param \DateTime $from
      * @param \DateTime $to
+     * @param bool $allDay
      *
      * @return static
+     * @throws InvalidLink
      */
-    public static function create(string $title, DateTime $from, DateTime $to)
+    public static function create(string $title, DateTime $from, DateTime $to, bool $allDay = false)
     {
-        return new static($title, $from, $to);
+        return new static($title, $from, $to, $allDay);
     }
 
     /**

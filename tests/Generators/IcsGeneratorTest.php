@@ -13,4 +13,12 @@ class IcsGeneratorTest extends TestCase
             $this->createLink()->ics()
         );
     }
+
+    /** @test */
+    public function it_can_generate_an_ics_allDay_link()
+    {
+        $this->assertMatchesSnapshot(
+            $this->createAlldayLink()->ics()
+        );
+    }
 }

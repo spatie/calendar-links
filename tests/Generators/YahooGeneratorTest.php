@@ -13,4 +13,12 @@ class YahooGeneratorTest extends TestCase
             $this->createLink()->yahoo()
         );
     }
+
+    /** @test */
+    public function it_can_generate_a_yahoo_allDay_link()
+    {
+        $this->assertMatchesSnapshot(
+            $this->createAlldayLink()->yahoo()
+        );
+    }
 }
