@@ -35,14 +35,7 @@ class Link
     /** @var string */
     protected $address;
 
-    /**
-     * Link constructor.
-     * @param string $title
-     * @param DateTime $from
-     * @param DateTime $to
-     * @param bool $allDay
-     * @throws InvalidLink
-     */
+
     public function __construct(string $title, DateTime $from, DateTime $to, bool $allDay = false)
     {
         $this->title = $title;
@@ -52,13 +45,12 @@ class Link
             throw InvalidLink::invalidDateRange($from, $to);
         }
 
+        $this->from = $from->format('Ymd\THis');
+        $this->to = $to->format('Ymd\THis');
+
         if ($this->allDay) {
             $this->from = $from->format('Ymd');
             $this->to = $to->format('Ymd');
-
-        } else {
-            $this->from = $from->format('Ymd\THis');
-            $this->to = $to->format('Ymd\THis');
         }
     }
 
