@@ -2,6 +2,9 @@
 
 All notable changes to `calendar-links` will be documented in this file
 
+## 1.0.3 - 2018-07-23
+- Fix newlines in description
+
 ## 1.0.2 - 2018-05-15
 - Fix for iCal links in Safari
 
