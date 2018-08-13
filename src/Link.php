@@ -29,12 +29,11 @@ class Link
     /** @var string */
     protected $description;
 
-    /** @var boolean */
+    /** @var bool */
     protected $allDay;
 
     /** @var string */
     protected $address;
-
 
     public function __construct(string $title, DateTime $from, DateTime $to, bool $allDay = false)
     {
