@@ -13,4 +13,12 @@ class GoogleGeneratorTest extends TestCase
             $this->createLink()->google()
         );
     }
+
+    /** @test */
+    public function it_can_generate_a_google_allDay_link()
+    {
+        $this->assertMatchesSnapshot(
+            $this->createAlldayLink()->google()
+        );
+    }
 }
