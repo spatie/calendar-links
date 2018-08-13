@@ -2,6 +2,9 @@
 
 All notable changes to `calendar-links` will be documented in this file
 
+## 1.1.0 - 2018-08-13
+- Add all day support
+
 ## 1.0.3 - 2018-07-23
 - Fix newlines in description
 
