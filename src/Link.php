@@ -36,7 +36,7 @@ class Link
     protected $address;
 
 
-    public function __construct(string $title, DateTime $from, DateTime $to, bool $allDay = false)
+    public function __construct($title, DateTime $from, DateTime $to, $allDay = false)
     {
         $this->title = $title;
         $this->allDay = $allDay;
@@ -63,7 +63,7 @@ class Link
      * @return static
      * @throws InvalidLink
      */
-    public static function create(string $title, DateTime $from, DateTime $to, bool $allDay = false)
+    public static function create($title, DateTime $from, DateTime $to, $allDay = false)
     {
         return new static($title, $from, $to, $allDay);
     }
@@ -73,7 +73,7 @@ class Link
      *
      * @return $this
      */
-    public function description(string $description)
+    public function description($description)
     {
         $this->description = $description;
 
@@ -85,24 +85,24 @@ class Link
      *
      * @return $this
      */
-    public function address(string $address)
+    public function address($address)
     {
         $this->address = $address;
 
         return $this;
     }
 
-    public function google(): string
+    public function google()
     {
         return (new Google())->generate($this);
     }
 
-    public function ics(): string
+    public function ics()
     {
         return (new Ics())->generate($this);
     }
 
-    public function yahoo(): string
+    public function yahoo()
     {
         return (new Yahoo())->generate($this);
     }
