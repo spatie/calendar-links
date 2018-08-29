@@ -12,8 +12,8 @@ class Yahoo implements Generator
         $url = 'https://calendar.yahoo.com/?v=60&view=d&type=20';
 
         $url .= '&title='.urlencode($link->title);
-        $url .= '&st='.$link->from;
-        $url .= '&et='.$link->to;
+        $url .= '&st='.$link->from .'Z';
+        $url .= '&et='.$link->to .'Z';
 
         if ($link->description) {
             $url .= '&desc='.urlencode($link->description);
