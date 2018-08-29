@@ -7,7 +7,7 @@ use Spatie\CalendarLinks\Generator;
 
 class Yahoo implements Generator
 {
-    public function generate(Link $link): string
+    public function generate(Link $link)
     {
         $url = 'https://calendar.yahoo.com/?v=60&view=d&type=20';
 
