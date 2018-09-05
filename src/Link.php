@@ -45,8 +45,8 @@ class Link
             throw InvalidLink::invalidDateRange($from, $to);
         }
 
-        $this->from = $from->format('Ymd\THis');
-        $this->to = $to->format('Ymd\THis');
+        $this->from = $from->format('Ymd\THis\Z');
+        $this->to = $to->format('Ymd\THis\Z');
 
         if ($this->allDay) {
             $this->from = $from->format('Ymd');

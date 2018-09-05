@@ -13,8 +13,8 @@ class Ics implements Generator
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
       'BEGIN:VEVENT',
-      'DTSTART:'.$link->from .'Z',
-      'DTEND:'.$link->to .'Z',
+      'DTSTART:'.$link->from,
+      'DTEND:'.$link->to,
       'SUMMARY:'.$link->title, ];
 
         if ($link->description) {

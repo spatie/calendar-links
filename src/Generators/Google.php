@@ -12,7 +12,7 @@ class Google implements Generator
         $url = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
 
         $url .= '&text='.urlencode($link->title);
-        $url .= '&dates='.$link->from.'Z/'.$link->to.'Z';
+        $url .= '&dates='.$link->from.'/'.$link->to;
 
         if ($link->description) {
             $url .= '&details='.urlencode($link->description);
