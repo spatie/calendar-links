@@ -5,18 +5,29 @@ namespace Spatie\CalendarLinks\Generators;
 use Spatie\CalendarLinks\Link;
 use Spatie\CalendarLinks\Generator;
 
+/**
+ * @see https://icalendar.org/RFC-Specifications/iCalendar-RFC-5545/
+ */
 class Ics implements Generator
 {
     public function generate(Link $link): string
     {
-        $dateTimeFormat = $link->allDay ? 'Ymd' : "Ymd\THis";
         $url = ['data:text/calendar;charset=utf8,',
+      'PRODID:spatie/calendar-links',
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
       'BEGIN:VEVENT',
-      'DTSTART:'.$link->from->format($dateTimeFormat),
-      'DTEND:'.$link->to->format($dateTimeFormat),
       'SUMMARY:'.$link->title, ];
+
+        if ($link->allDay) {
+            $dateTimeFormat = 'Ymd';
+            $url[] = 'DTSTART:'.$link->from->format($dateTimeFormat);
+            $url[] = 'DTEND:'.$link->to->format($dateTimeFormat);
+        } else {
+            $dateTimeFormat = "e:Ymd\THis";
+            $url[] = 'DTSTART;TZID='.$link->from->format($dateTimeFormat);
+            $url[] = 'DTEND;TZID='.$link->to->format($dateTimeFormat);
+        }
 
         if ($link->description) {
             $url[] = 'DESCRIPTION:'.addcslashes($link->description, "\n");
