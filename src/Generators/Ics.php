@@ -13,7 +13,6 @@ class Ics implements Generator
     public function generate(Link $link): string
     {
         $url = ['data:text/calendar;charset=utf8,',
-      'PRODID:spatie/calendar-links',
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
       'BEGIN:VEVENT',
