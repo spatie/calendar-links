@@ -2,7 +2,7 @@
 
 namespace Spatie\CalendarLinks\Generators;
 
-use DateTime;
+use DateTimeZone;
 use Spatie\CalendarLinks\Link;
 use Spatie\CalendarLinks\Generator;
 
@@ -16,9 +16,18 @@ class Yahoo implements Generator
         $url = 'https://calendar.yahoo.com/?v=60&view=d&type=20';
 
         $url .= '&title='.urlencode($link->title);
-        $dateTimeFormat = $link->allDay ? 'Ymd' : DateTime::ATOM;
-        $url .= '&st='.$link->from->format($dateTimeFormat);
-        $url .= '&et='.$link->to->format($dateTimeFormat);
+
+        if ($link->allDay) {
+            $dateTimeFormat = 'Ymd';
+            $url .= '&st='.$link->from->format($dateTimeFormat);
+            $url .= '&dur=allday';
+        } else {
+            $utcStartDateTime = (clone $link->from)->setTimezone(new DateTimeZone('UTC'));
+            $utcEndDateTime = (clone $link->to)->setTimezone(new DateTimeZone('UTC'));
+            $dateTimeFormat = $link->allDay ? 'Ymd' : 'Ymd\THis';
+            $url .= '&st='.$utcStartDateTime->format($dateTimeFormat).'Z';
+            $url .= '&et='.$utcEndDateTime->format($dateTimeFormat).'Z';
+        }
 
         if ($link->description) {
             $url .= '&desc='.urlencode($link->description);
