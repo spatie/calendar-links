@@ -14,6 +14,7 @@ class Google implements Generator
         $dateTimeFormat = $link->allDay ? 'Ymd' : "Ymd\THis";
         $url .= '&text='.urlencode($link->title);
         $url .= '&dates='.$link->from->format($dateTimeFormat).'/'.$link->to->format($dateTimeFormat);
+        $url .= '&ctz='.$link->from->getTimezone()->getName();
 
         if ($link->description) {
             $url .= '&details='.urlencode($link->description);
