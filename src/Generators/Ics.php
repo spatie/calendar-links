@@ -9,12 +9,13 @@ class Ics implements Generator
 {
     public function generate(Link $link): string
     {
+        $dateTimeFormat = $link->allDay ? 'Ymd' : "Ymd\THis";
         $url = ['data:text/calendar;charset=utf8,',
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
       'BEGIN:VEVENT',
-      'DTSTART:'.$link->from,
-      'DTEND:'.$link->to,
+      'DTSTART:'.$link->from->format($dateTimeFormat),
+      'DTEND:'.$link->to->format($dateTimeFormat),
       'SUMMARY:'.$link->title, ];
 
         if ($link->description) {
