@@ -14,6 +14,7 @@ use Spatie\CalendarLinks\Exceptions\InvalidLink;
  * @property \DateTime $to
  * @property string $description
  * @property string $address
+ * @property bool $allDay
  */
 class Link
 {
