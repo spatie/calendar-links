@@ -20,8 +20,8 @@ class OutlookCom implements Generator
 
         $utcStartDateTime = (clone $link->from)->setTimezone(new DateTimeZone('UTC'));
         $utcEndDateTime = (clone $link->to)->setTimezone(new DateTimeZone('UTC'));
-        $url .= '&dtstart='.$utcStartDateTime->format('Ymd\THis').'Z';
-        $url .= '&dtend='.$utcEndDateTime->format('Ymd\THis').'Z';
+        $url .= '&startdt='.$utcStartDateTime->format('Ymd\THis').'Z';
+        $url .= '&enddt='.$utcEndDateTime->format('Ymd\THis').'Z';
         if ($link->allDay) {
             $url .= '&allday=true';
         }
