@@ -4,9 +4,9 @@ namespace Spatie\CalendarLinks;
 
 use DateTime;
 use Spatie\CalendarLinks\Generators\Ics;
-use Spatie\CalendarLinks\Generators\WebOutlook;
 use Spatie\CalendarLinks\Generators\Yahoo;
 use Spatie\CalendarLinks\Generators\Google;
+use Spatie\CalendarLinks\Generators\WebOutlook;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
 
 /**
