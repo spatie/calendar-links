@@ -2,6 +2,9 @@
 
 All notable changes to `calendar-links` will be documented in this file
 
+## 1.1.1 - 2018-10-08
+- Fix Yahoo links
+
 ## 1.1.0 - 2018-08-13
 - Add all day support
 

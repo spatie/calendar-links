@@ -37,7 +37,6 @@ class Link
     /** @var string */
     protected $address;
 
-
     public function __construct(string $title, DateTime $from, DateTime $to, bool $allDay = false)
     {
         $this->title = $title;
