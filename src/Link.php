@@ -4,7 +4,7 @@ namespace Spatie\CalendarLinks;
 
 use DateTime;
 use Spatie\CalendarLinks\Generators\Ics;
-use Spatie\CalendarLinks\Generators\OutlookCom;
+use Spatie\CalendarLinks\Generators\WebOutlook;
 use Spatie\CalendarLinks\Generators\Yahoo;
 use Spatie\CalendarLinks\Generators\Google;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
@@ -108,9 +108,9 @@ class Link
         return (new Yahoo())->generate($this);
     }
 
-    public function outlookCom(): string
+    public function webOutlook(): string
     {
-        return (new OutlookCom())->generate($this);
+        return (new WebOutlook())->generate($this);
     }
 
     public function __get($property)

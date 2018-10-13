@@ -9,7 +9,7 @@ use Spatie\CalendarLinks\Link;
 /**
  * @see https://answers.microsoft.com/en-us/outlook_com/forum/ocalendar-oaddevent/link-to-outlook-live-calendar-correct-url/67b96c7d-336a-4ae9-b0fe-3b35ed8e959a
  */
-class OutlookCom implements Generator
+class WebOutlook implements Generator
 {
     /** @inheritdoc */
     public function generate(Link $link): string
@@ -20,8 +20,8 @@ class OutlookCom implements Generator
 
         $utcStartDateTime = (clone $link->from)->setTimezone(new DateTimeZone('UTC'));
         $utcEndDateTime = (clone $link->to)->setTimezone(new DateTimeZone('UTC'));
-        $url .= '&startdt='.$utcStartDateTime->format('Ymd\THis').'Z';
-        $url .= '&enddt='.$utcEndDateTime->format('Ymd\THis').'Z';
+        $url .= '&startdt='.$utcStartDateTime->format('Ymd\THisZ');
+        $url .= '&enddt='.$utcEndDateTime->format('Ymd\THisZ');
         if ($link->allDay) {
             $url .= '&allday=true';
         }
