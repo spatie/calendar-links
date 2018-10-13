@@ -14,17 +14,17 @@ class WebOutlook implements Generator
     /** @inheritdoc */
     public function generate(Link $link): string
     {
-        $url = 'https://outlook.live.com/owa/?path=/calendar/view/month&rru=addevent';
-
-        $url .= '&subject='.urlencode($link->title);
+        $url = 'https://outlook.live.com/owa/?path=/calendar/action/compose&rru=addevent';
 
         $utcStartDateTime = (clone $link->from)->setTimezone(new DateTimeZone('UTC'));
         $utcEndDateTime = (clone $link->to)->setTimezone(new DateTimeZone('UTC'));
-        $url .= '&startdt='.$utcStartDateTime->format('Ymd\THisZ');
-        $url .= '&enddt='.$utcEndDateTime->format('Ymd\THisZ');
+        $url .= '&startdt='.$utcStartDateTime->format('Ymd\THis');
+        $url .= '&enddt='.$utcEndDateTime->format('Ymd\THis');
         if ($link->allDay) {
             $url .= '&allday=true';
         }
+
+        $url .= '&subject='.urlencode($link->title);
 
         if ($link->description) {
             $url .= '&body='.urlencode($link->description);
