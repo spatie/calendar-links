@@ -21,7 +21,7 @@ class Ics implements Generator
             $url[] = 'DESCRIPTION:'.addcslashes($link->description, "\n");
         }
         if ($link->address) {
-            $url[] = 'LOCATION:'.str_replace(',', '', $link->address);
+            $url[] = 'LOCATION:'.str_replace(',', '\,', $link->address);
         }
 
         $url[] = 'END:VEVENT';
