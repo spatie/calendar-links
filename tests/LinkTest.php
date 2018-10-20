@@ -49,7 +49,7 @@ class LinkTest extends TestCase
     {
         $link = $this->createLink();
 
-        $this->assertEquals('With clowns and stuff', $link->description);
+        $this->assertEquals($this->getTestDescription(), $link->description);
     }
 
     /** @test */
@@ -57,6 +57,6 @@ class LinkTest extends TestCase
     {
         $link = $this->createLink();
 
-        $this->assertEquals('Party Lane 1A, 1337 Funtown', $link->address);
+        $this->assertEquals($this->getTestLocation(), $link->address);
     }
 }

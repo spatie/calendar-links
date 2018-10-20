@@ -17,7 +17,7 @@ abstract class TestCase extends BaseTestCase
             'Birthday',
             DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00'),
             DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00')
-        )->description('With clowns and stuff')->address('Party Lane 1A, 1337 Funtown');
+        )->description($this->getTestDescription())->address($this->getTestLocation());
     }
 
     protected function createAlldayLink(): Link
@@ -27,6 +27,19 @@ abstract class TestCase extends BaseTestCase
             DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00'),
             DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00'),
             true
-        )->description('With clowns and stuff')->address('Party Lane 1A, 1337 Funtown');
+        )->description($this->getTestDescription())->address($this->getTestLocation());
+    }
+
+    public function getTestDescription(): string
+    {
+        return <<<EOF
+With balloons, clowns and stuff
+Bring a dog, bring a frog
+EOF;
+    }
+
+    public function getTestLocation(): string
+    {
+        return 'Party Lane 1A, 1337 Funtown';
     }
 }
