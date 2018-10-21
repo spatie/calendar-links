@@ -11,8 +11,11 @@ class Ics implements Generator
     {
         $url = ['data:text/calendar;charset=utf8,',
       'BEGIN:VCALENDAR',
+      'PRODID:-//Spatie//CalendarLinks//EN',
       'VERSION:2.0',
       'BEGIN:VEVENT',
+      'UID:'. $link->from . $link->to,
+      'DTSTAMP:'. (new \DateTime())->format('Ymd\THis'),
       'DTSTART:'.$link->from,
       'DTEND:'.$link->to,
       'SUMMARY:'.$link->title, ];
