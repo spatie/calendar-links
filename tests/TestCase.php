@@ -32,7 +32,7 @@ abstract class TestCase extends BaseTestCase
 
     public function getTestDescription(): string
     {
-        return <<<EOF
+        return <<<'EOF'
 With balloons, clowns and stuff
 Bring a dog, bring a frog
 EOF;
