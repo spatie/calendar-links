@@ -4,6 +4,7 @@ namespace Spatie\CalendarLinks\Generators;
 
 use Spatie\CalendarLinks\Link;
 use Spatie\CalendarLinks\Generator;
+use DateTime;
 
 class Yahoo implements Generator
 {
