@@ -35,13 +35,13 @@ class LinkTest extends TestCase
     /** @test */
     public function it_has_a_from_date()
     {
-        $this->assertEquals('20180201T090000', $this->createLink()->from);
+        $this->assertEquals(new DateTime('20180201T090000 UTC'), $this->createLink()->from);
     }
 
     /** @test */
     public function it_has_a_to_date()
     {
-        $this->assertEquals('20180201T180000', $this->createLink()->to);
+        $this->assertEquals(new DateTime('20180201T180000 UTC'), $this->createLink()->to);
     }
 
     /** @test */

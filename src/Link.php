@@ -14,6 +14,7 @@ use Spatie\CalendarLinks\Exceptions\InvalidLink;
  * @property \DateTime $to
  * @property string $description
  * @property string $address
+ * @property bool $allDay
  */
 class Link
 {
@@ -44,12 +45,12 @@ class Link
             throw InvalidLink::invalidDateRange($from, $to);
         }
 
-        $this->from = $from->format('Ymd\THis');
-        $this->to = $to->format('Ymd\THis');
+        $this->from = clone $from;
+        $this->to = clone $to;
 
         if ($this->allDay) {
-            $this->from = $from->format('Ymd');
-            $this->to = $to->format('Ymd');
+            $this->from = clone $from;
+            $this->to = clone $from;
         }
     }
 
