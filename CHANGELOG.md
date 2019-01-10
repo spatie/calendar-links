@@ -2,7 +2,7 @@
 
 All notable changes to `calendar-links` will be documented in this file
 
-## 1.1.2 - 2019-01-10
+## 1.2.0 - 2019-01-10
 - Support timezones
 - Add outlook.com link generator
 
