@@ -6,6 +6,7 @@ use DateTime;
 use Spatie\CalendarLinks\Generators\Ics;
 use Spatie\CalendarLinks\Generators\Yahoo;
 use Spatie\CalendarLinks\Generators\Google;
+use Spatie\CalendarLinks\Generators\WebOutlook;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
 
 /**
@@ -105,6 +106,11 @@ class Link
     public function yahoo(): string
     {
         return (new Yahoo())->generate($this);
+    }
+
+    public function webOutlook(): string
+    {
+        return (new WebOutlook())->generate($this);
     }
 
     public function __get($property)
