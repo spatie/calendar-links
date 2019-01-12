@@ -44,14 +44,13 @@ class Ics implements Generator
         return 'data:text/calendar;charset=utf8,'.$redirectLink;
     }
 
+    /** @see https://tools.ietf.org/html/rfc5545.html#section-3.3.11 */
     protected function escapeString(string $field): string
     {
-        return addcslashes($field, "\n,");
+        return addcslashes($field, "\n,;");
     }
 
-    /**
-     * @see https://tools.ietf.org/html/rfc5545#section-3.8.4.7
-     */
+    /** * @see https://tools.ietf.org/html/rfc5545#section-3.8.4.7 */
     private function generateEventUid(Link $link): string
     {
         return md5($link->from.$link->to.$link->title.$link->address);
