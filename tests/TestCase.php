@@ -14,20 +14,30 @@ abstract class TestCase extends BaseTestCase
 
     protected function createLink(): Link
     {
+        $description = <<<'EOF'
+With balloons, clowns and stuff
+Bring a dog, bring a frog
+EOF;
+
         return Link::create(
             'Birthday',
             DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00', new DateTimeZone('UTC')),
             DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00', new DateTimeZone('UTC'))
-        )->description('With clowns and stuff')->address('Party Lane 1A, 1337 Funtown');
+        )->description($description)->address('Party Lane 1A, 1337 Funtown');
     }
 
     protected function createAlldayLink(): Link
     {
+        $description = <<<'EOF'
+With balloons, clowns and stuff
+Bring a dog, bring a frog
+EOF;
+
         return Link::create(
             'Birthday',
             DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00', new DateTimeZone('UTC')),
             DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00', new DateTimeZone('UTC')),
             true
-        )->description('With clowns and stuff')->address('Party Lane 1A, 1337 Funtown');
+        )->description($description)->address('Party Lane 1A, 1337 Funtown');
     }
 }

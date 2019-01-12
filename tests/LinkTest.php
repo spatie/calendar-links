@@ -48,8 +48,11 @@ class LinkTest extends TestCase
     public function it_can_have_a_description()
     {
         $link = $this->createLink();
-
-        $this->assertEquals('With clowns and stuff', $link->description);
+        $correctDescription = <<<'EOF'
+With balloons, clowns and stuff
+Bring a dog, bring a frog
+EOF;
+        $this->assertEquals($correctDescription, $link->description);
     }
 
     /** @test */

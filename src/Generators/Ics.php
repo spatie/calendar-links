@@ -29,10 +29,10 @@ class Ics implements Generator
         }
 
         if ($link->description) {
-            $url[] = 'DESCRIPTION:'.addcslashes($link->description, "\n");
+            $url[] = 'DESCRIPTION:'.$this->escapeString($link->description);
         }
         if ($link->address) {
-            $url[] = 'LOCATION:'.str_replace(',', '', $link->address);
+            $url[] = 'LOCATION:'.$this->escapeString($link->address);
         }
 
         $url[] = 'END:VEVENT';
@@ -40,5 +40,10 @@ class Ics implements Generator
         $redirectLink = implode('%0A', $url);
 
         return $redirectLink;
+    }
+
+    protected function escapeString(string $field): string
+    {
+        return addcslashes($field, "\n,");
     }
 }
