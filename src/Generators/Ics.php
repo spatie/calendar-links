@@ -39,7 +39,7 @@ class Ics implements Generator
 
         $url[] = 'END:VEVENT';
         $url[] = 'END:VCALENDAR';
-        $redirectLink = implode('%0A', $url);
+        $redirectLink = implode('%0d%0a', $url);
 
         return 'data:text/calendar;charset=utf8,'.$redirectLink;
     }
