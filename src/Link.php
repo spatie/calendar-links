@@ -6,6 +6,7 @@ use DateTime;
 use Spatie\CalendarLinks\Generators\Ics;
 use Spatie\CalendarLinks\Generators\Yahoo;
 use Spatie\CalendarLinks\Generators\Google;
+use Spatie\CalendarLinks\Generators\WebOutlook;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
 
 /**
@@ -14,6 +15,7 @@ use Spatie\CalendarLinks\Exceptions\InvalidLink;
  * @property \DateTime $to
  * @property string $description
  * @property string $address
+ * @property bool $allDay
  */
 class Link
 {
@@ -44,12 +46,12 @@ class Link
             throw InvalidLink::invalidDateRange($from, $to);
         }
 
-        $this->from = $from->format('Ymd\THis');
-        $this->to = $to->format('Ymd\THis');
+        $this->from = clone $from;
+        $this->to = clone $to;
 
         if ($this->allDay) {
-            $this->from = $from->format('Ymd');
-            $this->to = $to->format('Ymd');
+            $this->from = clone $from;
+            $this->to = clone $from;
         }
     }
 
@@ -104,6 +106,11 @@ class Link
     public function yahoo(): string
     {
         return (new Yahoo())->generate($this);
+    }
+
+    public function webOutlook(): string
+    {
+        return (new WebOutlook())->generate($this);
     }
 
     public function __get($property)
