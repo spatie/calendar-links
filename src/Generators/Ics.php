@@ -13,7 +13,6 @@ class Ics implements Generator
     public function generate(Link $link): string
     {
         $url = [
-            'data:text/calendar;charset=utf8,',
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
             'BEGIN:VEVENT',
@@ -42,7 +41,7 @@ class Ics implements Generator
         $url[] = 'END:VCALENDAR';
         $redirectLink = implode('%0A', $url);
 
-        return $redirectLink;
+        return 'data:text/calendar;charset=utf8,'.$redirectLink;
     }
 
     protected function escapeString(string $field): string
