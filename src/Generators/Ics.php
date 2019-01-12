@@ -17,6 +17,7 @@ class Ics implements Generator
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
             'BEGIN:VEVENT',
+            'UID:'.$this->generateEventUid($link),
             'SUMMARY:'.$link->title,
         ];
 
@@ -47,5 +48,13 @@ class Ics implements Generator
     protected function escapeString(string $field): string
     {
         return addcslashes($field, "\n,");
+    }
+
+    /**
+     * @see https://tools.ietf.org/html/rfc5545#section-3.8.4.7
+     */
+    private function generateEventUid(Link $link): string
+    {
+        return md5($link->from.$link->to.$link->title.$link->address);
     }
 }
