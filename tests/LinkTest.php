@@ -48,8 +48,11 @@ class LinkTest extends TestCase
     public function it_can_have_a_description()
     {
         $link = $this->createLink();
-
-        $this->assertEquals($this->getTestDescription(), $link->description);
+        $correctDescription = <<<'EOF'
+With balloons, clowns and stuff
+Bring a dog, bring a frog
+EOF;
+        $this->assertEquals($correctDescription, $link->description);
     }
 
     /** @test */
@@ -57,6 +60,6 @@ class LinkTest extends TestCase
     {
         $link = $this->createLink();
 
-        $this->assertEquals($this->getTestLocation(), $link->address);
+        $this->assertEquals('Party Lane 1A, 1337 Funtown', $link->address);
     }
 }
