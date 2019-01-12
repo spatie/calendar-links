@@ -50,7 +50,7 @@ class Ics implements Generator
         return addcslashes($field, "\n,;");
     }
 
-    /** * @see https://tools.ietf.org/html/rfc5545#section-3.8.4.7 */
+    /** @see https://tools.ietf.org/html/rfc5545#section-3.8.4.7 */
     private function generateEventUid(Link $link): string
     {
         return md5($link->from.$link->to.$link->title.$link->address);
