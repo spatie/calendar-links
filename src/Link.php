@@ -10,12 +10,12 @@ use Spatie\CalendarLinks\Generators\WebOutlook;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
 
 /**
- * @property string $title
- * @property \DateTime $from
- * @property \DateTime $to
- * @property string $description
- * @property string $address
- * @property bool $allDay
+ * @property-read string $title
+ * @property-read \DateTime $from
+ * @property-read \DateTime $to
+ * @property-read string $description
+ * @property-read string $address
+ * @property-read bool $allDay
  */
 class Link
 {
