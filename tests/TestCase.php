@@ -18,6 +18,7 @@ abstract class TestCase extends BaseTestCase
 With balloons, clowns and stuff
 Bring a dog, bring a frog
 EOF;
+
         return Link::create(
             'Birthday',
             DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00', new DateTimeZone('UTC')),
@@ -31,6 +32,7 @@ EOF;
 With balloons, clowns and stuff
 Bring a dog, bring a frog
 EOF;
+
         return Link::create(
             'Birthday',
             DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00', new DateTimeZone('UTC')),
