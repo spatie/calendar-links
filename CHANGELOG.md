@@ -2,6 +2,12 @@
 
 All notable changes to `calendar-links` will be documented in this file
 
+## 1.2.1 - 2019-01-13
+- Fix iCal: Use CRLF instead of LF (according RFC 5545)
+- Fix iCal: Specify UID property (according RFC 5545)
+- Fix iCal: Escape `;` character (according RFC 5545)
+- Fix iCal: Remove empty new line from .ics files
+
 ## 1.2.0 - 2019-01-10
 - Support timezones
 - Add outlook.com link generator
