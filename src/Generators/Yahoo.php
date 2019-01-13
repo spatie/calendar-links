@@ -7,7 +7,7 @@ use Spatie\CalendarLinks\Link;
 use Spatie\CalendarLinks\Generator;
 
 /**
- * @see http://chris.photobooks.com/tests/calendar/Notes.html
+ * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/master/services/yahoo.md
  */
 class Yahoo implements Generator
 {

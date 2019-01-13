@@ -5,6 +5,9 @@ namespace Spatie\CalendarLinks\Generators;
 use Spatie\CalendarLinks\Link;
 use Spatie\CalendarLinks\Generator;
 
+/**
+ * https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/master/services/google.md
+ */
 class Google implements Generator
 {
     public function generate(Link $link): string

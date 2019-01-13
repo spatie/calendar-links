@@ -7,7 +7,7 @@ use Spatie\CalendarLinks\Link;
 use Spatie\CalendarLinks\Generator;
 
 /**
- * @see https://answers.microsoft.com/en-us/outlook_com/forum/ocalendar-oaddevent/link-to-outlook-live-calendar-correct-url/67b96c7d-336a-4ae9-b0fe-3b35ed8e959a
+ * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/master/services/outlook-live.md
  */
 class WebOutlook implements Generator
 {
