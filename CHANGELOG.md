@@ -2,7 +2,7 @@
 
 All notable changes to `calendar-links` will be documented in this file
 
-## 1.2.1 - 2019-01-13
+## 1.2.2 - 2019-01-15
 - Fix Yahoo links for multiple days events
 
 ## 1.2.1 - 2019-01-13
