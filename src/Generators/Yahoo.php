@@ -27,9 +27,9 @@ class Yahoo implements Generator
             $dateTimeFormat = $link->allDay ? 'Ymd' : 'Ymd\THis';
             $url .= '&st='.$utcStartDateTime->format($dateTimeFormat).'Z';
             if ($utcStartDateTime->format('Ymd') != $utcEndDateTime->format('Ymd')) {
-                $url .= '&et=' . $utcEndDateTime->format($dateTimeFormat) . 'Z';
+                $url .= '&et='.$utcEndDateTime->format($dateTimeFormat).'Z';
             } else {
-                $url .= '&dur=' . date_diff($utcStartDateTime, $utcEndDateTime)->format('%H%I');
+                $url .= '&dur='.date_diff($utcStartDateTime, $utcEndDateTime)->format('%H%I');
             }
         }
 
