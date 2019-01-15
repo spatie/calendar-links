@@ -3,6 +3,9 @@
 All notable changes to `calendar-links` will be documented in this file
 
 ## 1.2.1 - 2019-01-13
+- Fix Yahoo links for multiple days events
+
+## 1.2.1 - 2019-01-13
 - Fix iCal: Use CRLF instead of LF (according RFC 5545)
 - Fix iCal: Specify UID property (according RFC 5545)
 - Fix iCal: Escape `;` character (according RFC 5545)
