@@ -27,19 +27,19 @@ class CreateLinkCommand extends Command
         $helpContent = '
     Example of a default request:
 
-        <fg=black;bg=yellow>? create --to="2018-02-01 18:00"</>
+        <fg=black;bg=yellow>calendar_links create --to="2018-02-01 18:00"</>
 
     Example of a request with start and end date:
 
-        <fg=black;bg=yellow>? create --from="2019-02-01 18:00" --to="2019-02-01 22:00"</></>
+        <fg=black;bg=yellow>calendar_links create --from="2019-02-01 18:00" --to="2019-02-01 22:00"</></>
 
     Example of a request for multiple links:
 
-        <fg=black;bg=yellow>? create --from="2019-02-01 18:00" --to="2019-02-01 22:00" -s google -s yahoo</>
+        <fg=black;bg=yellow>calendar_links create --from="2019-02-01 18:00" --to="2019-02-01 22:00" -s google -s yahoo</>
 
     Example of a raw request:
 
-        <fg=black;bg=yellow>? create --from="2019-02-01 18:00" --to="2019-02-01 22:00" -r true</>
+        <fg=black;bg=yellow>calendar_links create --from="2019-02-01 18:00" --to="2019-02-01 22:00" -r true</>
         ';
 
         $this

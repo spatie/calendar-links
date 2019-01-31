@@ -36,6 +36,9 @@
     "scripts": {
         "test": "vendor/bin/phpunit"
     },
+    "bin": [
+        "calendar_links"
+    ],
     "config": {
         "sort-packages": true
     }
