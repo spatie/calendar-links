@@ -82,6 +82,18 @@ class Link
     }
 
     /**
+     * @param string $eventUrl
+     *
+     * @return $this
+     */
+    public function eventUrl(string $eventUrl)
+    {
+        $this->eventUrl = $eventUrl;
+
+        return $this;
+    }
+
+    /**
      * @param string $address
      *
      * @return $this
