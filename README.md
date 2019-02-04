@@ -56,6 +56,21 @@ echo $link->webOutlook();
 echo $link->ics();
 ```
 
+## Usage (CLI)
+
+- Example of a default request:
+
+    `$ vendor/bin/calendar_links create --to="2018-02-01 18:00"`
+- Example of a request with start and end date:
+
+    `$ vendor/bin/calendar_links create --from="2019-02-01 18:00" --to="2019-02-01 22:00"`
+- Example of a request for multiple links:
+
+    `$ vendor/bin/calendar_links create --from="2019-02-01 18:00" --to="2019-02-01 22:00" -s google -s yahoo`
+- Example of a raw request:
+
+    `$ vendor/bin/calendar_links create --from="2019-02-01 18:00" --to="2019-02-01 22:00" -r true`
+
 ## Changelog
 
 Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
@@ -90,7 +105,7 @@ We publish all received postcards [on our company website](https://spatie.be/en/
 
 Spatie is a webdesign agency based in Antwerp, Belgium. You'll find an overview of all our open source projects [on our website](https://spatie.be/opensource).
 
-Does your business depend on our contributions? Reach out and support us on [Patreon](https://www.patreon.com/spatie). 
+Does your business depend on our contributions? Reach out and support us on [Patreon](https://www.patreon.com/spatie).
 All pledges will be dedicated to allocating workforce on maintenance and new awesome stuff.
 
 ## License
