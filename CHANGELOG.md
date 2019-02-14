@@ -2,6 +2,9 @@
 
 All notable changes to `calendar-links` will be documented in this file
 
+## 1.2.3 - 2019-02-14
+- Fix iCal all day links (use DURATION according RFC 5545)
+
 ## 1.2.2 - 2019-01-15
 - Fix Yahoo links for multiple days events
 
