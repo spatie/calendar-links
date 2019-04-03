@@ -37,6 +37,9 @@ class Link
     /** @var string */
     protected $address;
 
+    /** @var array */
+    protected $attendees;
+
     public function __construct(string $title, DateTime $from, DateTime $to, bool $allDay = false)
     {
         $this->title = $title;
@@ -89,6 +92,22 @@ class Link
     public function address(string $address)
     {
         $this->address = $address;
+
+        return $this;
+    }
+
+    /**
+     * @param array $emails
+     *
+     * @return $this
+     */
+    public function attendees(string $attendees)
+    {
+        if (!is_array($attendees)) {
+            $attendees = explode(',', $attendees);
+        }
+
+        $this->attendees = $attendees;
 
         return $this;
     }

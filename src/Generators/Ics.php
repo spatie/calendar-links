@@ -15,6 +15,9 @@ class Ics implements Generator
         $url = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
+            'BEGIN:VTIMEZONE',
+            'TZID:'.$link->from->format('e'),
+            'END:VTIMEZONE',
             'BEGIN:VEVENT',
             'UID:'.$this->generateEventUid($link),
             'SUMMARY:'.$link->title,
@@ -35,6 +38,11 @@ class Ics implements Generator
         }
         if ($link->address) {
             $url[] = 'LOCATION:'.$this->escapeString($link->address);
+        }
+        if ($link->attendees) {
+            foreach($link->attendees as $attendee) {
+                $url[] = 'ATTENDEE:'.$attendee;
+            }
         }
 
         $url[] = 'END:VEVENT';
