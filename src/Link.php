@@ -16,6 +16,7 @@ use Spatie\CalendarLinks\Exceptions\InvalidLink;
  * @property-read string $description
  * @property-read string $address
  * @property-read bool $allDay
+ * @property-read array $attendees
  */
 class Link
 {
