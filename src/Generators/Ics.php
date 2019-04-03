@@ -39,7 +39,7 @@ class Ics implements Generator
         if ($link->address) {
             $url[] = 'LOCATION:'.$this->escapeString($link->address);
         }
-        if (!empty($link->attendees)) {
+        if (! empty($link->attendees)) {
             foreach ($link->attendees as $attendee) {
                 $url[] = 'ATTENDEE:'.$attendee;
             }
