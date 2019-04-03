@@ -103,7 +103,7 @@ class Link
      */
     public function attendees(string $attendees)
     {
-        if (!is_array($attendees)) {
+        if (! is_array($attendees)) {
             $attendees = explode(',', $attendees);
         }
 
