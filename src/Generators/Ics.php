@@ -47,7 +47,7 @@ class Ics implements Generator
     /** @see https://tools.ietf.org/html/rfc5545.html#section-3.3.11 */
     protected function escapeString(string $field): string
     {
-        return addcslashes($field, "\n,;");
+        return addcslashes($field, "\r\n,;");
     }
 
     /** @see https://tools.ietf.org/html/rfc5545#section-3.8.4.7 */
