@@ -72,12 +72,12 @@ class Link
      * @return Link
      * @throws InvalidLink
      */
-    public static function createAllDay(string $title, DateTime $fromDate, int $numberOfDays = 1): Link
+    public static function createAllDay(string $title, DateTime $fromDate, int $numberOfDays = 1): self
     {
         $from = (clone $fromDate)->modify('midnight');
         $to = (clone $from)->modify("+$numberOfDays days");
 
-        return new Link($title, $from, $to, true);
+        return new self($title, $from, $to, true);
     }
 
     /**
