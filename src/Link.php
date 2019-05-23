@@ -48,11 +48,6 @@ class Link
 
         $this->from = clone $from;
         $this->to = clone $to;
-
-        if ($this->allDay) {
-            $this->from = clone $from;
-            $this->to = clone $from;
-        }
     }
 
     /**
