@@ -20,7 +20,13 @@ class WebOutlook implements Generator
         $utcStartDateTime = (clone $link->from)->setTimezone(new DateTimeZone('UTC'));
         $utcEndDateTime = (clone $link->to)->setTimezone(new DateTimeZone('UTC'));
         $url .= '&startdt='.$utcStartDateTime->format($dateTimeFormat);
-        $url .= '&enddt='.$utcEndDateTime->format($dateTimeFormat);
+
+        $isSingleDayEvent = $link->to->diff($link->from)->d < 2;
+        $canOmitEndDateTime = $link->allDay && $isSingleDayEvent;
+        if (! $canOmitEndDateTime) {
+            $url .= '&enddt='.$utcEndDateTime->format($dateTimeFormat);
+        }
+
         if ($link->allDay) {
             $url .= '&allday=true';
         }
