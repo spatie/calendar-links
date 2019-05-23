@@ -20,8 +20,8 @@ class Ics implements Generator
 
         if ($link->allDay) {
             $dateTimeFormat = 'Ymd';
+            // No need to specify DTEND for all-day events: https://tools.ietf.org/html/rfc5545#page-54
             $url[] = 'DTSTART:'.$link->from->format($dateTimeFormat);
-            $url[] = 'DTEND:'.$link->to->format($dateTimeFormat);
         } else {
             $dateTimeFormat = "e:Ymd\THis";
             $url[] = 'DTSTART;TZID='.$link->from->format($dateTimeFormat);
