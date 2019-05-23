@@ -65,6 +65,22 @@ class Link
     }
 
     /**
+     * @param string   $title
+     * @param DateTime $fromDate
+     * @param int      $numberOfDays
+     *
+     * @return Link
+     * @throws InvalidLink
+     */
+    public static function createAllDay(string $title, DateTime $fromDate, int $numberOfDays = 1): Link
+    {
+        $from = (clone $fromDate)->modify('midnight');
+        $to = (clone $from)->modify("+$numberOfDays days");
+
+        return new Link($title, $from, $to, true);
+    }
+
+    /**
      * @param string $description
      *
      * @return $this
