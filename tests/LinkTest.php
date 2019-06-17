@@ -62,4 +62,12 @@ EOF;
 
         $this->assertEquals('Party Lane 1A, 1337 Funtown', $link->address);
     }
+
+    /** @test */
+    public function it_can_have_an_attendee()
+    {
+        $link = $this-> createLinkWithAttendee();
+
+        $this->assertEquals('party@funtown.com', $link->attendee);
+    }
 }
