@@ -22,9 +22,9 @@ class Yahoo implements Generator
             $url .= '&st='.$link->from->format($dateTimeFormat);
             $url .= '&dur=allday';
         } else {
+            $dateTimeFormat = 'Ymd\THis';
             $utcStartDateTime = (clone $link->from)->setTimezone(new DateTimeZone('UTC'));
             $utcEndDateTime = (clone $link->to)->setTimezone(new DateTimeZone('UTC'));
-            $dateTimeFormat = 'Ymd\THis';
             $url .= '&st='.$utcStartDateTime->format($dateTimeFormat).'Z';
             $url .= '&et='.$utcEndDateTime->format($dateTimeFormat).'Z';
         }
