@@ -2,6 +2,11 @@
 
 All notable changes to `calendar-links` will be documented in this file
 
+## 1.2.4 - 2019-07-17
+- Fix Google links for all-day events (use next day as end-date for single-day events)
+- Fix Outlook links for all-day events (omit `enddt` for single-day events)
+- Add a new `Link::createAllDay` static constructor to simplify creating of all-day events
+
 ## 1.2.3 - 2019-02-14
 - Fix iCal all day links (use DURATION according RFC 5545)
 
