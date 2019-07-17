@@ -48,11 +48,6 @@ class Link
 
         $this->from = clone $from;
         $this->to = clone $to;
-
-        if ($this->allDay) {
-            $this->from = clone $from;
-            $this->to = clone $from;
-        }
     }
 
     /**
@@ -67,6 +62,22 @@ class Link
     public static function create(string $title, DateTime $from, DateTime $to, bool $allDay = false)
     {
         return new static($title, $from, $to, $allDay);
+    }
+
+    /**
+     * @param string   $title
+     * @param DateTime $fromDate
+     * @param int      $numberOfDays
+     *
+     * @return Link
+     * @throws InvalidLink
+     */
+    public static function createAllDay(string $title, DateTime $fromDate, int $numberOfDays = 1): self
+    {
+        $from = (clone $fromDate)->modify('midnight');
+        $to = (clone $from)->modify("+$numberOfDays days");
+
+        return new self($title, $from, $to, true);
     }
 
     /**

@@ -16,10 +16,17 @@ class WebOutlook implements Generator
     {
         $url = 'https://outlook.live.com/owa/?path=/calendar/action/compose&rru=addevent';
 
+        $dateTimeFormat = $link->allDay ? 'Ymd' : "Ymd\THis";
         $utcStartDateTime = (clone $link->from)->setTimezone(new DateTimeZone('UTC'));
         $utcEndDateTime = (clone $link->to)->setTimezone(new DateTimeZone('UTC'));
-        $url .= '&startdt='.$utcStartDateTime->format('Ymd\THis');
-        $url .= '&enddt='.$utcEndDateTime->format('Ymd\THis');
+        $url .= '&startdt='.$utcStartDateTime->format($dateTimeFormat);
+
+        $isSingleDayEvent = $link->to->diff($link->from)->d < 2;
+        $canOmitEndDateTime = $link->allDay && $isSingleDayEvent;
+        if (! $canOmitEndDateTime) {
+            $url .= '&enddt='.$utcEndDateTime->format($dateTimeFormat);
+        }
+
         if ($link->allDay) {
             $url .= '&allday=true';
         }
