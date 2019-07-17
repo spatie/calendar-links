@@ -24,7 +24,7 @@ class Yahoo implements Generator
         } else {
             $utcStartDateTime = (clone $link->from)->setTimezone(new DateTimeZone('UTC'));
             $utcEndDateTime = (clone $link->to)->setTimezone(new DateTimeZone('UTC'));
-            $dateTimeFormat = $link->allDay ? 'Ymd' : 'Ymd\THis';
+            $dateTimeFormat = 'Ymd\THis';
             $url .= '&st='.$utcStartDateTime->format($dateTimeFormat).'Z';
             $url .= '&et='.$utcEndDateTime->format($dateTimeFormat).'Z';
         }
