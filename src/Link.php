@@ -104,6 +104,7 @@ class Link
     public function attendee(string $attendee)
     {
         $this->attendee = $attendee;
+
         return $this;
     }
 

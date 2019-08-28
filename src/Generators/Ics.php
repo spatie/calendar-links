@@ -37,7 +37,7 @@ class Ics implements Generator
             $url[] = 'LOCATION:'.$this->escapeString($link->address);
         }
         if ($link->attendee) {
-            $url[] = 'ATTENDEE:' . $this->escapeString($link->attendee);
+            $url[] = 'ATTENDEE:'.$this->escapeString($link->attendee);
         }
         $url[] = 'END:VEVENT';
         $url[] = 'END:VCALENDAR';

@@ -1,4 +1,4 @@
-<?php
+?php
 
 namespace Spatie\CalendarLinks\Test;
 
@@ -66,7 +66,7 @@ EOF;
     /** @test */
     public function it_can_have_an_attendee()
     {
-        $link = $this-> createLinkWithAttendee();
+        $link = $this->createLinkWithAttendee();
 
         $this->assertEquals('party@funtown.com', $link->attendee);
     }
