@@ -56,6 +56,8 @@ echo $link->webOutlook();
 echo $link->ics();
 ```
 
+> ⚠️ ICS download link does't work in IE and EdgeHTML-based Edge browsers, see [details](https://github.com/spatie/calendar-links/issues/71).
+
 ## Changelog
 
 Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
