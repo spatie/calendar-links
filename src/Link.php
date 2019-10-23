@@ -109,9 +109,9 @@ class Link
         return (new Google())->generate($this);
     }
 
-    public function ics(): string
+    public function ics($uid = null): string
     {
-        return (new Ics())->generate($this);
+        return (new Ics($uid))->generate($this);
     }
 
     public function yahoo(): string

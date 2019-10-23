@@ -10,6 +10,13 @@ use Spatie\CalendarLinks\Generator;
  */
 class Ics implements Generator
 {
+    protected $uid = null;
+
+    public function __construct($uid = null)
+    {
+        $this->uid = $uid;
+    }
+    
     public function generate(Link $link): string
     {
         $url = [
@@ -53,6 +60,6 @@ class Ics implements Generator
     /** @see https://tools.ietf.org/html/rfc5545#section-3.8.4.7 */
     protected function generateEventUid(Link $link): string
     {
-        return md5($link->from->format(\DateTime::ATOM).$link->to->format(\DateTime::ATOM).$link->title.$link->address);
+        return $this->uid ?? md5($link->from->format(\DateTime::ATOM).$link->to->format(\DateTime::ATOM).$link->title.$link->address);
     }
 }
