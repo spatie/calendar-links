@@ -16,7 +16,7 @@ class Ics implements Generator
     {
         $this->uid = $uid;
     }
-    
+
     public function generate(Link $link): string
     {
         $url = [
