@@ -21,4 +21,20 @@ class IcsGeneratorTest extends TestCase
             $this->createAlldayLink()->ics()
         );
     }
+
+    /** @test */
+    public function it_can_generate_an_ics_timezoned_link()
+    {
+        $this->assertMatchesSnapshot(
+            $this->createTimezonedLink()->ics()
+        );
+    }
+
+    /** @test */
+    public function it_can_generate_an_ics_timezoned_all_day_link()
+    {
+        $this->assertMatchesSnapshot(
+            $this->createTimezonedAllDayLink()->ics()
+        );
+    }
 }

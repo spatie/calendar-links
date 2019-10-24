@@ -38,4 +38,31 @@ EOF;
             DateTime::createFromFormat('Y-m-d', '2018-02-01', new DateTimeZone('UTC'))
         )->description($description)->address('Party Lane 1A, 1337 Funtown');
     }
+
+    protected function createTimezonedAllDayLink(): Link
+    {
+        $description = <<<'EOF'
+With balloons, clowns and stuff
+Bring a dog, bring a frog
+EOF;
+
+        return Link::createAllDay(
+            'Birthday in Paris',
+            DateTime::createFromFormat('Y-m-d', '2018-02-01', new DateTimeZone('Europe/Paris'))
+        )->description($description)->address('Party Lane 1A, 1337 Funtown');
+    }
+
+    protected function createTimezonedLink(): Link
+    {
+        $description = <<<'EOF'
+With balloons, clowns and stuff
+Bring a dog, bring a frog
+EOF;
+
+        return Link::create(
+            'Flight from Paris to Tokyo',
+            DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00', new DateTimeZone('Europe/Paris')),
+            DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00', new DateTimeZone('Asia/Tokyo'))
+        )->description($description)->address('Party Lane 1A, 1337 Funtown');
+    }
 }
