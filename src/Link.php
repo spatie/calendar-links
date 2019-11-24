@@ -16,6 +16,7 @@ use Spatie\CalendarLinks\Exceptions\InvalidLink;
  * @property-read string $description
  * @property-read string $address
  * @property-read bool $allDay
+ * @property-read string $id
  */
 class Link
 {
@@ -36,6 +37,9 @@ class Link
 
     /** @var string */
     protected $address;
+
+    /** @var string */
+    protected $id;
 
     public function __construct(string $title, DateTime $from, DateTime $to, bool $allDay = false)
     {
@@ -100,6 +104,18 @@ class Link
     public function address(string $address)
     {
         $this->address = $address;
+
+        return $this;
+    }
+
+    /**
+     * @param string $id
+     *
+     * @return $this
+     */
+    public function id(string $id)
+    {
+        $this->id = $id;
 
         return $this;
     }

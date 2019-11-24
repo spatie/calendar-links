@@ -53,6 +53,8 @@ class Ics implements Generator
     /** @see https://tools.ietf.org/html/rfc5545#section-3.8.4.7 */
     protected function generateEventUid(Link $link): string
     {
-        return md5($link->from->format(\DateTime::ATOM).$link->to->format(\DateTime::ATOM).$link->title.$link->address);
+        return is_null($link->id)
+            ? md5($link->from->format(\DateTime::ATOM).$link->to->format(\DateTime::ATOM).$link->title.$link->address)
+            : $link->id;
     }
 }

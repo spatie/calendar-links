@@ -56,6 +56,16 @@ EOF;
     }
 
     /** @test */
+    public function it_can_have_an_id()
+    {
+        $link = $this->createLink();
+        $this->assertNull($link->id);
+
+        $link->id('069734e3e852b5b7fd56f01661d63c13@domain.tld');
+        $this->assertEquals('069734e3e852b5b7fd56f01661d63c13@domain.tld', $link->id);
+    }
+
+    /** @test */
     public function it_can_have_an_address()
     {
         $link = $this->createLink();

@@ -21,4 +21,13 @@ class IcsGeneratorTest extends TestCase
             $this->createAlldayLink()->ics()
         );
     }
+
+    /** @test */
+    public function it_can_generate_an_ics_link_with_custom_id()
+    {
+        $link = $this->createLink();
+        $link->id('custom-id@domain.tld');
+
+        $this->assertMatchesSnapshot($link->ics());
+    }
 }
