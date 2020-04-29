@@ -15,6 +15,14 @@ class WebOutlookGeneratorTest extends TestCase
     }
 
     /** @test */
+    public function it_can_generate_a_web_outlook_multiple_days_link()
+    {
+        $this->assertMatchesSnapshot(
+            $this->createMultipleDaysLink()->webOutlook()
+        );
+    }
+
+    /** @test */
     public function it_can_generate_a_web_outlook_allDay_link()
     {
         $this->assertMatchesSnapshot(

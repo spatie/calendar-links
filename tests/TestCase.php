@@ -26,6 +26,20 @@ EOF;
         )->description($description)->address('Party Lane 1A, 1337 Funtown');
     }
 
+    protected function createMultipleDaysLink(): Link
+    {
+        $description = <<<'EOF'
+With balloons, clowns and stuff
+Bring a dog, bring a frog
+EOF;
+
+        return Link::create(
+            'New Year',
+            DateTime::createFromFormat('Y-m-d H:i', '2019-12-31 23:00', new DateTimeZone('UTC')),
+            DateTime::createFromFormat('Y-m-d H:i', '2020-01-01 1:00', new DateTimeZone('UTC'))
+        )->description($description)->address('Party Lane 1A, 1337 Funtown');
+    }
+
     protected function createAlldayLink(): Link
     {
         $description = <<<'EOF'
