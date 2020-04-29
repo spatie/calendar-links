@@ -2,6 +2,12 @@
 
 All notable changes to `calendar-links` will be documented in this file
 
+## 1.3.0 - 2020-04-29
+- Support custom generators (`$link->formatWith(new Your\Generator()`)
+- Fix iCal links that contains special chars (use base64 for encoding)
+- Fix Outlook links: use new base URI and datetime formats
+- Fix Yahoo links: events had invalid end datetime (due to a bug on Yahoo side)
+
 ## 1.2.4 - 2019-07-17
 - Fix Google links for all-day events (use next day as end-date for single-day events)
 - Fix Outlook links for all-day events (omit `enddt` for single-day events)
