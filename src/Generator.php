@@ -5,7 +5,7 @@ namespace Spatie\CalendarLinks;
 interface Generator
 {
     /**
-     * Generate an URL to add event to calendar
+     * Generate an URL to add event to calendar.
      * @param \Spatie\CalendarLinks\Link $link
      * @return string
      */

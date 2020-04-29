@@ -3,8 +3,8 @@
 namespace Spatie\CalendarLinks\Generators;
 
 use DateTimeZone;
-use Spatie\CalendarLinks\Link;
 use Spatie\CalendarLinks\Generator;
+use Spatie\CalendarLinks\Link;
 
 /**
  * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/master/services/outlook-live.md
@@ -15,7 +15,7 @@ class WebOutlook implements Generator
     const DATE_FORMAT = 'Y-m-d';
     const DATETIME_FORMAT = 'Y-m-d\TH:i:s\Z';
 
-    /** @inheritDoc */
+    /** {@inheritdoc} */
     public function generate(Link $link): string
     {
         $url = 'https://outlook.live.com/calendar/deeplink/compose?path=/calendar/action/compose&rru=addevent';
