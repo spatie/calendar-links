@@ -28,8 +28,23 @@ class Yahoo implements Generator
         } else {
             $utcStartDateTime = (clone $link->from)->setTimezone(new DateTimeZone('UTC'));
             $utcEndDateTime = (clone $link->to)->setTimezone(new DateTimeZone('UTC'));
+
             $url .= '&st='.$utcStartDateTime->format($dateTimeFormat);
-            $url .= '&et='.$utcEndDateTime->format($dateTimeFormat);
+
+            /**
+             * Yahoo has a bug on parsing end date parameter: it ignores timezone, assuming
+             * that it's specified in user's tz. In order to bypass it, we can use duration ("dur")
+             * parameter instead of "et", but this parameter has a limitation cause by it's format HHmm:
+             * the max duration is 99hours and 59 minutes (dur=9959).
+             */
+            $maxDurationInSecs = (59 * 60 * 60) + (59 * 60);
+            $canUseDuration = $maxDurationInSecs > ($utcEndDateTime->getTimestamp() - $utcStartDateTime->getTimestamp());
+            if ($canUseDuration) {
+                $dateDiff = $utcStartDateTime->diff($utcEndDateTime);
+                $url .= '&dur='.$dateDiff->format('%H%I');
+            } else {
+                $url .= '&et='.$utcEndDateTime->format($dateTimeFormat);
+            }
         }
 
         $url .= '&title='.urlencode($link->title);
