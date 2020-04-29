@@ -104,24 +104,29 @@ class Link
         return $this;
     }
 
+    public function formatWith(Generator $generator): string
+    {
+        return $generator->generate($this);
+    }
+
     public function google(): string
     {
-        return (new Google())->generate($this);
+        return $this->formatWith(new Google());
     }
 
     public function ics(): string
     {
-        return (new Ics())->generate($this);
+        return $this->formatWith(new Ics());
     }
 
     public function yahoo(): string
     {
-        return (new Yahoo())->generate($this);
+        return $this->formatWith(new Yahoo());
     }
 
     public function webOutlook(): string
     {
-        return (new WebOutlook())->generate($this);
+        return $this->formatWith(new WebOutlook());
     }
 
     public function __get($property)

@@ -9,11 +9,11 @@
 Using this package you can generate links to add events to calendar systems. Here's a quick example:
 
 ```php
-(new Link(
-   'Birthday',
-   DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00'),
-   DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00')
-))->google();
+Link::create(
+    'Birthday',
+    DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00'),
+    DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00'))
+)->google();
 ```
 
 This will output: `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Birthday&dates=20180201T090000/20180201T180000&sprop=&sprop=name:`
@@ -54,6 +54,9 @@ echo $link->webOutlook();
 
 // Generate a data uri for an ics file (for iCal & Outlook)
 echo $link->ics();
+
+// Generate a data uri using arbitrary generator:
+echo $link->formatWith(new \Your\Generator());
 ```
 
 > ⚠️ ICS download links don't work in IE and EdgeHTML-based Edge browsers, see [details](https://github.com/spatie/calendar-links/issues/71).
