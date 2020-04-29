@@ -2,15 +2,15 @@
 
 namespace Spatie\CalendarLinks\Generators;
 
-use Spatie\CalendarLinks\Link;
 use Spatie\CalendarLinks\Generator;
+use Spatie\CalendarLinks\Link;
 
 /**
  * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/master/services/google.md
  */
 class Google implements Generator
 {
-    /** @inheritDoc */
+    /** {@inheritdoc} */
     public function generate(Link $link): string
     {
         $url = 'https://calendar.google.com/calendar/render?action=TEMPLATE';

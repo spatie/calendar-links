@@ -2,15 +2,15 @@
 
 namespace Spatie\CalendarLinks\Generators;
 
-use Spatie\CalendarLinks\Link;
 use Spatie\CalendarLinks\Generator;
+use Spatie\CalendarLinks\Link;
 
 /**
  * @see https://icalendar.org/RFC-Specifications/iCalendar-RFC-5545/
  */
 class Ics implements Generator
 {
-    /** @inheritDoc */
+    /** {@inheritdoc} */
     public function generate(Link $link): string
     {
         $url = [
