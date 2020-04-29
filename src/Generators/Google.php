@@ -2,8 +2,8 @@
 
 namespace Spatie\CalendarLinks\Generators;
 
-use Spatie\CalendarLinks\Link;
 use Spatie\CalendarLinks\Generator;
+use Spatie\CalendarLinks\Link;
 
 /**
  * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/master/services/google.md

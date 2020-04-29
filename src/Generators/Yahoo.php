@@ -3,14 +3,15 @@
 namespace Spatie\CalendarLinks\Generators;
 
 use DateTimeZone;
-use Spatie\CalendarLinks\Link;
 use Spatie\CalendarLinks\Generator;
+use Spatie\CalendarLinks\Link;
 
 /**
  * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/master/services/yahoo.md
  */
 class Yahoo implements Generator
 {
+    /** {@inheritdoc} */
     public function generate(Link $link): string
     {
         $url = 'https://calendar.yahoo.com/?v=60&view=d&type=20';
