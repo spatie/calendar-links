@@ -22,7 +22,7 @@ class Ics implements Generator
             'VERSION:2.0',
             'BEGIN:VEVENT',
             'UID:'.$this->generateEventUid($link),
-            'SUMMARY:'.$link->title,
+            'SUMMARY:'.$this->escapeString($link->title),
         ];
 
         $dateTimeFormat = $link->allDay ? $this->dateFormat : $this->dateTimeFormat;
@@ -44,9 +44,9 @@ class Ics implements Generator
 
         $url[] = 'END:VEVENT';
         $url[] = 'END:VCALENDAR';
-        $redirectLink = implode('%0d%0a', $url);
+        $redirectLink = implode("\r\n", $url);
 
-        return 'data:text/calendar;charset=utf8,'.$redirectLink;
+        return 'data:text/calendar;charset=utf8;base64,'.base64_encode($redirectLink);
     }
 
     /** @see https://tools.ietf.org/html/rfc5545.html#section-3.3.11 */
