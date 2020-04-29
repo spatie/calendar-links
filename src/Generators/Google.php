@@ -10,15 +10,20 @@ use Spatie\CalendarLinks\Link;
  */
 class Google implements Generator
 {
+    /** @var string {@see https://www.php.net/manual/en/function.date.php} */
+    protected $dateFormat = 'Ymd';
+    protected $dateTimeFormat = 'Ymd\THis';
+
     /** {@inheritdoc} */
     public function generate(Link $link): string
     {
         $url = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
 
-        $dateTimeFormat = $link->allDay ? 'Ymd' : "Ymd\THis";
-        $url .= '&text='.urlencode($link->title);
+        $dateTimeFormat = $link->allDay ? $this->dateFormat : $this->dateTimeFormat;
         $url .= '&dates='.$link->from->format($dateTimeFormat).'/'.$link->to->format($dateTimeFormat);
         $url .= '&ctz='.$link->from->getTimezone()->getName();
+
+        $url .= '&text='.urlencode($link->title);
 
         if ($link->description) {
             $url .= '&details='.urlencode($link->description);

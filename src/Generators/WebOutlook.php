@@ -12,15 +12,15 @@ use Spatie\CalendarLinks\Link;
 class WebOutlook implements Generator
 {
     /** @var string {@see https://www.php.net/manual/en/function.date.php} */
-    const DATE_FORMAT = 'Y-m-d';
-    const DATETIME_FORMAT = 'Y-m-d\TH:i:s\Z';
+    protected $dateFormat = 'Y-m-d';
+    protected $dateTimeFormat = 'Y-m-d\TH:i:s\Z';
 
     /** {@inheritdoc} */
     public function generate(Link $link): string
     {
         $url = 'https://outlook.live.com/calendar/deeplink/compose?path=/calendar/action/compose&rru=addevent';
 
-        $dateTimeFormat = $link->allDay ? self::DATE_FORMAT : self::DATETIME_FORMAT;
+        $dateTimeFormat = $link->allDay ? $this->dateFormat : $this->dateTimeFormat;
 
         $utcStartDateTime = (clone $link->from)->setTimezone(new DateTimeZone('UTC'));
         $utcEndDateTime = (clone $link->to)->setTimezone(new DateTimeZone('UTC'));

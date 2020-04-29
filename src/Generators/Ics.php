@@ -10,6 +10,10 @@ use Spatie\CalendarLinks\Link;
  */
 class Ics implements Generator
 {
+    /** @var string {@see https://www.php.net/manual/en/function.date.php} */
+    protected $dateFormat = 'Ymd';
+    protected $dateTimeFormat = 'e:Ymd\THis';
+
     /** {@inheritdoc} */
     public function generate(Link $link): string
     {
@@ -21,12 +25,12 @@ class Ics implements Generator
             'SUMMARY:'.$link->title,
         ];
 
+        $dateTimeFormat = $link->allDay ? $this->dateFormat : $this->dateTimeFormat;
+
         if ($link->allDay) {
-            $dateTimeFormat = 'Ymd';
             $url[] = 'DTSTART:'.$link->from->format($dateTimeFormat);
             $url[] = 'DURATION:P1D';
         } else {
-            $dateTimeFormat = "e:Ymd\THis";
             $url[] = 'DTSTART;TZID='.$link->from->format($dateTimeFormat);
             $url[] = 'DTEND;TZID='.$link->to->format($dateTimeFormat);
         }
