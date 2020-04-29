@@ -10,6 +10,7 @@ use Spatie\CalendarLinks\Generator;
  */
 class Ics implements Generator
 {
+    /** @inheritDoc */
     public function generate(Link $link): string
     {
         $url = [
