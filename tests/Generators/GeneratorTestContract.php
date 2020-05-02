@@ -1,10 +1,10 @@
 <?php
 
-namespace Spatie\CalendarLinks\Test\Generators;
+namespace Spatie\CalendarLinks\Tests\Generators;
 
 use Spatie\CalendarLinks\Generator;
 
-/** @mixin \Spatie\CalendarLinks\Test\TestCase */
+/** @mixin \Spatie\CalendarLinks\Tests\TestCase */
 trait GeneratorTestContract
 {
     abstract protected function generator(): Generator;
@@ -16,6 +16,7 @@ trait GeneratorTestContract
     {
         $link = $this->createShortEventLink();
 
+        $this->assertTrue(method_exists($link, $this->linkMethodName()));
         $this->assertSame($this->generator()->generate($link), $link->{$this->linkMethodName()}());
     }
 
@@ -25,6 +26,11 @@ trait GeneratorTestContract
         $this->assertMatchesSnapshot(
             $this->generator()->generate($this->createShortEventLink())
         );
+
+        $this->assertSame(
+            $this->generator()->generate($this->createShortEventLink(false)),
+            $this->generator()->generate($this->createShortEventLink(true))
+        );
     }
 
     /** @test */
@@ -33,6 +39,11 @@ trait GeneratorTestContract
         $this->assertMatchesSnapshot(
             $this->generator()->generate($this->createAllDayEventLink())
         );
+
+        $this->assertSame(
+            $this->generator()->generate($this->createAllDayEventLink(false)),
+            $this->generator()->generate($this->createAllDayEventLink(true))
+        );
     }
 
     /** @test */
@@ -40,6 +51,11 @@ trait GeneratorTestContract
     {
         $this->assertMatchesSnapshot(
             $this->generator()->generate($this->createMultipleDaysEventLink())
+        );
+
+        $this->assertSame(
+            $this->generator()->generate($this->createMultipleDaysEventLink(false)),
+            $this->generator()->generate($this->createMultipleDaysEventLink(true))
         );
     }
 }

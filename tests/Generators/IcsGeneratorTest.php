@@ -1,11 +1,10 @@
 <?php
 
-namespace Spatie\CalendarLink\Test;
+namespace Spatie\CalendarLinks\Tests\Generators;
 
 use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Generators\Ics;
-use Spatie\CalendarLinks\Test\Generators\GeneratorTestContract;
-use Spatie\CalendarLinks\Test\TestCase;
+use Spatie\CalendarLinks\Tests\TestCase;
 
 class IcsGeneratorTest extends TestCase
 {
@@ -25,7 +24,7 @@ class IcsGeneratorTest extends TestCase
     public function it_can_generate_an_ics_link_with_custom_uid()
     {
         $this->assertMatchesSnapshot(
-            $this->createShortEventLink()->ics(['uid' => 'random-uid'])
+            $this->createShortEventLink()->ics(['UID' => 'random-uid'])
         );
     }
 }

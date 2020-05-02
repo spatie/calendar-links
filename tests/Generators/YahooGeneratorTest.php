@@ -1,14 +1,13 @@
 <?php
 
-namespace Spatie\CalendarLink\Test;
+namespace Spatie\CalendarLinks\Tests\Generators;
 
 use DateTime;
 use DateTimeZone;
 use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Generators\Yahoo;
 use Spatie\CalendarLinks\Link;
-use Spatie\CalendarLinks\Test\Generators\GeneratorTestContract;
-use Spatie\CalendarLinks\Test\TestCase;
+use Spatie\CalendarLinks\Tests\TestCase;
 
 class YahooGeneratorTest extends TestCase
 {

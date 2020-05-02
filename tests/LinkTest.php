@@ -1,6 +1,6 @@
 <?php
 
-namespace Spatie\CalendarLinks\Test;
+namespace Spatie\CalendarLinks\Tests;
 
 use DateTime;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
@@ -33,25 +33,35 @@ class LinkTest extends TestCase
     }
 
     /** @test */
-    public function it_has_a_from_date()
+    public function it_has_a_mutable_from_date()
     {
         $this->assertEquals(new DateTime('20180201T090000 UTC'), $this->createShortEventLink()->from);
     }
 
     /** @test */
-    public function it_has_a_to_date()
+    public function it_has_a_mutable_to_date()
     {
         $this->assertEquals(new DateTime('20180201T180000 UTC'), $this->createShortEventLink()->to);
+    }
+
+    /** @test */
+    public function it_has_an_immutable_from_date()
+    {
+        $this->assertEquals(new DateTime('20180201T090000 UTC'), $this->createShortEventLink()->from);
+    }
+
+    /** @test */
+    public function it_has_an_immutable_to_date()
+    {
+        $this->assertEquals(new \DateTimeImmutable('20180201T180000 UTC'), $this->createShortEventLink()->to);
     }
 
     /** @test */
     public function it_can_have_a_description()
     {
         $link = $this->createShortEventLink();
-        $correctDescription = <<<'EOF'
-With balloons, clowns and stuff
-Bring a dog, bring a frog
-EOF;
+        $correctDescription = 'With balloons, clowns and stuff
+Bring a dog, bring a frog';
         $this->assertEquals($correctDescription, $link->description);
     }
 

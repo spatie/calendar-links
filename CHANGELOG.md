@@ -8,6 +8,7 @@ All notable changes to `calendar-links` will be documented in this file
 ### Added
 - Allow specifying custom `UID` ICS links (https://github.com/spatie/calendar-links/pull/85)
 - Support PHP 8.0
+- Support immutable dates (`\DateTimeImmutable::class`)
 
 ### Changed
 - Require PHP 7.2+

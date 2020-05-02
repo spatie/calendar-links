@@ -1,11 +1,10 @@
 <?php
 
-namespace Spatie\CalendarLink\Test;
+namespace Spatie\CalendarLinks\Tests\Generators;
 
 use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Generators\Google;
-use Spatie\CalendarLinks\Test\Generators\GeneratorTestContract;
-use Spatie\CalendarLinks\Test\TestCase;
+use Spatie\CalendarLinks\Tests\TestCase;
 
 class GoogleGeneratorTest extends TestCase
 {
