@@ -32,7 +32,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: dom, json, pcre, reflection, spl
+          extensions: dom, json, libxml, mbstring, pcre, reflection, spl, xml, xmlwriter
           coverage: none
           ini-values: assert.exception=1, zend.assertions=1
 
