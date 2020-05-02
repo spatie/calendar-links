@@ -4,25 +4,24 @@ namespace Spatie\CalendarLink\Test;
 
 use DateTime;
 use DateTimeZone;
+use Spatie\CalendarLinks\Generator;
+use Spatie\CalendarLinks\Generators\Yahoo;
 use Spatie\CalendarLinks\Link;
+use Spatie\CalendarLinks\Test\Generators\GeneratorTestContract;
 use Spatie\CalendarLinks\Test\TestCase;
 
 class YahooGeneratorTest extends TestCase
 {
-    /** @test */
-    public function it_can_generate_a_yahoo_link()
+    use GeneratorTestContract;
+
+    protected function generator(): Generator
     {
-        $this->assertMatchesSnapshot(
-            $this->createLink()->yahoo()
-        );
+        return new Yahoo();
     }
 
-    /** @test */
-    public function it_can_generate_a_yahoo_multiple_days_link()
+    protected function linkMethodName(): string
     {
-        $this->assertMatchesSnapshot(
-            $this->createMultipleDaysLink()->yahoo()
-        );
+        return 'yahoo';
     }
 
     /** @test */
@@ -35,13 +34,5 @@ class YahooGeneratorTest extends TestCase
         )->description('Long event')->address('Party Lane 1A, 1337 Funtown');
 
         $this->assertMatchesSnapshot($link->yahoo());
-    }
-
-    /** @test */
-    public function it_can_generate_a_yahoo_allDay_link()
-    {
-        $this->assertMatchesSnapshot(
-            $this->createAlldayLink()->yahoo()
-        );
     }
 }

@@ -12,7 +12,7 @@ abstract class TestCase extends BaseTestCase
 {
     use MatchesSnapshots;
 
-    protected function createLink(): Link
+    protected function createShortEventLink(): Link
     {
         $description = <<<'EOF'
 With balloons, clowns and stuff
@@ -26,7 +26,7 @@ EOF;
         )->description($description)->address('Party Lane 1A, 1337 Funtown');
     }
 
-    protected function createMultipleDaysLink(): Link
+    protected function createMultipleDaysEventLink(): Link
     {
         $description = <<<'EOF'
 With balloons, clowns and stuff
@@ -40,7 +40,7 @@ EOF;
         )->description($description)->address('Party Lane 1A, 1337 Funtown');
     }
 
-    protected function createAlldayLink(): Link
+    protected function createAllDayEventLink(): Link
     {
         $description = <<<'EOF'
 With balloons, clowns and stuff
