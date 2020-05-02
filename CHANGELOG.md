@@ -2,9 +2,11 @@
 
 All notable changes to `calendar-links` will be documented in this file
 
-## 1.4.0 - 2020-05-2
+## Unreleased
+
+## 1.4.0 - 2020-05-02
 ### Added
-- Allow specifying custom `uid` ICS links (https://github.com/spatie/calendar-links/pull/85)
+- Allow specifying custom `UID` ICS links (https://github.com/spatie/calendar-links/pull/85)
 - Support PHP 8.0
 
 ### Changed

@@ -29,7 +29,7 @@ class Ics implements Generator
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
             'BEGIN:VEVENT',
-            'UID:'.($this->options['uid'] ?? $this->generateEventUid($link)),
+            'UID:'.($this->options['UID'] ?? $this->generateEventUid($link)),
             'SUMMARY:'.$this->escapeString($link->title),
         ];
 
