@@ -14,6 +14,14 @@ class Ics implements Generator
     protected $dateFormat = 'Ymd';
     protected $dateTimeFormat = 'e:Ymd\THis';
 
+    /** @var array */
+    protected $options = [];
+
+    public function __construct(array $options = [])
+    {
+        $this->options = $options;
+    }
+
     /** {@inheritdoc} */
     public function generate(Link $link): string
     {
@@ -21,7 +29,7 @@ class Ics implements Generator
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
             'BEGIN:VEVENT',
-            'UID:'.$this->generateEventUid($link),
+            'UID:'.($this->options['uid'] ?? $this->generateEventUid($link)),
             'SUMMARY:'.$this->escapeString($link->title),
         ];
 
