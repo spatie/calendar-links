@@ -2,6 +2,14 @@
 
 All notable changes to `calendar-links` will be documented in this file
 
+## 1.4.0 - 2020-05-2
+### Added
+- Allow specifying custom `uid` ICS links (https://github.com/spatie/calendar-links/pull/85)
+- Support PHP 8.0
+
+### Changed
+- Require PHP 7.2+
+
 ## 1.3.0 - 2020-04-29
 - Support custom generators (`$link->formatWith(new Your\Generator()`)
 - Fix iCal links that contains special chars (use base64 for encoding)
