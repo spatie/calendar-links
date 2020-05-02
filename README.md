@@ -1,7 +1,7 @@
 # Generate add to calendar links for Google, iCal and other calendar systems
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/spatie/calendar-links.svg?style=flat-square)](https://packagist.org/packages/spatie/calendar-links)
-[![Build Status](https://img.shields.io/travis/spatie/calendar-links/master.svg?style=flat-square)](https://travis-ci.org/spatie/calendar-links)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/spatie/calendar-links/CI/master?style=flat-square)
 [![Quality Score](https://img.shields.io/scrutinizer/g/spatie/calendar-links.svg?style=flat-square)](https://scrutinizer-ci.com/g/spatie/calendar-links)
 [![StyleCI](https://styleci.io/repos/103638080/shield?branch=master)](https://styleci.io/repos/103638080)
 [![Total Downloads](https://img.shields.io/packagist/dt/spatie/calendar-links.svg?style=flat-square)](https://packagist.org/packages/spatie/calendar-links)
