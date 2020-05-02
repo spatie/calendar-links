@@ -15,6 +15,14 @@ class IcsGeneratorTest extends TestCase
     }
 
     /** @test */
+    public function it_can_generate_an_ics_link_with_custom_uid()
+    {
+        $this->assertMatchesSnapshot(
+            $this->createLink()->ics(['uid' => 'random-uid'])
+        );
+    }
+
+    /** @test */
     public function it_can_generate_an_ics_multiple_days_link()
     {
         $this->assertMatchesSnapshot(

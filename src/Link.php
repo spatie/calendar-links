@@ -114,9 +114,9 @@ class Link
         return $this->formatWith(new Google());
     }
 
-    public function ics(): string
+    public function ics(array $options = []): string
     {
-        return $this->formatWith(new Ics());
+        return $this->formatWith(new Ics($options));
     }
 
     public function yahoo(): string
