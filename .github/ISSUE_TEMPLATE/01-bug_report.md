@@ -7,7 +7,6 @@ assignees: ''
 
 ---
 <!-- ⚠️ Ensure that you will not create a duplicate: Use the GitHub issue search. -->
-<!-- ⚠️ For the issues title please use declarative mood -- we will display issue title in our changelogs --!>
 
 
 ## Context
