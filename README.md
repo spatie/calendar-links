@@ -51,7 +51,7 @@ $to = DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00');
 
 $link = Link::create('Sebastian\'s birthday', $from, $to)
     ->description('Cookies & cocktails!')
-    ->address('Samberstraat 69D, 2060 Antwerpen');
+    ->address('Kruikstraat 22, 2018 Antwerpen');
 
 // Generate a link to create an event on Google calendar
 echo $link->google();
