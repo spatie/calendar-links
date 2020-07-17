@@ -9,10 +9,12 @@
 Using this package you can generate links to add events to calendar systems. Here's a quick example:
 
 ```php
+use Spatie\CalendarLinks\Link;
+
 Link::create(
     'Birthday',
     DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00'),
-    DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00'))
+    DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00')
 )->google();
 ```
 
