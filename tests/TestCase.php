@@ -43,7 +43,7 @@ Bring a dog, bring a frog';
         )->description($description)->address('Party Lane 1A, 1337 Funtown');
     }
 
-    protected function createAllDayEventLink(bool $immutable = false): Link
+    protected function createSingleDayAllDayEventLink(bool $immutable = false): Link
     {
         $description = 'With balloons, clowns and stuff
 Bring a dog, bring a frog';
@@ -54,6 +54,21 @@ Bring a dog, bring a frog';
         return Link::createAllDay(
             'Birthday',
             $dateTimeClass::createFromFormat('Y-m-d', '2018-02-01', new DateTimeZone('UTC'))
+        )->description($description)->address('Party Lane 1A, 1337 Funtown');
+    }
+
+    protected function createMultipleDaysAllDayEventLink(bool $immutable = false): Link
+    {
+        $description = 'With balloons, clowns and stuff
+Bring a dog, bring a frog';
+
+        /** @var \DateTimeInterface $dateTimeClass */
+        $dateTimeClass = $immutable ? DateTimeImmutable::class : DateTime::class;
+
+        return Link::createAllDay(
+            'Birthday',
+            $dateTimeClass::createFromFormat('Y-m-d', '2018-02-01', new DateTimeZone('UTC')),
+            5
         )->description($description)->address('Party Lane 1A, 1337 Funtown');
     }
 }
