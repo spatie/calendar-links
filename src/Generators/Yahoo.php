@@ -22,7 +22,7 @@ class Yahoo implements Generator
 
         $dateTimeFormat = $link->allDay ? $this->dateFormat : $this->dateTimeFormat;
 
-        if ($link->allDay) {
+        if ($link->allDay && $link->from->diff($link->to)->days === 1) {
             $url .= '&st='.$link->from->format($dateTimeFormat);
             $url .= '&dur=allday';
         } else {
