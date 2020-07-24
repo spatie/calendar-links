@@ -34,7 +34,7 @@
     },
     "scripts": {
         "test": "vendor/bin/phpunit",
-        "snapshots:update": "vendor/bin/phpunit -d --update-snapshots"
+        "test:update-snapshots": "vendor/bin/phpunit -d --update-snapshots"
     },
     "config": {
         "sort-packages": true
