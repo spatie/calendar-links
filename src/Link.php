@@ -7,6 +7,7 @@ use Spatie\CalendarLinks\Exceptions\InvalidLink;
 use Spatie\CalendarLinks\Generators\Google;
 use Spatie\CalendarLinks\Generators\Ics;
 use Spatie\CalendarLinks\Generators\WebOutlook;
+use Spatie\CalendarLinks\Generators\Office365;
 use Spatie\CalendarLinks\Generators\Yahoo;
 
 /**
@@ -127,6 +128,11 @@ class Link
     public function webOutlook(): string
     {
         return $this->formatWith(new WebOutlook());
+    }
+
+    public function office365(): string
+    {
+        return $this->formatWith(new Office365());
     }
 
     public function __get($property)
