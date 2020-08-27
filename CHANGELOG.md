@@ -4,6 +4,16 @@ All notable changes to `calendar-links` will be documented in this file
 
 ## Unreleased
 
+
+## 1.4.1 - 2020-08-27
+### Changed
+ - Simplify extending of WebOutlook (e.g. for Office365)
+ - Yahoo: use `allday` parameter only for a single-day events (67517bd70cae21309fe0eccca97db2d41e45aed3)
+ - Improve exception hierarchy: `InvalidLink` now extends `\InvalidArgumentException` 
+
+### Added
+ - Add more tests, reorganize existing
+
 ## 1.4.0 - 2020-05-02
 ### Added
 - Allow specifying custom `UID` ICS links (https://github.com/spatie/calendar-links/pull/85)
