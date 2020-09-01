@@ -1,10 +1,10 @@
 # Generate add to calendar links for Google, iCal and other calendar systems
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/spatie/calendar-links.svg?style=flat-square)](https://packagist.org/packages/spatie/calendar-links)
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/spatie/calendar-links/CI/master?style=flat-square)
-[![Quality Score](https://img.shields.io/scrutinizer/g/spatie/calendar-links.svg?style=flat-square)](https://scrutinizer-ci.com/g/spatie/calendar-links)
-[![StyleCI](https://styleci.io/repos/103638080/shield?branch=master)](https://styleci.io/repos/103638080)
 [![Total Downloads](https://img.shields.io/packagist/dt/spatie/calendar-links.svg?style=flat-square)](https://packagist.org/packages/spatie/calendar-links)
+![Test](https://github.com/spatie/calendar-links/workflows/Test/badge.svg)
+[![Quality Score](https://img.shields.io/scrutinizer/g/spatie/calendar-links.svg?style=flat-square)](https://scrutinizer-ci.com/g/spatie/calendar-links)
+
 
 Using this package you can generate links to add events to calendar systems. Here's a quick example:
 
