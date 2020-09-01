@@ -15,7 +15,7 @@ class Yahoo implements Generator
     protected $dateFormat = 'Ymd';
     protected $dateTimeFormat = 'Ymd\THis\Z';
 
-    /** {@inheritDoc} */
+    /** {@inheritdoc} */
     public function generate(Link $link): string
     {
         $url = 'https://calendar.yahoo.com/?v=60&view=d&type=20';
