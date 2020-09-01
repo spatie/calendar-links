@@ -5,6 +5,10 @@ All notable changes to `calendar-links` will be documented in this file
 ## Unreleased
 
 
+## 1.4.2 - 2020-09-01
+### Changed
+ - Simplify extending of ICS Generator (https://github.com/spatie/calendar-links/commit/c705b17416e2cf0b673a742f9fb6716a111ed984)
+
 ## 1.4.1 - 2020-08-27
 ### Changed
  - Simplify extending of WebOutlook (e.g. for Office365)
