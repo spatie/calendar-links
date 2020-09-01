@@ -22,7 +22,7 @@ class Ics implements Generator
         $this->options = $options;
     }
 
-    /** {@inheritdoc} */
+    /** {@inheritDoc} */
     public function generate(Link $link): string
     {
         $url = [

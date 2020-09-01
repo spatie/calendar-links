@@ -14,7 +14,7 @@ class Google implements Generator
     protected $dateFormat = 'Ymd';
     protected $dateTimeFormat = 'Ymd\THis';
 
-    /** {@inheritdoc} */
+    /** {@inheritDoc} */
     public function generate(Link $link): string
     {
         $url = 'https://calendar.google.com/calendar/render?action=TEMPLATE';

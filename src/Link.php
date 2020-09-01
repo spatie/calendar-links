@@ -11,8 +11,8 @@ use Spatie\CalendarLinks\Generators\Yahoo;
 
 /**
  * @property-read string $title
- * @property-read DateTimeInterface $from
- * @property-read DateTimeInterface $to
+ * @property-read DateTimeInterface|\DateTime|\DateTimeImmutable $from
+ * @property-read DateTimeInterface|\DateTime|\DateTimeImmutable $to
  * @property-read string $description
  * @property-read string $address
  * @property-read bool $allDay
@@ -66,7 +66,7 @@ class Link
 
     /**
      * @param string $title
-     * @param DateTimeInterface $fromDate
+     * @param DateTimeInterface|\DateTime|\DateTimeImmutable $fromDate
      * @param int $numberOfDays
      *
      * @return Link

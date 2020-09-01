@@ -17,7 +17,7 @@ class WebOutlook implements Generator
     protected $dateFormat = 'Y-m-d';
     protected $dateTimeFormat = 'Y-m-d\TH:i:s\Z';
 
-    /** {@inheritdoc} */
+    /** {@inheritDoc} */
     public function generate(Link $link): string
     {
         $url = static::BASE_URL;
