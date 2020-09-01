@@ -52,9 +52,13 @@ class Ics implements Generator
 
         $url[] = 'END:VEVENT';
         $url[] = 'END:VCALENDAR';
-        $redirectLink = implode("\r\n", $url);
 
-        return 'data:text/calendar;charset=utf8;base64,'.base64_encode($redirectLink);
+        return $this->buildLink($url);
+    }
+
+    protected function buildLink(array $propertiesAndComponents): string
+    {
+        return 'data:text/calendar;charset=utf8;base64,'.base64_encode(implode("\r\n", $propertiesAndComponents));
     }
 
     /** @see https://tools.ietf.org/html/rfc5545.html#section-3.3.11 */
