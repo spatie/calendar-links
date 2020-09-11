@@ -35,8 +35,6 @@ class Google implements Generator
             $url .= '&location='.urlencode($link->address);
         }
 
-        $url .= '&sprop=&sprop=name:';
-
         return $url;
     }
 }
