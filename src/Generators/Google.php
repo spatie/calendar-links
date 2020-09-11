@@ -2,6 +2,7 @@
 
 namespace Spatie\CalendarLinks\Generators;
 
+use DateTimeZone;
 use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Link;
 
@@ -12,16 +13,17 @@ class Google implements Generator
 {
     /** @var string {@see https://www.php.net/manual/en/function.date.php} */
     protected $dateFormat = 'Ymd';
-    protected $dateTimeFormat = 'Ymd\THis';
+    protected $dateTimeFormat = 'Ymd\THis\Z';
 
     /** {@inheritDoc} */
     public function generate(Link $link): string
     {
         $url = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
 
+        $utcStartDateTime = (clone $link->from)->setTimezone(new DateTimeZone('UTC'));
+        $utcEndDateTime = (clone $link->to)->setTimezone(new DateTimeZone('UTC'));
         $dateTimeFormat = $link->allDay ? $this->dateFormat : $this->dateTimeFormat;
-        $url .= '&dates='.$link->from->format($dateTimeFormat).'/'.$link->to->format($dateTimeFormat);
-        $url .= '&ctz='.$link->from->getTimezone()->getName();
+        $url .= '&dates='.$utcStartDateTime->format($dateTimeFormat).'/'.$utcEndDateTime->format($dateTimeFormat);
 
         $url .= '&text='.urlencode($link->title);
 
