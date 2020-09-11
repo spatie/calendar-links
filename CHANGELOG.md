@@ -4,7 +4,7 @@ All notable changes to `calendar-links` will be documented in this file
 
 ## Unreleased
 ### Changed
- - Google: use UTC timezone to bypass problems with some timzone names unsupported by Google calendar
+ - Google: use UTC timezone to bypass problems with some timzone names unsupported by Google calendar (⚠️ backwards-incompatible if you extended Google Generator)
 
 ## 1.4.2 - 2020-09-01
 ### Changed
