@@ -17,6 +17,7 @@ use Spatie\CalendarLinks\Generators\Yahoo;
  * @property-read string $address
  * @property-read bool $allDay
  * @property-read string $url
+ * @property-read string $urlTitle
  * @property-read string $descriptionWithUrlFormat
  * @property-read string $descriptionWithUrl
  */
