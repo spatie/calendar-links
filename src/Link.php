@@ -16,6 +16,9 @@ use Spatie\CalendarLinks\Generators\Yahoo;
  * @property-read string $description
  * @property-read string $address
  * @property-read bool $allDay
+ * @property-read string $url
+ * @property-read string $descriptionWithUrlFormat
+ * @property-read string $descriptionWithUrl
  */
 class Link
 {
@@ -36,6 +39,15 @@ class Link
 
     /** @var string */
     protected $address;
+
+    /** @var string */
+    protected $url;
+
+    /** @var string */
+    protected $urlTitle;
+
+    /** @var string format  {description}, {url}, {urlTitle} */
+    protected $descriptionWithUrlFormat = '{url} {description}';
 
     public function __construct(string $title, DateTimeInterface $from, DateTimeInterface $to, bool $allDay = false)
     {
@@ -104,6 +116,70 @@ class Link
         return $this;
     }
 
+    /**
+     * @param string $url
+     *
+     * @return $this
+     */
+    public function url(string $url)
+    {
+        $this->url = $url;
+
+        return $this;
+    }
+
+    /**
+     * @param string $urlTitle
+     *
+     * @return $this
+     */
+    public function urlTitle(string $urlTitle)
+    {
+        $this->urlTitle = $urlTitle;
+
+        return $this;
+    }
+
+    public function getUrlTitle(): string
+    {
+        return $this->urlTitle ?? preg_replace('/^(https?:\/\/|mailto:)/', '', $this->url);
+    }
+
+    /**
+     * @param string $descriptionWithUrlFormat format string with the following placeholders
+     *                                         {description}, {url}, {urlTitle}
+     *
+     * @return $descriptionWithUrlFormat
+     */
+    public function descriptionWithUrlFormat(string $format)
+    {
+        $this->descriptionWithUrlFormat = $format;
+
+        return $this;
+    }
+
+    /**
+     * @param string|null $format overrides $this->descriptionWithUrlFormat
+     *                            {description}, {url}, {urlTitle}
+     *                            if null, $this->descriptionWithUrlFormat is used
+     *
+     * @return string description formated with url or one if the other is empty.
+     */
+    public function formatDescriptionWithUrl(?string $format = null): string
+    {
+        if (empty($this->url))
+            return $this->description;
+
+        if (empty($this->description))
+            return $this->url;
+
+        return strtr($format ?? $this->descriptionWithUrlFormat, [
+            '{description}' => $this->description,
+            '{url}' => $this->url,
+            '{urlTitle}' => $this->getUrlTitle(),
+        ]);
+    }
+
     public function formatWith(Generator $generator): string
     {
         return $generator->generate($this);
@@ -131,6 +207,13 @@ class Link
 
     public function __get($property)
     {
-        return $this->$property;
+        switch ($property) {
+            case 'descriptionWithUrl':
+                return $this->formatDescriptionWithUrl();
+            case 'urlTitle':
+                return $this->getUrlTitle();
+            default:
+                return $this->$property;
+        }
     }
 }

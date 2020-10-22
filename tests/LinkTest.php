@@ -72,4 +72,54 @@ Bring a dog, bring a frog';
 
         $this->assertEquals('Party Lane 1A, 1337 Funtown', $link->address);
     }
+
+    /** @test */
+    public function it_can_have_a_url()
+    {
+        $link = $this->createShortEventLink();
+
+        $this->assertEquals('https://example.com', $link->url);
+    }
+
+    /** @test */
+    public function it_can_have_a_description_with_url()
+    {
+        $link = $this->createShortEventLink();
+        $correctDescriptionWithUrl = 'https://example.com With balloons, clowns and stuff
+Bring a dog, bring a frog';
+
+        $this->assertEquals($correctDescriptionWithUrl, $link->descriptionWithUrl);
+    }
+
+    /** @test */
+    public function it_can_have_a_description_with_url_format()
+    {
+        $link = $this->createShortEventLink();
+
+        $this->assertEquals('{url} {description}', $link->descriptionWithUrlFormat);
+    }
+
+    /** @test */
+    public function it_can_have_a_custom_description_with_url_format()
+    {
+        $link = $this->createShortEventLink()->descriptionWithUrlFormat('{description} {url}');
+
+        $this->assertEquals('{description} {url}', $link->descriptionWithUrlFormat);
+    }
+
+    /** @test */
+    public function it_can_have_a_url_title()
+    {
+        $link = $this->createShortEventLink();
+
+        $this->assertEquals('example.com', $link->urlTitle);
+    }
+
+    /** @test */
+    public function it_can_have_a_custom_url_title()
+    {
+        $link = $this->createShortEventLink()->urlTitle('Example.com');
+
+        $this->assertEquals('Example.com', $link->urlTitle);
+    }
 }

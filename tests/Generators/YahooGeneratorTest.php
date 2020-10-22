@@ -30,7 +30,7 @@ class YahooGeneratorTest extends TestCase
             'Christmas and New Year',
             DateTime::createFromFormat('Y-m-d H:i', '2019-12-25 23:00', new DateTimeZone('UTC')),
             DateTime::createFromFormat('Y-m-d H:i', '2020-01-01 1:00', new DateTimeZone('UTC'))
-        )->description('Long event')->address('Party Lane 1A, 1337 Funtown');
+        )->description('Long event')->address('Party Lane 1A, 1337 Funtown')->url('https://example.com');
 
         $this->assertMatchesSnapshot($link->yahoo());
     }

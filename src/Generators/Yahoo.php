@@ -50,7 +50,7 @@ class Yahoo implements Generator
         $url .= '&title='.urlencode($link->title);
 
         if ($link->description) {
-            $url .= '&desc='.urlencode($link->description);
+            $url .= '&desc='.urlencode($link->descriptionWithUrl);
         }
 
         if ($link->address) {

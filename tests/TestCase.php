@@ -25,7 +25,7 @@ Bring a dog, bring a frog';
             'Birthday',
             $dateTimeClass::createFromFormat('Y-m-d H:i', '2018-02-01 09:00', new DateTimeZone('UTC')),
             $dateTimeClass::createFromFormat('Y-m-d H:i', '2018-02-01 18:00', new DateTimeZone('UTC'))
-        )->description($description)->address('Party Lane 1A, 1337 Funtown');
+        )->description($description)->address('Party Lane 1A, 1337 Funtown')->url('https://example.com');
     }
 
     protected function createMultipleDaysEventLink(bool $immutable = false): Link
@@ -40,7 +40,7 @@ Bring a dog, bring a frog';
             'New Year',
             $dateTimeClass::createFromFormat('Y-m-d H:i', '2019-12-31 23:00', new DateTimeZone('UTC')),
             $dateTimeClass::createFromFormat('Y-m-d H:i', '2020-01-01 1:00', new DateTimeZone('UTC'))
-        )->description($description)->address('Party Lane 1A, 1337 Funtown');
+        )->description($description)->address('Party Lane 1A, 1337 Funtown')->url('https://example.com');
     }
 
     protected function createSingleDayAllDayEventLink(bool $immutable = false): Link
@@ -54,7 +54,7 @@ Bring a dog, bring a frog';
         return Link::createAllDay(
             'Birthday',
             $dateTimeClass::createFromFormat('Y-m-d', '2018-02-01', new DateTimeZone('UTC'))
-        )->description($description)->address('Party Lane 1A, 1337 Funtown');
+        )->description($description)->address('Party Lane 1A, 1337 Funtown')->url('https://example.com');
     }
 
     protected function createMultipleDaysAllDayEventLink(bool $immutable = false): Link
@@ -69,6 +69,6 @@ Bring a dog, bring a frog';
             'Birthday',
             $dateTimeClass::createFromFormat('Y-m-d', '2018-02-01', new DateTimeZone('UTC')),
             5
-        )->description($description)->address('Party Lane 1A, 1337 Funtown');
+        )->description($description)->address('Party Lane 1A, 1337 Funtown')->url('https://example.com');
     }
 }

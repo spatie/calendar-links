@@ -1,1 +1,1 @@
-<?php return 'https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20180201T090000Z/20180201T180000Z&text=Birthday&details=With+balloons%2C+clowns+and+stuff%0ABring+a+dog%2C+bring+a+frog&location=Party+Lane+1A%2C+1337+Funtown';
+<?php return 'https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20180201T090000Z/20180201T180000Z&text=Birthday&details=With+balloons%2C+clowns+and+stuff%0ABring+a+dog%2C+bring+a+frog&location=Party+Lane+1A%2C+1337+Funtown&sprop=website:https%3A%2F%2Fexample.com&sprop=name:example.com';

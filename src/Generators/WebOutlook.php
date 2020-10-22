@@ -37,7 +37,7 @@ class WebOutlook implements Generator
         $url .= '&subject='.urlencode($link->title);
 
         if ($link->description) {
-            $url .= '&body='.urlencode($link->description);
+            $url .= '&body='.urlencode($link->descriptionWithUrl);
         }
 
         if ($link->address) {
