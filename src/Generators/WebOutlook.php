@@ -34,14 +34,14 @@ class WebOutlook implements Generator
             $url .= '&allday=true';
         }
 
-        $url .= '&subject='.urlencode($link->title);
+        $url .= '&subject='.urlencode(preg_replace('/\s/', '&#32', $link->title));
 
         if ($link->description) {
-            $url .= '&body='.urlencode($link->description);
+            $url .= '&body='.urlencode(preg_replace('/\s/', '&#32', $link->description));
         }
 
         if ($link->address) {
-            $url .= '&location='.urlencode($link->address);
+            $url .= '&location='.urlencode(preg_replace('/\s/', '&#32', $link->address));
         }
 
         return $url;
