@@ -34,16 +34,36 @@ class WebOutlook implements Generator
             $url .= '&allday=true';
         }
 
-        $url .= '&subject='.urlencode(preg_replace('/\s/', '&#32', $link->title));
+        $url .= '&subject='.urlencode($this->sanitizeText($link->title));
 
         if ($link->description) {
-            $url .= '&body='.urlencode(preg_replace('/\s/', '&#32', $link->description));
+            $url .= '&body='.urlencode($this->sanitizeText($link->description));
         }
 
         if ($link->address) {
-            $url .= '&location='.urlencode(preg_replace('/\s/', '&#32', $link->address));
+            $url .= '&location='.urlencode($this->sanitizeText($link->address));
         }
 
         return $url;
+    }
+
+    /**
+     * Generate an text without html entity code and hexadecimal code instead spaces.
+     * @param string $text
+     * @return string
+     */
+    private function sanitizeText(string $text): string
+    {
+        $replaceList = [
+            '/\s/' => '&#32;',
+        ];
+
+        $resultText = html_entity_decode($text);
+
+        foreach ($replaceList as $pattern => $newValue) {
+            $resultText = preg_replace($pattern, $newValue, $resultText);
+        }
+
+        return $resultText;
     }
 }
