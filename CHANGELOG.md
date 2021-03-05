@@ -3,8 +3,13 @@
 All notable changes to `calendar-links` will be documented in this file
 
 ## Unreleased
+
+## 1.4.3 - 2021-03-05
 ### Changed
  - Google: use UTC timezone to bypass problems with some timzone names unsupported by Google calendar (⚠️ backwards-incompatible if you extended Google Generator)
+
+### Fixed
+ - Spaces replaced by "+" on Outlook.com #109
 
 ## 1.4.2 - 2020-09-01
 ### Changed
