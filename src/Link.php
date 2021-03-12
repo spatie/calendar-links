@@ -43,7 +43,7 @@ class Link
         $this->allDay = $allDay;
 
         if ($to < $from) {
-            throw InvalidLink::invalidDateRange($from, $to);
+            throw InvalidLink::invalidDateRange($to, $from);
         }
 
         $this->from = clone $from;
