@@ -23,38 +23,25 @@ class Yahoo implements Generator
         $dateTimeFormat = $link->allDay ? $this->dateFormat : $this->dateTimeFormat;
 
         if ($link->allDay && $link->from->diff($link->to)->days === 1) {
-            $url .= '&st='.$link->from->format($dateTimeFormat);
+            $url .= '&ST='.$link->from->format($dateTimeFormat);
             $url .= '&dur=allday';
         } else {
+
             $utcStartDateTime = (clone $link->from)->setTimezone(new DateTimeZone('UTC'));
             $utcEndDateTime = (clone $link->to)->setTimezone(new DateTimeZone('UTC'));
+            $url .= '&ST='.$utcStartDateTime->format($dateTimeFormat);
+            $url .= '&ET='.$utcEndDateTime->format($dateTimeFormat);
 
-            $url .= '&st='.$utcStartDateTime->format($dateTimeFormat);
-
-            /**
-             * Yahoo has a bug on parsing end date parameter: it ignores timezone, assuming
-             * that it's specified in user's tz. In order to bypass it, we can use duration ("dur")
-             * parameter instead of "et", but this parameter has a limitation cause by it's format HHmm:
-             * the max duration is 99hours and 59 minutes (dur=9959).
-             */
-            $maxDurationInSecs = (59 * 60 * 60) + (59 * 60);
-            $canUseDuration = $maxDurationInSecs > ($utcEndDateTime->getTimestamp() - $utcStartDateTime->getTimestamp());
-            if ($canUseDuration) {
-                $dateDiff = $utcStartDateTime->diff($utcEndDateTime);
-                $url .= '&dur='.$dateDiff->format('%H%I');
-            } else {
-                $url .= '&et='.$utcEndDateTime->format($dateTimeFormat);
-            }
         }
 
-        $url .= '&title='.urlencode($link->title);
+        $url .= '&TITLE='.rawurlencode($link->title);
 
         if ($link->description) {
-            $url .= '&desc='.urlencode($link->description);
+            $url .= '&DESC='.rawurlencode($link->description);
         }
 
         if ($link->address) {
-            $url .= '&in_loc='.urlencode($link->address);
+            $url .= '&in_loc='.rawurlencode($link->address);
         }
 
         return $url;
