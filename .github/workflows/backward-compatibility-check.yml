@@ -1,5 +1,5 @@
 on: [push]
-name: Test
+name: BC check
 jobs:
   roave_bc_check:
     name: Roave BC Check
