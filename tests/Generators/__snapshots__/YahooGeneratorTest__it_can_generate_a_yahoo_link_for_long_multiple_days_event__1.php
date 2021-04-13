@@ -1,1 +1,1 @@
-<?php return 'https://calendar.yahoo.com/?v=60&view=d&type=20&st=20191225T230000Z&et=20200101T010000Z&title=Christmas+and+New+Year&desc=Long+event&in_loc=Party+Lane+1A%2C+1337+Funtown';
+<?php return 'https://calendar.yahoo.com/?v=60&view=d&type=20&ST=20191225T230000Z&ET=20200101T010000Z&TITLE=Christmas%20and%20New%20Year&DESC=Long%20event&in_loc=Party%20Lane%201A%2C%201337%20Funtown';
