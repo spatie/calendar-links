@@ -19,20 +19,11 @@ class Yahoo implements Generator
     public function generate(Link $link): string
     {
         $url = 'https://calendar.yahoo.com/?v=60&view=d&type=20';
-
-        $dateTimeFormat = $link->allDay ? $this->dateFormat : $this->dateTimeFormat;
-
-        if ($link->allDay && $link->from->diff($link->to)->days === 1) {
-            $url .= '&ST='.$link->from->format($dateTimeFormat);
-            $url .= '&dur=allday';
-        } else {
-
-            $utcStartDateTime = (clone $link->from)->setTimezone(new DateTimeZone('UTC'));
-            $utcEndDateTime = (clone $link->to)->setTimezone(new DateTimeZone('UTC'));
-            $url .= '&ST='.$utcStartDateTime->format($dateTimeFormat);
-            $url .= '&ET='.$utcEndDateTime->format($dateTimeFormat);
-
-        }
+        $dateTimeFormat = $this->dateTimeFormat;
+        $utcStartDateTime = (clone $link->from)->setTimezone(new DateTimeZone('UTC'));
+        $utcEndDateTime = (clone $link->to)->setTimezone(new DateTimeZone('UTC'));
+        $url .= '&ST='.$utcStartDateTime->format($dateTimeFormat);
+        $url .= '&ET='.$utcEndDateTime->format($dateTimeFormat);
 
         $url .= '&TITLE='.rawurlencode($link->title);
 
