@@ -29,20 +29,30 @@ class Yahoo implements Generator
         } else {
             $utcStartDateTime = (clone $link->from)->setTimezone(new DateTimeZone('UTC'));
             $utcEndDateTime = (clone $link->to)->setTimezone(new DateTimeZone('UTC'));
-            $url .= '&ST=' . $utcStartDateTime->format($dateTimeFormat);
-            $url .= '&ET=' . $utcEndDateTime->format($dateTimeFormat);
+            $url .= '&ST='.$utcStartDateTime->format($dateTimeFormat);
+            $url .= '&ET='.$utcEndDateTime->format($dateTimeFormat);
         }
 
-        $url .= '&TITLE='.rawurlencode($link->title);
+        $url .= '&TITLE='.$this->sanitizeText($link->title);
 
         if ($link->description) {
-            $url .= '&DESC='.rawurlencode($link->description);
+            $url .= '&DESC='.$this->sanitizeText($link->description);
         }
 
         if ($link->address) {
-            $url .= '&in_loc='.rawurlencode($link->address);
+            $url .= '&in_loc='.$this->sanitizeText($link->address);
         }
 
         return $url;
+    }
+
+    /**
+     * Prepare text to use used in URL and parsed by the service.
+     * @param string $text
+     * @return string
+     */
+    private function sanitizeText(string $text): string
+    {
+        return rawurlencode($text);
     }
 }
