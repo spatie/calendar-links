@@ -43,7 +43,7 @@ class Link
         $this->allDay = $allDay;
 
         if ($to < $from) {
-            throw InvalidLink::invalidDateRange($from, $to);
+            throw InvalidLink::negativeDateRange($from, $to);
         }
 
         $this->from = clone $from;
@@ -72,7 +72,7 @@ class Link
      * @return Link
      * @throws InvalidLink
      */
-    public static function createAllDay(string $title, DateTimeInterface $fromDate, int $numberOfDays = 1): self
+    public static function createAllDay(string $title, \DateTimeInterface $fromDate, int $numberOfDays = 1): self
     {
         $from = (clone $fromDate)->modify('midnight');
         $to = (clone $from)->modify("+$numberOfDays days");
