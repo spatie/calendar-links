@@ -2,7 +2,6 @@
 
 namespace Spatie\CalendarLinks;
 
-use DateTimeInterface;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
 use Spatie\CalendarLinks\Generators\Google;
 use Spatie\CalendarLinks\Generators\Ics;
@@ -11,8 +10,8 @@ use Spatie\CalendarLinks\Generators\Yahoo;
 
 /**
  * @property-read string $title
- * @property-read DateTimeInterface|\DateTime|\DateTimeImmutable $from
- * @property-read DateTimeInterface|\DateTime|\DateTimeImmutable $to
+ * @property-read \DateTimeInterface|\DateTime|\DateTimeImmutable $from
+ * @property-read \DateTimeInterface|\DateTime|\DateTimeImmutable $to
  * @property-read string $description
  * @property-read string $address
  * @property-read bool $allDay
@@ -37,7 +36,7 @@ class Link
     /** @var string */
     protected $address;
 
-    public function __construct(string $title, DateTimeInterface $from, DateTimeInterface $to, bool $allDay = false)
+    public function __construct(string $title, \DateTimeInterface $from, \DateTimeInterface $to, bool $allDay = false)
     {
         $this->title = $title;
         $this->allDay = $allDay;
@@ -59,14 +58,14 @@ class Link
      * @return static
      * @throws InvalidLink
      */
-    public static function create(string $title, DateTimeInterface $from, DateTimeInterface $to, bool $allDay = false)
+    public static function create(string $title, \DateTimeInterface $from, \DateTimeInterface $to, bool $allDay = false)
     {
         return new static($title, $from, $to, $allDay);
     }
 
     /**
      * @param string $title
-     * @param DateTimeInterface|\DateTime|\DateTimeImmutable $fromDate
+     * @param \DateTimeInterface|\DateTime|\DateTimeImmutable $fromDate
      * @param int $numberOfDays
      *
      * @return Link
