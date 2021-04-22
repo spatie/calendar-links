@@ -7,7 +7,7 @@ use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Link;
 
 /**
- * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/master/services/outlook-live.md
+ * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/master/services/outlook-web.md
  */
 class WebOutlook implements Generator
 {
