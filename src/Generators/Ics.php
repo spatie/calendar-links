@@ -50,6 +50,10 @@ class Ics implements Generator
             $url[] = 'LOCATION:'.$this->escapeString($link->address);
         }
 
+        if (isset($this->options['URL'])) {
+            $url[] = 'URL;VALUE=URI:'.$this->options['URL'];
+        }
+
         $url[] = 'END:VEVENT';
         $url[] = 'END:VCALENDAR';
 
