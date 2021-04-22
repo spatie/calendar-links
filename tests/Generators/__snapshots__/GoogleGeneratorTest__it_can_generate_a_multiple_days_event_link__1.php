@@ -1,1 +1,0 @@
-<?php return 'https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20191231T230000Z/20200101T010000Z&text=New+Year&details=With+balloons%2C+clowns+and+stuff%0ABring+a+dog%2C+bring+a+frog&location=Party+Lane+1A%2C+1337+Funtown';
