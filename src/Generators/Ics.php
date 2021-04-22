@@ -31,7 +31,6 @@ class Ics implements Generator
             'BEGIN:VEVENT',
             'UID:'.($this->options['UID'] ?? $this->generateEventUid($link)),
             'SUMMARY:'.$this->escapeString($link->title),
-            'URL;VALUE=URI:'.($this->options['URL'] ?? ''),
         ];
 
         $dateTimeFormat = $link->allDay ? $this->dateFormat : $this->dateTimeFormat;
@@ -49,6 +48,10 @@ class Ics implements Generator
         }
         if ($link->address) {
             $url[] = 'LOCATION:'.$this->escapeString($link->address);
+        }
+
+        if (isset($this->options['URL'])) {
+            $url[] = 'URL;VALUE=URI:'.$this->options['URL'];
         }
 
         $url[] = 'END:VEVENT';
