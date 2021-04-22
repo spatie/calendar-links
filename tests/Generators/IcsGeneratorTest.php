@@ -13,8 +13,7 @@ class IcsGeneratorTest extends TestCase
     protected function generator(): Generator
     {
         // extend base class just to make output more readable and simplify reviewing of the snapshot diff
-        return new class extends Ics
-        {
+        return new class extends Ics {
             protected function buildLink(array $propertiesAndComponents): string
             {
                 return implode("\r\n", $propertiesAndComponents);
