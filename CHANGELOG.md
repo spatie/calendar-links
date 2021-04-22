@@ -4,9 +4,10 @@ All notable changes to `calendar-links` will be documented in this file
 
 ## Unreleased
 
-## 1.4.5 - 2021-04-22
+## 1.5.0 - 2021-04-22
 ### Changed
-- Add iCal: option URL for ics() as URL;VALUE=URI: to display links in Calendar macOS
+- ICS: support URLs as option (@gulios)
+- ICS: support all day events spanning multiple days (@mrshowerman)
 
 ## 1.4.4 - 2021-04-13
 ### Fixed
