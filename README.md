@@ -36,20 +36,20 @@ We highly appreciate you sending us a postcard from your hometown, mentioning wh
 
 You can install the package via composer:
 
-```bash
+```sh
 composer require spatie/calendar-links
 ```
 
 ## Usage
 
-``` php
+```php
 <?php
 use Spatie\CalendarLinks\Link;
 
 $from = DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00');
 $to = DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00');
 
-$link = Link::create('Sebastian\'s birthday', $from, $to)
+$link = Link::create('Sebastian’s birthday', $from, $to)
     ->description('Cookies & cocktails!')
     ->address('Kruikstraat 22, 2018 Antwerpen');
 
@@ -65,7 +65,7 @@ echo $link->webOutlook();
 // Generate a data uri for an ics file (for iCal & Outlook)
 echo $link->ics();
 
-// Generate a data uri using arbitrary generator:
+// Generate a data URI using arbitrary generator:
 echo $link->formatWith(new \Your\Generator());
 ```
 
@@ -77,7 +77,7 @@ Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recen
 
 ## Testing
 
-``` bash
+```sh
 composer test
 ```
 
