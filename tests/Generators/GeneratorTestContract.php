@@ -12,15 +12,6 @@ trait GeneratorTestContract
     abstract protected function linkMethodName(): string;
 
     /** @test */
-    public function it_has_a_valid_method_in_link_class()
-    {
-        $link = $this->createShortEventLink();
-
-        $this->assertTrue(method_exists($link, $this->linkMethodName()));
-        $this->assertSame($this->generator()->generate($link), $link->{$this->linkMethodName()}());
-    }
-
-    /** @test */
     public function it_can_generate_a_short_event_link()
     {
         $this->assertMatchesSnapshot(
