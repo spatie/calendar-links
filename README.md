@@ -71,6 +71,12 @@ echo $link->formatWith(new \Your\Generator());
 
 > ⚠️ ICS download links don't work in IE and EdgeHTML-based Edge browsers, see [details](https://github.com/spatie/calendar-links/issues/71).
 
+## Package principles
+
+1. it should produce a small output (too keep pagesize small)
+2. it should be fast (no any external heavy dependencies)
+3. all features should be supported by at least 2 generators (different services have different features)
+
 ## Changelog
 
 Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.

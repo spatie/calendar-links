@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: "Something not working as expected? 🐞"
+about: "something didn’t work as expected? 🐞"
 title: ''
 labels: "bug"
 assignees: ''
@@ -11,12 +11,14 @@ assignees: ''
 
 ## Context
 
-1. PHP Version: 
-1. Package version: 
+1. PHP Version: <!-- php -v --!>
+1. Package version: <!-- composer show spatie/calendar-links | grep 'versions' -->
+
 
 ## Describe the Bug
 
 <!-- Steps to reproduce -->
+
 
 ## Expected Behavior
 
