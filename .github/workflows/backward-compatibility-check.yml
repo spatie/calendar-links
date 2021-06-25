@@ -1,12 +1,15 @@
 on: [push]
-name: BC check
+name: Backward compatibility check
+
 jobs:
-  roave_bc_check:
-    name: Roave BC Check
+  bc_check:
+    name: Backward compatibility check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v2
+
       - name: fetch tags
         run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
       - name: Roave BC Check
         uses: docker://nyholm/roave-bc-check-ga
