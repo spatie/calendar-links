@@ -32,6 +32,7 @@ class Ics implements Generator
             'UID:'.($this->options['UID'] ?? $this->generateEventUid($link)),
             'SEQUENCE:'.($this->options['SEQUENCE'] ?? ''),
             'STATUS:'.($this->options['STATUS'] ?? ''),
+            'METHOD:'.($this->options['METHOD'] ?? ''),
             'SUMMARY:'.$this->escapeString($link->title),
         ];
 
