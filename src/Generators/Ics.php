@@ -28,11 +28,11 @@ class Ics implements Generator
         $url = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
+            'METHOD:'.($this->options['METHOD'] ?? ''),
             'BEGIN:VEVENT',
             'UID:'.($this->options['UID'] ?? $this->generateEventUid($link)),
             'SEQUENCE:'.($this->options['SEQUENCE'] ?? ''),
             'STATUS:'.($this->options['STATUS'] ?? ''),
-            'METHOD:'.($this->options['METHOD'] ?? ''),
             'SUMMARY:'.$this->escapeString($link->title),
         ];
 
