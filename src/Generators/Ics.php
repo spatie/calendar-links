@@ -30,7 +30,7 @@ class Ics implements Generator
             'VERSION:2.0',
             'METHOD:'.($this->options['METHOD'] ?? ''),
             'BEGIN:VEVENT',
-            'ATTENDEE:ATTENDEE;ROLE=REQ-PARTICIPANT;CN='.($this->options['ATTENDEE'] ?? '').':MAILTO:'.($this->options['ATTENDEE'] ?? '')
+            'ATTENDEE:ATTENDEE;ROLE=REQ-PARTICIPANT;CN='.($this->options['ATTENDEE'] ?? '').':MAILTO:'.($this->options['ATTENDEE'] ?? ''),
             'UID:'.($this->options['UID'] ?? $this->generateEventUid($link)),
             'SEQUENCE:'.($this->options['SEQUENCE'] ?? ''),
             'STATUS:'.($this->options['STATUS'] ?? ''),
