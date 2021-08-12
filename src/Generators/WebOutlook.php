@@ -11,7 +11,7 @@ use Spatie\CalendarLinks\Link;
  */
 class WebOutlook implements Generator
 {
-    protected const BASE_URL = 'https://outlook.live.com/calendar/deeplink/compose?path=/calendar/action/compose&rru=addevent';
+    protected const BASE_URL = 'https://outlook.office.com/calendar/deeplink/compose?path=/calendar/action/compose&rru=addevent';
 
     /** @var string {@see https://www.php.net/manual/en/function.date.php} */
     protected $dateFormat = 'Y-m-d';
