@@ -27,8 +27,7 @@ class Google implements Generator
         
         // Add timezone name if it is specified in both from and to dates and is the same for both
         if (
-            $link->from->getTimezone() !== false
-            && $link->to->getTimezone() !== false
+            $link->from->getTimezone() && $link->to->getTimezone()
             && $link->from->getTimezone()->getName() === $link->to->getTimezone()->getName()
         ) {
             $url .= '&ctz=' . $link->from->getTimezone()->getName();
