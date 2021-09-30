@@ -59,8 +59,11 @@ echo $link->google();
 // Generate a link to create an event on Yahoo calendar
 echo $link->yahoo();
 
-// Generate a link to create an event on outlook.com calendar
+// Generate a link to create an event on outlook.live.com calendar
 echo $link->webOutlook();
+
+// Generate a link to create an event on outlook.office365.com calendar
+echo $link->webOffice365();
 
 // Generate a data uri for an ics file (for iCal & Outlook)
 echo $link->ics();

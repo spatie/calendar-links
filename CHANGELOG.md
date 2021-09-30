@@ -4,6 +4,10 @@ All notable changes to `calendar-links` will be documented in this file
 
 ## Unreleased
 
+## 1.6.1 - 2021-09-30
+### Changed
+- Add support for outlook.office365.com $link->webOffice365();
+
 ## 1.6.0 - 2021-04-22
 ### Changed
 - Drop support for PHP 7.2 and PHP 7.3
