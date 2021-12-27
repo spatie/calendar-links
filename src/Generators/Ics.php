@@ -56,6 +56,10 @@ class Ics implements Generator
 
         $url[] = 'END:VEVENT';
         $url[] = 'END:VCALENDAR';
+        
+        if ($this->options['export']) {
+          return implode("\r\n", $url);
+        }
 
         return $this->buildLink($url);
     }
