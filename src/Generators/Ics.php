@@ -12,7 +12,7 @@ class Ics implements Generator
 {
     /** @var string {@see https://www.php.net/manual/en/function.date.php} */
     protected $dateFormat = 'Ymd';
-    protected $dateTimeFormat = 'e:Ymd\THis';
+    protected $dateTimeFormat = 'Ymd\THis';
 
     /** @var array */
     protected $options = [];
@@ -28,19 +28,21 @@ class Ics implements Generator
         $url = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
+            'PRODID:-//spatie/calendar-links',
             'BEGIN:VEVENT',
             'UID:'.($this->options['UID'] ?? $this->generateEventUid($link)),
             'SUMMARY:'.$this->escapeString($link->title),
+            'DTSTAMP:'.gmdate($this->dateTimeFormat).'Z'
         ];
 
         $dateTimeFormat = $link->allDay ? $this->dateFormat : $this->dateTimeFormat;
 
         if ($link->allDay) {
-            $url[] = 'DTSTART:'.$link->from->format($dateTimeFormat);
+            $url[] = 'DTSTART:'.gmdate($dateTimeFormat, $link->from->getTimestamp()).'Z';
             $url[] = 'DURATION:P'.(max(1, $link->from->diff($link->to)->days)).'D';
         } else {
-            $url[] = 'DTSTART;TZID='.$link->from->format($dateTimeFormat);
-            $url[] = 'DTEND;TZID='.$link->to->format($dateTimeFormat);
+            $url[] = 'DTSTART:'.gmdate($dateTimeFormat, $link->from->getTimestamp()).'Z';
+            $url[] = 'DTEND:'.gmdate($dateTimeFormat, $link->to->getTimestamp()).'Z';
         }
 
         if ($link->description) {
