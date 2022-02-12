@@ -3,20 +3,20 @@
 namespace Spatie\CalendarLinks\Tests\Generators;
 
 use Spatie\CalendarLinks\Generator;
-use Spatie\CalendarLinks\Generators\WebOffice365;
+use Spatie\CalendarLinks\Generators\WebOffice;
 use Spatie\CalendarLinks\Tests\TestCase;
 
-class WebOffice365GeneratorTest extends TestCase
+class WebOfficeGeneratorTest extends TestCase
 {
     use GeneratorTestContract;
 
     protected function generator(): Generator
     {
-        return new WebOffice365();
+        return new WebOffice();
     }
 
     protected function linkMethodName(): string
     {
-        return 'webOffice365';
+        return 'webOffice';
     }
 }
