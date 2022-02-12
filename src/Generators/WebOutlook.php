@@ -41,7 +41,7 @@ class WebOutlook implements Generator
         }
 
         if ($link->address) {
-            $url .= '&location='.urlencode($this->sanitizeText($link->address));
+            $url .= '&location='.urlencode($link->address);
         }
 
         return $url;

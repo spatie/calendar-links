@@ -41,7 +41,8 @@ class WebOffice implements Generator
         }
 
         if ($link->address) {
-            $url .= '&location='.urlencode($this->sanitizeText($link->address));
+            // The Location field is not HTML code
+            $url .= '&location='.urlencode($link->address);
         }
 
         return $url;
