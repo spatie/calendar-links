@@ -4,6 +4,10 @@ All notable changes to `calendar-links` will be documented in this file
 
 ## Unreleased
 
+## 1.6.1 - 2021-09-30
+### Changed
+- Add support for outlook.office.com $link->webOffice();
+
 ## 1.6.0 - 2021-04-22
 ### Changed
 - Drop support for PHP 7.2 and PHP 7.3
@@ -33,7 +37,7 @@ All notable changes to `calendar-links` will be documented in this file
 ### Changed
  - Simplify extending of WebOutlook (e.g. for Office365)
  - Yahoo: use `allday` parameter only for a single-day events
- - Improve exception hierarchy: `InvalidLink` now extends `\InvalidArgumentException` 
+ - Improve exception hierarchy: `InvalidLink` now extends `\InvalidArgumentException`
 
 ### Added
  - Add more tests, reorganize existing
