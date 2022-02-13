@@ -41,6 +41,7 @@ class WebOutlook implements Generator
         }
 
         if ($link->address) {
+            // The Location field is not HTML code
             $url .= '&location='.urlencode($link->address);
         }
 
@@ -48,7 +49,7 @@ class WebOutlook implements Generator
     }
 
     /**
-     * Generate an text without html entity code and hexadecimal code instead spaces.
+     * Generate a text without html entity code and hexadecimal code instead spaces.
      * @param string $text
      * @return string
      */

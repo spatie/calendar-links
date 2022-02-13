@@ -49,7 +49,7 @@ class WebOffice implements Generator
     }
 
     /**
-     * Generate an text without html entity code and hexadecimal code instead spaces.
+     * Generate a text without html entity code and hexadecimal code instead spaces.
      * @param string $text
      * @return string
      */
