@@ -19,7 +19,7 @@ jobs:
       -   name: Fix style
           uses: docker://oskarstark/php-cs-fixer-ga
           with:
-            args: --config=.php-cs-fixer --allow-risky=yes
+            args: --config=.php-cs-fixer.php --allow-risky=yes
 
       -   name: Commit changes
           uses: stefanzweifel/git-auto-commit-action@v4
