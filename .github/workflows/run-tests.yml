@@ -1,6 +1,6 @@
 # https://help.github.com/en/categories/automating-your-workflow-with-github-actions
 
-name: CI
+name: Run Tests
 
 on:
   - pull_request
