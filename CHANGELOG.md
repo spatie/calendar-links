@@ -3,10 +3,12 @@
 All notable changes to `calendar-links` will be documented in this file
 
 ## Unreleased
+ - ... [add your changes here]
 
-## 1.6.1 - 2021-09-30
+## 1.7.0 - 2022-02-13
 ### Changed
-- Add support for outlook.office.com $link->webOffice();
+- New: Add support for outlook.office.com $link->webOffice(); (@dravenk and @gulios)
+- Google: Add timezone name if it is specified in both `from` and `to` dates and is the same for both (@bradyemerson)
 
 ## 1.6.0 - 2021-04-22
 ### Changed
