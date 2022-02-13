@@ -9,9 +9,9 @@ use Spatie\CalendarLinks\Link;
 /**
  * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/master/services/outlook-web.md
  */
-class WebOutlook implements Generator
+class WebOffice implements Generator
 {
-    protected const BASE_URL = 'https://outlook.live.com/calendar/deeplink/compose?path=/calendar/action/compose&rru=addevent';
+    protected const BASE_URL = 'https://outlook.office.com/calendar/deeplink/compose?path=/calendar/action/compose&rru=addevent';
 
     /** @var string {@see https://www.php.net/manual/en/function.date.php} */
     protected $dateFormat = 'Y-m-d';
@@ -41,6 +41,7 @@ class WebOutlook implements Generator
         }
 
         if ($link->address) {
+            // The Location field is not HTML code
             $url .= '&location='.urlencode($link->address);
         }
 
