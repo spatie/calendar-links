@@ -78,9 +78,9 @@ Bring a dog, bring a frog';
 Bring a dog, bring a frog.
 There will be line breaks on it.
 Project link <a href="https://github.com/spatie/calendar-links">calendar-links</a>
-<br>
 <img src="https://github-ads.s3.eu-central-1.amazonaws.com/calendar-links.jpg?t=1" width="419px" />
-Thanks you.
+<br>
+Thank you.
 ';
 
         /** @var \DateTimeInterface $dateTimeClass */
