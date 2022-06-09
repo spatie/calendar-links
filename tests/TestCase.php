@@ -71,4 +71,25 @@ Bring a dog, bring a frog';
             5
         )->description($description)->address('Party Lane 1A, 1337 Funtown');
     }
+
+    protected function createDescriptionIsHTMLcodeEventLink(bool $immutable = false): Link
+    {
+        $description = 'With balloons, clowns and stuff
+Bring a dog, bring a frog.
+There will be line breaks on it.
+Project link <a href="https://github.com/spatie/calendar-links">calendar-links</a>
+<img src="https://github-ads.s3.eu-central-1.amazonaws.com/calendar-links.jpg?t=1" width="419px" />
+<br>
+Thank you.
+';
+
+        /** @var \DateTimeInterface $dateTimeClass */
+        $dateTimeClass = $immutable ? DateTimeImmutable::class : DateTime::class;
+
+        return Link::create(
+            'Birthday Party +1',
+            $dateTimeClass::createFromFormat('Y-m-d H:i', '2018-02-01 09:00', new DateTimeZone('UTC')),
+            $dateTimeClass::createFromFormat('Y-m-d H:i', '2018-02-01 18:00', new DateTimeZone('UTC'))
+        )->description($description)->address('Party Lane 1A, 1337 Funtown');
+    }
 }

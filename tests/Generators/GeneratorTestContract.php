@@ -62,4 +62,17 @@ trait GeneratorTestContract
             $this->generator()->generate($this->createMultipleDaysAllDayEventLink(true))
         );
     }
+
+    /** @test */
+    public function it_can_generate_a_description_is_html_code_event_link_with_allday_flag()
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator()->generate($this->createDescriptionIsHTMLcodeEventLink())
+        );
+
+        $this->assertSame(
+            $this->generator()->generate($this->createDescriptionIsHTMLcodeEventLink(false)),
+            $this->generator()->generate($this->createDescriptionIsHTMLcodeEventLink(true))
+        );
+    }
 }
