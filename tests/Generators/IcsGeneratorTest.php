@@ -10,10 +10,14 @@ class IcsGeneratorTest extends TestCase
 {
     use GeneratorTestContract;
 
-    protected function generator(): Generator
+    /**
+     * @param array $options @see \Spatie\CalendarLinks\Generators\Ics::__construct
+     * @return \Spatie\CalendarLinks\Generator
+     */
+    protected function generator(array $options = []): Generator
     {
         // extend base class just to make output more readable and simplify reviewing of the snapshot diff
-        return new class extends Ics {
+        return new class($options) extends Ics {
             protected function buildLink(array $propertiesAndComponents): string
             {
                 return implode("\r\n", $propertiesAndComponents);
@@ -30,7 +34,7 @@ class IcsGeneratorTest extends TestCase
     public function it_can_generate_an_ics_link_with_custom_uid()
     {
         $this->assertMatchesSnapshot(
-            $this->createShortEventLink()->ics(['UID' => 'random-uid'])
+            $this->generator(['UID' => 'random-uid'])->generate($this->createShortEventLink())
         );
     }
 }
