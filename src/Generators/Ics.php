@@ -27,8 +27,8 @@ class Ics implements Generator
     {
         $url = [
             'BEGIN:VCALENDAR',
-            'VERSION:2.0',
-            'PRODID:Spatie Calendar Links',
+            'VERSION:2.0', // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.7.4
+            'PRODID:Spatie calendar-links', // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.7.3
             'BEGIN:VEVENT',
             'UID:'.($this->options['UID'] ?? $this->generateEventUid($link)),
             'SUMMARY:'.$this->escapeString($link->title),
