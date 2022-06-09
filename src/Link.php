@@ -42,7 +42,7 @@ class Link
         $this->title = $title;
         $this->allDay = $allDay;
 
-        if ($to < $from) {
+        if ($from > $to) {
             throw InvalidLink::negativeDateRange($from, $to);
         }
 
