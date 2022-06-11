@@ -37,4 +37,19 @@ class IcsGeneratorTest extends TestCase
             $this->generator(['UID' => 'random-uid'])->generate($this->createShortEventLink())
         );
     }
+
+    /** @test */
+    public function it_has_a_product_id()
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator(['PRODID' => 'Spatie calendar-links'])->generate($this->createShortEventLink())
+        );
+    }
+    /** @test */
+    public function it_has_a_product_dtstamp()
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator(['DTSTAMP' => 'TZID=UTC:20180201T090000'])->generate($this->createShortEventLink())
+        );
+    }
 }
