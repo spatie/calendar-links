@@ -45,6 +45,7 @@ class IcsGeneratorTest extends TestCase
             $this->generator(['PRODID' => 'Spatie calendar-links'])->generate($this->createShortEventLink())
         );
     }
+
     /** @test */
     public function it_has_a_product_dtstamp()
     {
