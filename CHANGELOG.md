@@ -2,13 +2,29 @@
 
 All notable changes to `calendar-links` will be documented in this file
 
-## Unreleased
- - ... [add your changes here]
+## 1.8.0 - 2022-08-20
+### Changed
+ - ICS: Add `PRODID` and `DTSTAMP` required parameters to make ICS valid by @makbeta
+ - ICS: Fix HTML description for Outlook 2016 by @karthikbodu
+ - Outlook: extract common logic for `WebOffice` and `WebOutlook` into a parent class by @lptn
+
+### Fixed
+- Simplify format of test snapshots: do not use base64 by @lptn
+- Fix typo in README by @fabpot
+
+## 1.7.2 - 2022-06-09
+### Fixed
+ - Outlook: Fixed #148 Support HTML-formatted description by @dravenk in #150
+
+## 1.7.1 - 2022-02-14
+### Changed
+ - Outlook: Fixed location field characters (by @dravenk in #144)
+ - Add missing dependency of php-cs-fixer and update it
 
 ## 1.7.0 - 2022-02-13
 ### Changed
-- New: Add support for outlook.office.com $link->webOffice(); (@dravenk and @gulios)
-- Google: Add timezone name if it is specified in both `from` and `to` dates and is the same for both (@bradyemerson)
+ - New: Add support for outlook.office.com $link->webOffice(); (@dravenk and @gulios)
+ - Google: Add timezone name if it is specified in both `from` and `to` dates and is the same for both (@bradyemerson)
 
 ## 1.6.0 - 2021-04-22
 ### Changed
@@ -16,8 +32,8 @@ All notable changes to `calendar-links` will be documented in this file
 
 ## 1.5.0 - 2021-04-22
 ### Changed
-- ICS: support URLs as option (@gulios)
-- ICS: support all day events spanning multiple days (@mrshowerman)
+ - ICS: support URLs as option (@gulios)
+ - ICS: support all day events spanning multiple days (@mrshowerman)
 
 ## 1.4.4 - 2021-04-13
 ### Fixed
@@ -96,5 +112,4 @@ All notable changes to `calendar-links` will be documented in this file
 - Use `\n` instead of `%0A` when generating an ics file
 
 ## 1.0.0 - 2017-09-29
-
 - initial release
