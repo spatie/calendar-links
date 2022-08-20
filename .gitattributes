@@ -2,6 +2,7 @@
 # https://www.kernel.org/pub/software/scm/git/docs/gitattributes.html
 
 # Ignore all test and documentation with "export-ignore".
+/.github            export-ignore
 /.gitattributes     export-ignore
 /.gitignore         export-ignore
 /.travis.yml        export-ignore
@@ -9,3 +10,9 @@
 /.scrutinizer.yml   export-ignore
 /tests              export-ignore
 /.editorconfig      export-ignore
+
+# better diffs https://php.watch/articles/composer-gitattributes#diff-php
+*.php diff=php
+
+# Declare files that will always have CRLF line endings on checkout.
+*.text text eol=crlf
