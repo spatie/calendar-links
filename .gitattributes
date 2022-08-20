@@ -15,4 +15,4 @@
 *.php diff=php
 
 # Declare files that will always have CRLF line endings on checkout.
-*.text text eol=crlf
+tests/**/__snapshots__/** text eol=lf
