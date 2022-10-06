@@ -47,6 +47,7 @@ class Ics implements Generator
         }
 
         if ($link->description) {
+            $url[] = 'DESCRIPTION:'.strip_tags($link->description);
             $url[] = 'X-ALT-DESC;FMTTYPE=text/html:'.$this->escapeString($link->description);
         }
         if ($link->address) {
