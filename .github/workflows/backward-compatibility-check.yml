@@ -19,4 +19,4 @@ jobs:
         run: mkdir -p /home/runner/work/_temp/_github_home && printf "[safe]\n\tdirectory = /github/workspace" > /home/runner/work/_temp/_github_home/.gitconfig
 
       - name: BC Check
-        uses: docker://nyholm/roave-bc-check-ga:stable
+        uses: docker://nyholm/roave-bc-check-ga
