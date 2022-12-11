@@ -50,7 +50,7 @@ class Ics implements Generator
         }
 
         if ($link->description) {
-            $url[] = 'DESCRIPTION:'.strip_tags($link->description);
+            $url[] = 'DESCRIPTION:'.$this->escapeString(strip_tags($link->description));
         }
         if ($link->address) {
             $url[] = 'LOCATION:'.$this->escapeString($link->address);

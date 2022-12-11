@@ -7,14 +7,7 @@ SUMMARY:Birthday Party +1
 DTSTAMP;TZID=UTC:20180201T090000
 DTSTART;TZID=UTC:20180201T090000
 DTEND;TZID=UTC:20180201T180000
-DESCRIPTION:With balloons, clowns and stuff
-Bring a dog, bring a frog.
-There will be line breaks on it.
-Project link calendar-links
-
-
-Thank you.
-
+DESCRIPTION:With balloons\, clowns and stuff\nBring a dog\, bring a frog.\nThere will be line breaks on it.\nProject link calendar-links\n\n\nThank you.\n
 LOCATION:Party Lane 1A\, 1337 Funtown
 END:VEVENT
 END:VCALENDAR

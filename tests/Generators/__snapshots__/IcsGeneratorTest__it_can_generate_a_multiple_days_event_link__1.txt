@@ -7,8 +7,7 @@ SUMMARY:New Year
 DTSTAMP;TZID=UTC:20191231T230000
 DTSTART;TZID=UTC:20191231T230000
 DTEND;TZID=UTC:20200101T010000
-DESCRIPTION:With balloons, clowns and stuff
-Bring a dog, bring a frog
+DESCRIPTION:With balloons\, clowns and stuff\nBring a dog\, bring a frog
 LOCATION:Party Lane 1A\, 1337 Funtown
 END:VEVENT
 END:VCALENDAR
