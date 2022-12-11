@@ -2,6 +2,16 @@
 
 All notable changes to `calendar-links` will be documented in this file
 
+## 1.8.2 - 2022-12-11
+### Changed
+ - ICS: Use `DESCRIPTION` instead of `X-ALT-DESC` (as it has better support) by @cdubz in #158
+ - Chore: fix tests, fix and improve CI
+
+## 1.8.1 - 2022-12-01
+### Changed
+ - Remove PHP 7.4 support
+ - Update dependencies
+
 ## 1.8.0 - 2022-08-20
 ### Changed
  - ICS: Add `PRODID` and `DTSTAMP` required parameters to make ICS valid by @makbeta
