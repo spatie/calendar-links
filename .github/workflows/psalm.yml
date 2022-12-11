@@ -29,5 +29,5 @@ jobs:
       - name: Run composer install
         run: composer install -n --prefer-dist
 
-      - name: Run psalm
-        run: composer psalm
+      - name: Run Psalm
+        run: composer psalm:ci
