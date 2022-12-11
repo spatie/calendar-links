@@ -7,6 +7,14 @@ SUMMARY:Birthday Party +1
 DTSTAMP;TZID=UTC:20180201T090000
 DTSTART;TZID=UTC:20180201T090000
 DTEND;TZID=UTC:20180201T180000
+DESCRIPTION:With balloons, clowns and stuff
+Bring a dog, bring a frog.
+There will be line breaks on it.
+Project link calendar-links
+
+
+Thank you.
+
 X-ALT-DESC;FMTTYPE=text/html:With balloons\, clowns and stuff\nBring a dog\, bring a frog.\nThere will be line breaks on it.\nProject link <a href="https://github.com/spatie/calendar-links">calendar-links</a>\n<img src="https://github-ads.s3.eu-central-1.amazonaws.com/calendar-links.jpg?t=1" width="419px" />\n<br>\nThank you.\n
 LOCATION:Party Lane 1A\, 1337 Funtown
 END:VEVENT
