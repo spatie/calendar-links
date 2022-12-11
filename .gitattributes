@@ -14,6 +14,5 @@
 # better diffs https://php.watch/articles/composer-gitattributes#diff-php
 *.php diff=php
 
-# All test snapshots and text stubs must have LF line endings
-tests/**/__snapshots__/**   text eol=lf
-tests/**/stubs/**           text eol=lf
+# All test snapshots and text stubs must have CRLF line endings
+tests/**/__snapshots__/IcsGeneratorTest*    text eol=crlf
