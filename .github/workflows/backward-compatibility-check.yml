@@ -11,5 +11,10 @@ jobs:
       - name: fetch tags
         run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 
+      - name: Set ownership
+        run: |
+          # this is to fix GIT not liking owner of the checkout dir
+          chown -R $(id -u):$(id -g) $PWD
+
       - name: Roave BC Check
         uses: docker://nyholm/roave-bc-check-ga
