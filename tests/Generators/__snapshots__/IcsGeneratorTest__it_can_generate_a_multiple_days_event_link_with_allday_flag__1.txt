@@ -9,7 +9,6 @@ DTSTART:20180201
 DURATION:P5D
 DESCRIPTION:With balloons, clowns and stuff
 Bring a dog, bring a frog
-X-ALT-DESC;FMTTYPE=text/html:With balloons\, clowns and stuff\nBring a dog\, bring a frog
 LOCATION:Party Lane 1A\, 1337 Funtown
 END:VEVENT
 END:VCALENDAR
