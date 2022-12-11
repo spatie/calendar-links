@@ -7,6 +7,8 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/spatie/calendar-links.svg?style=flat-square)](https://packagist.org/packages/spatie/calendar-links)
 ![Test](https://github.com/spatie/calendar-links/workflows/Test/badge.svg)
 [![Quality Score](https://img.shields.io/scrutinizer/g/spatie/calendar-links.svg?style=flat-square)](https://scrutinizer-ci.com/g/spatie/calendar-links)
+![Type coverage](https://shepherd.dev/github/spatie/calendar-links/coverage.svg)
+![Psalm level](https://shepherd.dev/github/spatie/calendar-links/level.svg)
 
 
 Using this package you can generate links to add events to calendar systems. Here's a quick example:
