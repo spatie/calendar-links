@@ -3,8 +3,19 @@
 name: Run Tests
 
 on:
-  - pull_request
-  - push
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '**.php'
+      - '**.txt'
+      - '**.json'
+      - 'composer.*'
+  push:
+    paths:
+      - '**.php'
+      - '**.txt'
+      - '**.json'
+      - 'composer.*'
 
 jobs:
   tests:
