@@ -18,7 +18,6 @@ abstract class TestCase extends BaseTestCase
         $description = 'With balloons, clowns and stuff
 Bring a dog, bring a frog';
 
-        /** @var \DateTimeInterface $dateTimeClass */
         $dateTimeClass = $immutable ? DateTimeImmutable::class : DateTime::class;
 
         return Link::create(
@@ -33,7 +32,6 @@ Bring a dog, bring a frog';
         $description = 'With balloons, clowns and stuff
 Bring a dog, bring a frog';
 
-        /** @var \DateTimeInterface $dateTimeClass */
         $dateTimeClass = $immutable ? DateTimeImmutable::class : DateTime::class;
 
         return Link::create(
@@ -48,7 +46,6 @@ Bring a dog, bring a frog';
         $description = 'With balloons, clowns and stuff
 Bring a dog, bring a frog';
 
-        /** @var \DateTimeInterface $dateTimeClass */
         $dateTimeClass = $immutable ? DateTimeImmutable::class : DateTime::class;
 
         return Link::createAllDay(
@@ -62,7 +59,6 @@ Bring a dog, bring a frog';
         $description = 'With balloons, clowns and stuff
 Bring a dog, bring a frog';
 
-        /** @var \DateTimeInterface $dateTimeClass */
         $dateTimeClass = $immutable ? DateTimeImmutable::class : DateTime::class;
 
         return Link::createAllDay(
@@ -83,7 +79,6 @@ Project link <a href="https://github.com/spatie/calendar-links">calendar-links</
 Thank you.
 ';
 
-        /** @var \DateTimeInterface $dateTimeClass */
         $dateTimeClass = $immutable ? DateTimeImmutable::class : DateTime::class;
 
         return Link::create(
