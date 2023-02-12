@@ -16,3 +16,6 @@
 
 # All test snapshots and text stubs must have CRLF line endings
 tests/**/__snapshots__/IcsGeneratorTest*    text eol=crlf
+
+# PHPUnit
+.phpunit.cache

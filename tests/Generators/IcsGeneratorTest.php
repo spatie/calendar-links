@@ -31,7 +31,7 @@ class IcsGeneratorTest extends TestCase
     }
 
     /** @test */
-    public function it_can_generate_an_ics_link_with_custom_uid()
+    public function it_can_generate_an_ics_link_with_custom_uid(): void
     {
         $this->assertMatchesSnapshot(
             $this->generator(['UID' => 'random-uid'])->generate($this->createShortEventLink())
@@ -39,7 +39,7 @@ class IcsGeneratorTest extends TestCase
     }
 
     /** @test */
-    public function it_has_a_product_id()
+    public function it_has_a_product_id(): void
     {
         $this->assertMatchesSnapshot(
             $this->generator(['PRODID' => 'Spatie calendar-links'])->generate($this->createShortEventLink())
@@ -47,7 +47,7 @@ class IcsGeneratorTest extends TestCase
     }
 
     /** @test */
-    public function it_has_a_product_dtstamp()
+    public function it_has_a_product_dtstamp(): void
     {
         $this->assertMatchesSnapshot(
             $this->generator(['DTSTAMP' => 'TZID=UTC:20180201T090000'])->generate($this->createShortEventLink())

@@ -12,7 +12,7 @@ trait GeneratorTestContract
     abstract protected function linkMethodName(): string;
 
     /** @test */
-    public function it_can_generate_a_short_event_link()
+    public function it_can_generate_a_short_event_link(): void
     {
         $this->assertMatchesSnapshot(
             $this->generator()->generate($this->createShortEventLink())
@@ -25,7 +25,7 @@ trait GeneratorTestContract
     }
 
     /** @test */
-    public function it_can_generate_a_single_day_allday_event_link()
+    public function it_can_generate_a_single_day_allday_event_link(): void
     {
         $this->assertMatchesSnapshot(
             $this->generator()->generate($this->createSingleDayAllDayEventLink())
@@ -38,7 +38,7 @@ trait GeneratorTestContract
     }
 
     /** @test */
-    public function it_can_generate_a_multiple_days_event_link()
+    public function it_can_generate_a_multiple_days_event_link(): void
     {
         $this->assertMatchesSnapshot(
             $this->generator()->generate($this->createMultipleDaysEventLink())
@@ -51,7 +51,7 @@ trait GeneratorTestContract
     }
 
     /** @test */
-    public function it_can_generate_a_multiple_days_event_link_with_allday_flag()
+    public function it_can_generate_a_multiple_days_event_link_with_allday_flag(): void
     {
         $this->assertMatchesSnapshot(
             $this->generator()->generate($this->createMultipleDaysAllDayEventLink())
@@ -64,7 +64,7 @@ trait GeneratorTestContract
     }
 
     /** @test */
-    public function it_can_generate_a_description_is_html_code_event_link_with_allday_flag()
+    public function it_can_generate_a_description_is_html_code_event_link_with_allday_flag(): void
     {
         $this->assertMatchesSnapshot(
             $this->generator()->generate($this->createDescriptionIsHTMLcodeEventLink())
