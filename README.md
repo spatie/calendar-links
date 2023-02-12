@@ -5,10 +5,10 @@
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/spatie/calendar-links.svg?style=flat-square)](https://packagist.org/packages/spatie/calendar-links)
 [![Total Downloads](https://img.shields.io/packagist/dt/spatie/calendar-links.svg?style=flat-square)](https://packagist.org/packages/spatie/calendar-links)
-![Test](https://github.com/spatie/calendar-links/workflows/Test/badge.svg)
+[![Test](https://github.com/spatie/calendar-links/workflows/Test/badge.svg)](https://github.com/spatie/calendar-links/actions/workflows/run-tests.yml)
 [![Quality Score](https://img.shields.io/scrutinizer/g/spatie/calendar-links.svg?style=flat-square)](https://scrutinizer-ci.com/g/spatie/calendar-links)
-![Type coverage](https://shepherd.dev/github/spatie/calendar-links/coverage.svg)
-![Psalm level](https://shepherd.dev/github/spatie/calendar-links/level.svg)
+[![Type coverage](https://shepherd.dev/github/spatie/calendar-links/coverage.svg)](https://shepherd.dev/github/spatie/calendar-links)
+[![Psalm level](https://shepherd.dev/github/spatie/calendar-links/level.svg)](https://shepherd.dev/github/spatie/calendar-links)
 
 
 Using this package you can generate links to add events to calendar systems. Here's a quick example:
