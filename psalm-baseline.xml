@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="5.6.0@e784128902dfe01d489c4123d69918a9f3c1eac5">
+  <file src="src/Generators/BaseOutlook.php">
+    <PossiblyUndefinedMethod>
+      <code>setTimezone</code>
+      <code>setTimezone</code>
+    </PossiblyUndefinedMethod>
+  </file>
+  <file src="src/Generators/Google.php">
+    <PossiblyUndefinedMethod>
+      <code>setTimezone</code>
+      <code>setTimezone</code>
+    </PossiblyUndefinedMethod>
+  </file>
+  <file src="src/Generators/Yahoo.php">
+    <PossiblyUndefinedMethod>
+      <code>setTimezone</code>
+      <code>setTimezone</code>
+    </PossiblyUndefinedMethod>
+  </file>
+  <file src="src/Link.php">
+    <MissingParamType>
+      <code>$property</code>
+    </MissingParamType>
+    <PossiblyUndefinedMethod>
+      <code>modify</code>
+    </PossiblyUndefinedMethod>
+    <PropertyTypeCoercion>
+      <code>clone $from</code>
+      <code>clone $to</code>
+    </PropertyTypeCoercion>
+    <UnsafeInstantiation>
+      <code>new static($title, $from, $to, $allDay)</code>
+    </UnsafeInstantiation>
+  </file>
+</files>
