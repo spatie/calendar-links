@@ -50,7 +50,7 @@ class IcsGeneratorTest extends TestCase
     public function it_has_a_product_dtstamp(): void
     {
         $this->assertMatchesSnapshot(
-            $this->generator(['DTSTAMP' => 'TZID=UTC:20180201T090000'])->generate($this->createShortEventLink())
+            $this->generator(['DTSTAMP' => '20180201T090000Z'])->generate($this->createShortEventLink())
         );
     }
 }
