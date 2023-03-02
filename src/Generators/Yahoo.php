@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Spatie\CalendarLinks\Generators;
 
@@ -11,12 +11,12 @@ use Spatie\CalendarLinks\Link;
  */
 class Yahoo implements Generator
 {
-    /** @var string {@see https://www.php.net/manual/en/function.date.php} */
-    protected $dateFormat = 'Ymd';
-    /** @var string */
-    protected $dateTimeFormat = 'Ymd\THis\Z';
+    /** @see https://www.php.net/manual/en/function.date.php */
+    protected string $dateFormat = 'Ymd';
 
-    /** {@inheritDoc} */
+    protected string $dateTimeFormat = 'Ymd\THis\Z';
+
+    /** @inheritDoc */
     public function generate(Link $link): string
     {
         $url = 'https://calendar.yahoo.com/?v=60&view=d&type=20';
@@ -28,8 +28,8 @@ class Yahoo implements Generator
             $url .= '&DUR=allday';
             $url .= '&ET='.$link->to->format($dateTimeFormat);
         } else {
-            $utcStartDateTime = (clone $link->from)->setTimezone(new DateTimeZone('UTC'));
-            $utcEndDateTime = (clone $link->to)->setTimezone(new DateTimeZone('UTC'));
+            $utcStartDateTime = $link->from->setTimezone(new DateTimeZone('UTC'));
+            $utcEndDateTime = $link->to->setTimezone(new DateTimeZone('UTC'));
             $url .= '&ST='.$utcStartDateTime->format($dateTimeFormat);
             $url .= '&ET='.$utcEndDateTime->format($dateTimeFormat);
         }

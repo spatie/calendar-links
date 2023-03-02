@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Spatie\CalendarLinks;
 
@@ -9,35 +9,21 @@ use Spatie\CalendarLinks\Generators\WebOffice;
 use Spatie\CalendarLinks\Generators\WebOutlook;
 use Spatie\CalendarLinks\Generators\Yahoo;
 
-/**
- * @property-read string $title
- * @property-read \DateTimeInterface|\DateTime|\DateTimeImmutable $from
- * @property-read \DateTimeInterface|\DateTime|\DateTimeImmutable $to
- * @property-read string $description
- * @property-read string $address
- * @property-read bool $allDay
- */
 class Link
 {
-    /** @var string */
-    protected $title;
+    public readonly string $title;
 
-    /** @var \DateTime */
-    protected $from;
+    public readonly \DateTimeImmutable $from;
 
-    /** @var \DateTime */
-    protected $to;
+    public readonly \DateTimeImmutable $to;
 
-    /** @var string */
-    protected $description;
+    public readonly bool $allDay;
 
-    /** @var bool */
-    protected $allDay;
+    public string $description = '';
 
-    /** @var string */
-    protected $address;
+    public string $address = '';
 
-    public function __construct(string $title, \DateTimeInterface $from, \DateTimeInterface $to, bool $allDay = false)
+    final public function __construct(string $title, \DateTimeInterface $from, \DateTimeInterface $to, bool $allDay = false)
     {
         $this->title = $title;
         $this->allDay = $allDay;
@@ -46,58 +32,41 @@ class Link
             throw InvalidLink::negativeDateRange($from, $to);
         }
 
-        $this->from = clone $from;
-        $this->to = clone $to;
+        $this->from = \DateTimeImmutable::createFromInterface($from);
+        $this->to = \DateTimeImmutable::createFromInterface($to);
     }
 
     /**
-     * @param string $title
-     * @param \DateTimeInterface $from
-     * @param \DateTimeInterface $to
-     * @param bool $allDay
-     *
-     * @return static
-     * @throws InvalidLink
+     * @throws \Spatie\CalendarLinks\Exceptions\InvalidLink When date range is invalid.
      */
-    public static function create(string $title, \DateTimeInterface $from, \DateTimeInterface $to, bool $allDay = false)
+    public static function create(string $title, \DateTimeInterface $from, \DateTimeInterface $to, bool $allDay = false): static
     {
         return new static($title, $from, $to, $allDay);
     }
 
     /**
-     * @param string $title
-     * @param \DateTimeInterface|\DateTime|\DateTimeImmutable $fromDate
-     * @param int $numberOfDays
-     *
-     * @return Link
-     * @throws InvalidLink
+     * @param positive-int $numberOfDays
+     * @throws \Spatie\CalendarLinks\Exceptions\InvalidLink When date range is invalid.
      */
     public static function createAllDay(string $title, \DateTimeInterface $fromDate, int $numberOfDays = 1): self
     {
-        $from = (clone $fromDate)->modify('midnight');
-        $to = (clone $from)->modify("+$numberOfDays days");
+        $from = \DateTimeImmutable::createFromInterface($fromDate)->modify('midnight');
+        $to = $from->modify("+$numberOfDays days");
+        assert($to instanceof \DateTimeImmutable);
 
         return new self($title, $from, $to, true);
     }
 
-    /**
-     * @param string $description
-     *
-     * @return $this
-     */
-    public function description(string $description)
+    /** Set description of the Event. */
+    public function description(string $description): static
     {
         $this->description = $description;
 
         return $this;
     }
 
-    /**
-     * @param string $address
-     *
-     * @return $this
-     */
-    public function address(string $address)
+    /** Set address of the Event. */
+    public function address(string $address): static
     {
         $this->address = $address;
 
@@ -114,10 +83,7 @@ class Link
         return $this->formatWith(new Google());
     }
 
-    /**
-     * @param array<non-empty-string, non-empty-string> $options
-     * @return string
-     */
+    /** @param array<non-empty-string, non-empty-string> $options */
     public function ics(array $options = []): string
     {
         return $this->formatWith(new Ics($options));
@@ -136,10 +102,5 @@ class Link
     public function webOffice(): string
     {
         return $this->formatWith(new WebOffice());
-    }
-
-    public function __get($property)
-    {
-        return $this->$property;
     }
 }

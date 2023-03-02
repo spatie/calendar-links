@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Spatie\CalendarLinks\Tests\Generators;
 
@@ -6,18 +6,22 @@ use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Generators\Ics;
 use Spatie\CalendarLinks\Tests\TestCase;
 
-class IcsGeneratorTest extends TestCase
+final class IcsGeneratorTest extends TestCase
 {
     use GeneratorTestContract;
 
     /**
-     * @param array $options @see \Spatie\CalendarLinks\Generators\Ics::__construct
+     * @param array<non-empty-string, non-empty-string> $options {@see \Spatie\CalendarLinks\Generators\Ics::__construct}
      * @return \Spatie\CalendarLinks\Generator
      */
     protected function generator(array $options = []): Generator
     {
         // extend base class just to make output more readable and simplify reviewing of the snapshot diff
         return new class($options) extends Ics {
+            /**
+             * @param non-empty-list<non-empty-string> $propertiesAndComponents
+             * @return non-empty-string
+             */
             protected function buildLink(array $propertiesAndComponents): string
             {
                 return implode("\r\n", $propertiesAndComponents);

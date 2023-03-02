@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Spatie\CalendarLinks\Generators;
 
@@ -10,13 +10,13 @@ use Spatie\CalendarLinks\Link;
  */
 class Ics implements Generator
 {
-    /** @var string {@see https://www.php.net/manual/en/function.date.php} */
-    protected $dateFormat = 'Ymd';
-    /** @var string */
-    protected $dateTimeFormat = 'Ymd\THis\Z';
+    /** @see https://www.php.net/manual/en/function.date.php */
+    protected string $dateFormat = 'Ymd';
+
+    protected string $dateTimeFormat = 'Ymd\THis\Z';
 
     /** @var array<non-empty-string, non-empty-string> */
-    protected $options = [];
+    protected array $options = [];
 
     /**
      * @param array<non-empty-string, non-empty-string> $options
@@ -26,7 +26,7 @@ class Ics implements Generator
         $this->options = $options;
     }
 
-    /** {@inheritDoc} */
+    /** @inheritDoc */
     public function generate(Link $link): string
     {
         $url = [
@@ -67,6 +67,10 @@ class Ics implements Generator
         return $this->buildLink($url);
     }
 
+    /**
+     * @param non-empty-list<non-empty-string> $propertiesAndComponents
+     * @return non-empty-string
+     */
     protected function buildLink(array $propertiesAndComponents): string
     {
         return 'data:text/calendar;charset=utf8;base64,'.base64_encode(implode("\r\n", $propertiesAndComponents));

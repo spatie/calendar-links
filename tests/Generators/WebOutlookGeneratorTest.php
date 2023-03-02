@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Spatie\CalendarLinks\Tests\Generators;
 
@@ -6,7 +6,7 @@ use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Generators\WebOutlook;
 use Spatie\CalendarLinks\Tests\TestCase;
 
-class WebOutlookGeneratorTest extends TestCase
+final class WebOutlookGeneratorTest extends TestCase
 {
     use GeneratorTestContract;
 

@@ -1,9 +1,10 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Spatie\CalendarLinks\Generators;
 
 class WebOutlook extends BaseOutlook
 {
+    /** @var non-empty-string */
     protected const BASE_URL = 'https://outlook.live.com/calendar/deeplink/compose?path=/calendar/action/compose&rru=addevent';
 
     /** @inheritDoc */
