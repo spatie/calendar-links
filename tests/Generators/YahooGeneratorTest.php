@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Spatie\CalendarLinks\Tests\Generators;
 
@@ -9,7 +9,7 @@ use Spatie\CalendarLinks\Generators\Yahoo;
 use Spatie\CalendarLinks\Link;
 use Spatie\CalendarLinks\Tests\TestCase;
 
-class YahooGeneratorTest extends TestCase
+final class YahooGeneratorTest extends TestCase
 {
     use GeneratorTestContract;
 
