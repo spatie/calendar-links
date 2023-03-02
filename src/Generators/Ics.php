@@ -13,7 +13,7 @@ class Ics implements Generator
     /** @var string {@see https://www.php.net/manual/en/function.date.php} */
     protected $dateFormat = 'Ymd';
     /** @var string */
-    protected $dateTimeFormat = 'Ymd\THis';
+    protected $dateTimeFormat = 'Ymd\THis\Z';
 
     /** @var array<non-empty-string, non-empty-string> */
     protected $options = [];
