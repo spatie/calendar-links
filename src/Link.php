@@ -61,6 +61,7 @@ class Link
     public function description(string $description): static
     {
         $this->description = $description;
+
         return $this;
     }
 
@@ -68,6 +69,7 @@ class Link
     public function address(string $address): static
     {
         $this->address = $address;
+
         return $this;
     }
 
