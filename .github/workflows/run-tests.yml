@@ -24,7 +24,7 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest]
-        php: [8.0, 8.1, 8.2]
+        php: [8.1, 8.2]
         dependency-version: [prefer-lowest, prefer-stable]
 
     name: P${{ matrix.php }} - ${{ matrix.dependency-version }} - ${{ matrix.os }}
@@ -37,7 +37,6 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: dom, json, libxml, mbstring, pcre, reflection, spl, xml, xmlwriter
           coverage: none
           ini-values: assert.exception=1, zend.assertions=1
 
