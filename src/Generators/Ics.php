@@ -10,6 +10,8 @@ use Spatie\CalendarLinks\Link;
  */
 class Ics implements Generator
 {
+    public const OPTION_AS_FILE = 'as_file';
+
     /** @var string {@see https://www.php.net/manual/en/function.date.php} */
     protected $dateFormat = 'Ymd';
     /** @var string */
@@ -63,6 +65,10 @@ class Ics implements Generator
 
         $url[] = 'END:VEVENT';
         $url[] = 'END:VCALENDAR';
+
+        if ($this->options[self::OPTION_AS_FILE] ?? false) {
+            return implode("\r\n", $url);
+        }
 
         return $this->buildLink($url);
     }

@@ -53,4 +53,12 @@ class IcsGeneratorTest extends TestCase
             $this->generator(['DTSTAMP' => '20180201T090000Z'])->generate($this->createShortEventLink())
         );
     }
+
+    /** @test */
+    public function it_can_generate_a_file(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator([Ics::OPTION_AS_FILE => true])->generate($this->createShortEventLink())
+        );
+    }
 }
