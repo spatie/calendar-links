@@ -73,6 +73,12 @@ echo $link->webOffice();
 // Generate a data uri for an ics file (for iCal & Outlook)
 echo $link->ics();
 
+// Generate a data uri for an ics file with default reminder (for iCal & Outlook)
+echo $link->ics(['REMINDER' => []]);
+
+// Generate a data uri for an ics file with a custom reminder (for iCal & Outlook)
+echo $link->ics(['REMINDER' => ['DESCRIPTION' => 'Remind me', 'TIME' => DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 08:15', new DateTimeZone('UTC'))]]);
+
 // Generate a data URI using arbitrary generator:
 echo $link->formatWith(new \Your\Generator());
 ```
