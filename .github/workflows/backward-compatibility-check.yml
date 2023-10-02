@@ -6,7 +6,7 @@ jobs:
     name: Backward compatibility check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: fetch tags
         run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
