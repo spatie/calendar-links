@@ -18,12 +18,17 @@ class Ics implements Generator
     /** @var array<non-empty-string, non-empty-string> */
     protected $options = [];
 
+    /** @var array{format?: string} */
+    protected $presentationOptions = [];
+
     /**
-     * @param array<non-empty-string, non-empty-string> $options
+     * @param array<non-empty-string, non-empty-string> $options Optional ICS properties and components
+     * @param array{format?: string} $presentationOptions
      */
-    public function __construct(array $options = [])
+    public function __construct(array $options = [], array $presentationOptions = [])
     {
         $this->options = $options;
+        $this->presentationOptions = $presentationOptions;
     }
 
     /** {@inheritDoc} */
@@ -64,12 +69,22 @@ class Ics implements Generator
         $url[] = 'END:VEVENT';
         $url[] = 'END:VCALENDAR';
 
-        return $this->buildLink($url);
+        $format = $this->presentationOptions['format'] ?? 'html';
+
+        return match ($format) {
+            'file' => $this->buildFile($url),
+            default => $this->buildLink($url),
+        };
     }
 
     protected function buildLink(array $propertiesAndComponents): string
     {
         return 'data:text/calendar;charset=utf8;base64,'.base64_encode(implode("\r\n", $propertiesAndComponents));
+    }
+
+    protected function buildFile(array $propertiesAndComponents): string
+    {
+        return implode("\r\n", $propertiesAndComponents);
     }
 
     /** @see https://tools.ietf.org/html/rfc5545.html#section-3.3.11 */

@@ -19,3 +19,4 @@ tests/**/__snapshots__/IcsGeneratorTest*    text eol=crlf
 
 # PHPUnit
 .phpunit.cache
+.phpunit.cache/

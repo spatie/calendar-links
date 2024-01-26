@@ -115,12 +115,13 @@ class Link
     }
 
     /**
-     * @param array<non-empty-string, non-empty-string> $options
+     * @param array<non-empty-string, non-empty-string> $options ICS specific properties and components
+     * @param array{format?: string} $presentationOptions
      * @return string
      */
-    public function ics(array $options = []): string
+    public function ics(array $options = [], array $presentationOptions = []): string
     {
-        return $this->formatWith(new Ics($options));
+        return $this->formatWith(new Ics($options, $presentationOptions));
     }
 
     public function yahoo(): string
