@@ -68,6 +68,33 @@ Bring a dog, bring a frog';
         )->description($description)->address('Party Lane 1A, 1337 Funtown');
     }
 
+    protected function createAllDayEventMultipleDaysWithTimezoneLink(bool $immutable = false): Link
+    {
+        $description = 'Testing all day';
+
+        $dateTimeClass = $immutable ? DateTimeImmutable::class : DateTime::class;
+
+        return Link::createAllDay(
+            'All day bugs',
+            $dateTimeClass::createFromFormat('Y-m-d', '2024-01-25', new DateTimeZone('Pacific/Wake'))->setTime(0,0),
+            5
+        )->description($description);
+    }
+
+    protected function createEventMultipleDaysViaStartEndWithTimezoneLink(bool $immutable = false): Link
+    {
+        $description = 'Testing all day';
+
+        $dateTimeClass = $immutable ? DateTimeImmutable::class : DateTime::class;
+
+        return Link::create(
+            'All day bugs',
+            $dateTimeClass::createFromFormat('Y-m-d', '2024-01-25', new DateTimeZone('Pacific/Wake'))->setTime(0,0),
+            $dateTimeClass::createFromFormat('Y-m-d', '2024-01-30', new DateTimeZone('Pacific/Wake'))->setTime(0,0),
+            true,
+        )->description($description);
+    }
+
     protected function createDescriptionIsHTMLcodeEventLink(bool $immutable = false): Link
     {
         $description = 'With balloons, clowns and stuff

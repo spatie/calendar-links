@@ -53,4 +53,20 @@ class IcsGeneratorTest extends TestCase
             $this->generator(['DTSTAMP' => '20180201T090000Z'])->generate($this->createShortEventLink())
         );
     }
+
+    /** @test */
+    public function it_correctly_generates_all_day_events_by_days(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator()->generate($this->createAllDayEventMultipleDaysWithTimezoneLink())
+        );
+    }
+
+    /** @test */
+    public function it_correctly_generates_all_day_events_by_dates(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator()->generate($this->createEventMultipleDaysViaStartEndWithTimezoneLink())
+        );
+    }
 }

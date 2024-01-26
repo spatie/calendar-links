@@ -61,6 +61,14 @@ class Link
      */
     public static function create(string $title, \DateTimeInterface $from, \DateTimeInterface $to, bool $allDay = false)
     {
+        // When creating all day events, we need to be in the UTC timezone as all day events are "floating" based on the user's timezone
+        if ($allDay) {
+            $startDate = new \DateTime($from->format('Y-m-d'), new \DateTimeZone('UTC'));
+            $numberOfDays = $from->diff($to)->days + 1;
+
+            return self::createAllDay($title, $startDate, $numberOfDays);
+        }
+
         return new static($title, $from, $to, $allDay);
     }
 
@@ -74,6 +82,11 @@ class Link
      */
     public static function createAllDay(string $title, \DateTimeInterface $fromDate, int $numberOfDays = 1): self
     {
+        // In cases where the from date is not UTC, make sure it's UTC, size all day events are floating and non UTC dates cause bugs in the generators
+        if ($fromDate->getTimezone() !== new \DateTimeZone('UTC')) {
+            $fromDate = \DateTime::createFromFormat('Y-m-d', $fromDate->format('Y-m-d'));
+        }
+
         $from = (clone $fromDate)->modify('midnight');
         $to = (clone $from)->modify("+$numberOfDays days");
 
