@@ -69,12 +69,11 @@ echo $link->webOffice();
 
 // Generate a data URI for an ics file (for iCal & Outlook)
 echo $link->ics();
-echo $link->ics(['URL' => 'https://my-page.com', 'UID' => 'custom-id']); // 
-// Generate a data uri for an ics file with the default reminder (for iCal & Outlook)
-echo $link->ics(['REMINDER' => []]);
-// Generate a data uri for an ics file with a custom reminder (for iCal & Outlook)
-echo $link->ics(['REMINDER' => ['DESCRIPTION' => 'Remind me', 'TIME' => new \DateTime('tomorrow 12:30 UTC')]]);
-echo $link->ics([], ['format' => 'file']); // e.g. to attach ics as a file to an email.
+echo $link->ics(['UID' => 'custom-id']); // Custom UID (to update existing events)
+echo $link->ics(['URL' => 'https://my-page.com']); // Custom URL
+echo $link->ics(['REMINDER' => []]); // Add the default reminder (for iCal & Outlook)
+echo $link->ics(['REMINDER' => ['DESCRIPTION' => 'Remind me', 'TIME' => new \DateTime('tomorrow 12:30 UTC')]]); // Add a custom reminder
+echo $link->ics([], ['format' => 'file']); // use file output; e.g. to attach ics as a file to an email.
 
 // Generate a data URI using arbitrary generator:
 echo $link->formatWith(new \Your\Generator());
