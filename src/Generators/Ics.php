@@ -7,6 +7,7 @@ use Spatie\CalendarLinks\Link;
 
 /**
  * @see https://icalendar.org/RFC-Specifications/iCalendar-RFC-5545/
+ * @psalm-type IcsOptions = array{UID?: string, URL?: string, REMINDER?: array{DESCRIPTION?: string, TIME?: \DateTimeInterface}}
  */
 class Ics implements Generator
 {
@@ -15,17 +16,18 @@ class Ics implements Generator
 
     /** @var string {@see https://www.php.net/manual/en/function.date.php} */
     protected $dateFormat = 'Ymd';
+
     /** @var string */
     protected $dateTimeFormat = 'Ymd\THis\Z';
 
-    /** @var array<non-empty-string, non-empty-string> */
+    /** @var IcsOptions */
     protected $options = [];
 
     /** @var array{format?: self::FORMAT_*} */
     protected $presentationOptions = [];
 
     /**
-     * @param array<non-empty-string, non-empty-string> $options Optional ICS properties and components
+     * @param IcsOptions $options Optional ICS properties and components
      * @param array{format?: self::FORMAT_*} $presentationOptions
      */
     public function __construct(array $options = [], array $presentationOptions = [])
@@ -69,22 +71,8 @@ class Ics implements Generator
             $url[] = 'URL;VALUE=URI:'.$this->options['URL'];
         }
 
-        if (isset($this->options['REMINDER'])) {
-            $description = 'Reminder: '.$this->escapeString($link->title);
-            if (isset($this->options['REMINDER']['DESCRIPTION'])) {
-                $description = $this->escapeString($this->options['REMINDER']['DESCRIPTION']);
-            }
-
-            $trigger = '-PT15M';
-            if (isset($this->options[ 'REMINDER'][ 'TIME'])) {
-                $trigger = 'VALUE=DATE-TIME:'.gmdate($dateTimeFormat, $this->options[ 'REMINDER'][ 'TIME']->getTimestamp());
-            }
-
-            $url[] = 'BEGIN:VALARM';
-            $url[] = 'ACTION:DISPLAY';
-            $url[] = 'DESCRIPTION:'.$description;
-            $url[] = 'TRIGGER:'.$trigger;
-            $url[] = 'END:VALARM';
+        if (is_array($this->options['REMINDER'] ?? null)) {
+            $url = [...$url, ...$this->generateAlertComponent($link)];
         }
 
         $url[] = 'END:VEVENT';
@@ -124,5 +112,31 @@ class Ics implements Generator
             $link->title,
             $link->address
         ));
+    }
+
+    /**
+     * @param \Spatie\CalendarLinks\Link $link
+     * @return list<string>
+     */
+    private function generateAlertComponent(Link $link): array
+    {
+        $description = $this->options['REMINDER']['DESCRIPTION'] ?? null;
+        if (! is_string($description)) {
+            $description = 'Reminder: '.$this->escapeString($link->title);
+        }
+
+        $trigger = '-PT15M';
+        if (($reminderTime = $this->options['REMINDER']['TIME'] ?? null) instanceof \DateTimeInterface) {
+            $trigger = 'VALUE=DATE-TIME:'.gmdate($this->dateTimeFormat, $reminderTime->getTimestamp());
+        }
+
+        $alarmComponent = [];
+        $alarmComponent[] = 'BEGIN:VALARM';
+        $alarmComponent[] = 'ACTION:DISPLAY';
+        $alarmComponent[] = 'DESCRIPTION:'.$description;
+        $alarmComponent[] = 'TRIGGER:'.$trigger;
+        $alarmComponent[] = 'END:VALARM';
+
+        return $alarmComponent;
     }
 }

@@ -16,6 +16,7 @@ use Spatie\CalendarLinks\Generators\Yahoo;
  * @property-read string $description
  * @property-read string $address
  * @property-read bool $allDay
+ * @psalm-import-type IcsOptions from \Spatie\CalendarLinks\Generators\Ics
  */
 class Link
 {
@@ -128,6 +129,7 @@ class Link
     }
 
     /**
+     * @psalm-param IcsOptions $options ICS specific properties and components
      * @param array<non-empty-string, non-empty-string> $options ICS specific properties and components
      * @param array{format?: \Spatie\CalendarLinks\Generators\Ics::FORMAT_*} $presentationOptions
      * @return string
