@@ -70,8 +70,10 @@ echo $link->webOutlook();
 // Generate a link to create an event on outlook.office.com calendar
 echo $link->webOffice();
 
-// Generate a data uri for an ics file (for iCal & Outlook)
+// Generate a data URI for an ics file (for iCal & Outlook)
 echo $link->ics();
+echo $link->ics(['URL' => 'https://my-page.com', 'UID' => 'custom-id']); // 
+echo $link->ics([], ['format' => 'file']); // e.g. to attach ics as a file to an email.
 
 // Generate a data URI using arbitrary generator:
 echo $link->formatWith(new \Your\Generator());

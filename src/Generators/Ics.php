@@ -10,6 +10,9 @@ use Spatie\CalendarLinks\Link;
  */
 class Ics implements Generator
 {
+    public const FORMAT_HTML = 'html';
+    public const FORMAT_FILE = 'file';
+
     /** @var string {@see https://www.php.net/manual/en/function.date.php} */
     protected $dateFormat = 'Ymd';
     /** @var string */
@@ -18,12 +21,12 @@ class Ics implements Generator
     /** @var array<non-empty-string, non-empty-string> */
     protected $options = [];
 
-    /** @var array{format?: string} */
+    /** @var array{format?: self::FORMAT_*} */
     protected $presentationOptions = [];
 
     /**
      * @param array<non-empty-string, non-empty-string> $options Optional ICS properties and components
-     * @param array{format?: string} $presentationOptions
+     * @param array{format?: self::FORMAT_*} $presentationOptions
      */
     public function __construct(array $options = [], array $presentationOptions = [])
     {
@@ -69,7 +72,7 @@ class Ics implements Generator
         $url[] = 'END:VEVENT';
         $url[] = 'END:VCALENDAR';
 
-        $format = $this->presentationOptions['format'] ?? 'html';
+        $format = $this->presentationOptions['format'] ?? self::FORMAT_HTML;
 
         return match ($format) {
             'file' => $this->buildFile($url),

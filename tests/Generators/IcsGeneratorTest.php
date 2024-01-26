@@ -16,7 +16,7 @@ class IcsGeneratorTest extends TestCase
      */
     protected function generator(array $options = [], array $presentationOptions = []): Generator
     {
-        $presentationOptions['format'] ??= 'file';
+        $presentationOptions['format'] ??= Ics::FORMAT_FILE;
 
         return new Ics($options, $presentationOptions);
     }
@@ -30,7 +30,7 @@ class IcsGeneratorTest extends TestCase
     public function it_can_generate_an_ics_link_with_custom_uid(): void
     {
         $this->assertMatchesSnapshot(
-            $this->generator(['UID' => 'random-uid', ['format' => 'file']])->generate($this->createShortEventLink())
+            $this->generator(['UID' => 'random-uid', ['format' => Ics::FORMAT_FILE]])->generate($this->createShortEventLink())
         );
     }
 
@@ -38,7 +38,7 @@ class IcsGeneratorTest extends TestCase
     public function it_has_a_product_id(): void
     {
         $this->assertMatchesSnapshot(
-            $this->generator(['PRODID' => 'Spatie calendar-links'], ['format' => 'file'])->generate($this->createShortEventLink())
+            $this->generator(['PRODID' => 'Spatie calendar-links'], ['format' => Ics::FORMAT_FILE])->generate($this->createShortEventLink())
         );
     }
 
@@ -46,7 +46,7 @@ class IcsGeneratorTest extends TestCase
     public function it_has_a_product_dtstamp(): void
     {
         $this->assertMatchesSnapshot(
-            $this->generator(['DTSTAMP' => '20180201T090000Z'], ['format' => 'file'])->generate($this->createShortEventLink())
+            $this->generator(['DTSTAMP' => '20180201T090000Z'], ['format' => Ics::FORMAT_FILE])->generate($this->createShortEventLink())
         );
     }
 
@@ -54,7 +54,7 @@ class IcsGeneratorTest extends TestCase
     public function it_generates_base64_encoded_link_for_html(): void
     {
         $this->assertMatchesSnapshot(
-            $this->generator([], ['format' => 'html'])->generate($this->createShortEventLink())
+            $this->generator([], ['format' => Ics::FORMAT_FILE])->generate($this->createShortEventLink())
         );
     }
 }
