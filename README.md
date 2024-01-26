@@ -72,6 +72,12 @@ echo $link->ics();
 echo $link->ics(['URL' => 'https://my-page.com', 'UID' => 'custom-id']); // 
 echo $link->ics([], ['format' => 'file']); // e.g. to attach ics as a file to an email.
 
+// Generate a data uri for an ics file with default reminder (for iCal & Outlook)
+echo $link->ics(['REMINDER' => []]);
+
+// Generate a data uri for an ics file with a custom reminder (for iCal & Outlook)
+echo $link->ics(['REMINDER' => ['DESCRIPTION' => 'Remind me', 'TIME' => DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 08:15', new DateTimeZone('UTC'))]]);
+
 // Generate a data URI using arbitrary generator:
 echo $link->formatWith(new \Your\Generator());
 ```

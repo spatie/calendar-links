@@ -2,6 +2,8 @@
 
 namespace Spatie\CalendarLinks\Tests\Generators;
 
+use DateTime;
+use DateTimeZone;
 use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Generators\Ics;
 use Spatie\CalendarLinks\Tests\TestCase;
@@ -71,6 +73,25 @@ class IcsGeneratorTest extends TestCase
     {
         $this->assertMatchesSnapshot(
             $this->generator()->generate($this->createEventMultipleDaysViaStartEndWithTimezoneLink())
+        );
+    }
+
+    /** @test */
+    public function it_can_generate_with_a_default_reminder(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator(['REMINDER' => []])->generate($this->createShortEventLink())
+        );
+    }
+
+    /** @test */
+    public function it_can_generate_with_a_custom_reminder(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator(['REMINDER' => [
+                'DESCRIPTION' => 'Party with balloons and cake!',
+                'TIME' => DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 08:15', new DateTimeZone('UTC'))
+            ]])->generate($this->createShortEventLink())
         );
     }
 }

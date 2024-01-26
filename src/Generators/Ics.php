@@ -69,6 +69,24 @@ class Ics implements Generator
             $url[] = 'URL;VALUE=URI:'.$this->options['URL'];
         }
 
+        if (isset($this->options['REMINDER'])) {
+            $description = 'Reminder: '.$this->escapeString($link->title);
+            if (isset($this->options['REMINDER']['DESCRIPTION'])) {
+                $description = $this->escapeString($this->options['REMINDER']['DESCRIPTION']);
+            }
+
+            $trigger = '-PT15M';
+            if (isset($this->options[ 'REMINDER'][ 'TIME'])) {
+                $trigger = 'VALUE=DATE-TIME:'.gmdate($dateTimeFormat, $this->options[ 'REMINDER'][ 'TIME']->getTimestamp());
+            }
+
+            $url[] = 'BEGIN:VALARM';
+            $url[] = 'ACTION:DISPLAY';
+            $url[] = 'DESCRIPTION:'.$description;
+            $url[] = 'TRIGGER:'.$trigger;
+            $url[] = 'END:VALARM';
+        }
+
         $url[] = 'END:VEVENT';
         $url[] = 'END:VCALENDAR';
 
