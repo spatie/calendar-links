@@ -13,6 +13,7 @@ abstract class BaseOutlook implements Generator
 {
     /** @var string {@see https://www.php.net/manual/en/function.date.php} */
     protected $dateFormat = 'Y-m-d';
+
     /** @var string {@see https://www.php.net/manual/en/function.date.php} */
     protected $dateTimeFormat = 'Y-m-d\TH:i:s\Z';
 

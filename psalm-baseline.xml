@@ -1,36 +1,72 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<files psalm-version="5.6.0@e784128902dfe01d489c4123d69918a9f3c1eac5">
+<files psalm-version="5.20.0@3f284e96c9d9be6fe6b15c79416e1d1903dcfef4">
   <file src="src/Generators/BaseOutlook.php">
-    <PossiblyUndefinedMethod>
+    <MissingDocblockType>
+      <code><![CDATA[protected $dateFormat = 'Y-m-d';]]></code>
+      <code><![CDATA[protected $dateTimeFormat = 'Y-m-d\TH:i:s\Z';]]></code>
+    </MissingDocblockType>
+    <MissingPropertyType>
+      <code>$dateFormat</code>
+      <code>$dateTimeFormat</code>
+    </MissingPropertyType>
+    <UndefinedInterfaceMethod>
       <code>setTimezone</code>
       <code>setTimezone</code>
-    </PossiblyUndefinedMethod>
+    </UndefinedInterfaceMethod>
   </file>
   <file src="src/Generators/Google.php">
-    <PossiblyUndefinedMethod>
+    <MissingDocblockType>
+      <code><![CDATA[protected $dateFormat = 'Ymd';]]></code>
+    </MissingDocblockType>
+    <MissingPropertyType>
+      <code>$dateFormat</code>
+    </MissingPropertyType>
+    <UndefinedInterfaceMethod>
       <code>setTimezone</code>
       <code>setTimezone</code>
-    </PossiblyUndefinedMethod>
+    </UndefinedInterfaceMethod>
+  </file>
+  <file src="src/Generators/Ics.php">
+    <MissingDocblockType>
+      <code><![CDATA[protected $dateFormat = 'Ymd';]]></code>
+    </MissingDocblockType>
+    <MissingPropertyType>
+      <code>$dateFormat</code>
+    </MissingPropertyType>
   </file>
   <file src="src/Generators/Yahoo.php">
-    <PossiblyUndefinedMethod>
+    <MissingDocblockType>
+      <code><![CDATA[protected $dateFormat = 'Ymd';]]></code>
+    </MissingDocblockType>
+    <MissingPropertyType>
+      <code>$dateFormat</code>
+    </MissingPropertyType>
+    <UndefinedInterfaceMethod>
       <code>setTimezone</code>
       <code>setTimezone</code>
-    </PossiblyUndefinedMethod>
+    </UndefinedInterfaceMethod>
   </file>
   <file src="src/Link.php">
+    <LessSpecificReturnStatement>
+      <code>self::createAllDay($title, $startDate, $numberOfDays)</code>
+    </LessSpecificReturnStatement>
     <MissingParamType>
       <code>$property</code>
     </MissingParamType>
-    <PossiblyUndefinedMethod>
-      <code>modify</code>
-    </PossiblyUndefinedMethod>
     <PropertyTypeCoercion>
       <code>clone $from</code>
       <code>clone $to</code>
     </PropertyTypeCoercion>
+    <UndefinedInterfaceMethod>
+      <code>modify</code>
+    </UndefinedInterfaceMethod>
     <UnsafeInstantiation>
       <code>new static($title, $from, $to, $allDay)</code>
     </UnsafeInstantiation>
+  </file>
+  <file src="tests/Generators/IcsGeneratorTest.php">
+    <InvalidArgument>
+      <code>$presentationOptions</code>
+    </InvalidArgument>
   </file>
 </files>
