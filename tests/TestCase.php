@@ -76,7 +76,7 @@ Bring a dog, bring a frog';
 
         return Link::createAllDay(
             'All day bugs',
-            $dateTimeClass::createFromFormat('Y-m-d', '2024-01-25', new DateTimeZone('Pacific/Wake'))->setTime(0,0),
+            $dateTimeClass::createFromFormat('Y-m-d', '2024-01-25', new DateTimeZone('Pacific/Wake'))->setTime(0, 0),
             5
         )->description($description);
     }
@@ -89,8 +89,8 @@ Bring a dog, bring a frog';
 
         return Link::create(
             'All day bugs',
-            $dateTimeClass::createFromFormat('Y-m-d', '2024-01-25', new DateTimeZone('Pacific/Wake'))->setTime(0,0),
-            $dateTimeClass::createFromFormat('Y-m-d', '2024-01-30', new DateTimeZone('Pacific/Wake'))->setTime(0,0),
+            $dateTimeClass::createFromFormat('Y-m-d', '2024-01-25', new DateTimeZone('Pacific/Wake'))->setTime(0, 0),
+            $dateTimeClass::createFromFormat('Y-m-d', '2024-01-30', new DateTimeZone('Pacific/Wake'))->setTime(0, 0),
             true,
         )->description($description);
     }
