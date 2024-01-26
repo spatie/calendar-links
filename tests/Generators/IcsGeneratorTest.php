@@ -14,15 +14,11 @@ class IcsGeneratorTest extends TestCase
      * @param array $options @see \Spatie\CalendarLinks\Generators\Ics::__construct
      * @return \Spatie\CalendarLinks\Generator
      */
-    protected function generator(array $options = []): Generator
+    protected function generator(array $options = [], array $presentationOptions = []): Generator
     {
-        // extend base class just to make output more readable and simplify reviewing of the snapshot diff
-        return new class($options) extends Ics {
-            protected function buildLink(array $propertiesAndComponents): string
-            {
-                return implode("\r\n", $propertiesAndComponents);
-            }
-        };
+        $presentationOptions['format'] ??= Ics::FORMAT_FILE;
+
+        return new Ics($options, $presentationOptions);
     }
 
     protected function linkMethodName(): string
@@ -34,7 +30,7 @@ class IcsGeneratorTest extends TestCase
     public function it_can_generate_an_ics_link_with_custom_uid(): void
     {
         $this->assertMatchesSnapshot(
-            $this->generator(['UID' => 'random-uid'])->generate($this->createShortEventLink())
+            $this->generator(['UID' => 'random-uid', ['format' => Ics::FORMAT_FILE]])->generate($this->createShortEventLink())
         );
     }
 
@@ -42,7 +38,7 @@ class IcsGeneratorTest extends TestCase
     public function it_has_a_product_id(): void
     {
         $this->assertMatchesSnapshot(
-            $this->generator(['PRODID' => 'Spatie calendar-links'])->generate($this->createShortEventLink())
+            $this->generator(['PRODID' => 'Spatie calendar-links'], ['format' => Ics::FORMAT_FILE])->generate($this->createShortEventLink())
         );
     }
 
@@ -50,7 +46,15 @@ class IcsGeneratorTest extends TestCase
     public function it_has_a_product_dtstamp(): void
     {
         $this->assertMatchesSnapshot(
-            $this->generator(['DTSTAMP' => '20180201T090000Z'])->generate($this->createShortEventLink())
+            $this->generator(['DTSTAMP' => '20180201T090000Z'], ['format' => Ics::FORMAT_FILE])->generate($this->createShortEventLink())
+        );
+    }
+
+    /** @test */
+    public function it_generates_base64_encoded_link_for_html(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator([], ['format' => Ics::FORMAT_FILE])->generate($this->createShortEventLink())
         );
     }
 
