@@ -54,7 +54,7 @@ class IcsGeneratorTest extends TestCase
     public function it_generates_base64_encoded_link_for_html(): void
     {
         $this->assertMatchesSnapshot(
-            $this->generator([], ['format' => Ics::FORMAT_FILE])->generate($this->createShortEventLink())
+            $this->generator([], ['format' => Ics::FORMAT_HTML])->generate($this->createShortEventLink())
         );
     }
 

@@ -8,7 +8,7 @@
 [![Psalm level](https://shepherd.dev/github/spatie/calendar-links/level.svg)](https://shepherd.dev/github/spatie/calendar-links)
 
 
-Using this package you can generate links to add events to calendar systems. Here's a quick example:
+Using this package, you can generate links to add events to calendar systems. Here's a quick example:
 
 ```php
 use Spatie\CalendarLinks\Link;
@@ -22,7 +22,7 @@ Link::create(
 
 This will output: `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Birthday&dates=20180201T090000/20180201T180000&sprop=&sprop=name:`
 
-If you follow that link (and are authenticated with Google) you'll see a screen to add the event to your calendar.
+If you follow that link (and are authenticated with Google), you’ll see a screen to add the event to your calendar.
 
 The package can also generate ics files that you can open in several email and calendar programs, including Microsoft Outlook, Google Calendar, and Apple Calendar.
 
@@ -76,17 +76,15 @@ echo $link->ics([], ['format' => 'file']); // e.g. to attach ics as a file to an
 echo $link->formatWith(new \Your\Generator());
 ```
 
-> ⚠️ ICS download links don't work in IE and EdgeHTML-based Edge browsers, see [details](https://github.com/spatie/calendar-links/issues/71).
-
 ## Package principles
 
-1. it should produce a small output (to keep pagesize small)
+1. it should produce a small output (to keep page-size small)
 2. it should be fast (no any external heavy dependencies)
 3. all features should be supported by at least 2 generators (different services have different features)
 
 ## Changelog
 
-Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
+Please see [CHANGELOG](CHANGELOG.md) for more information.
 
 ## Testing
 
@@ -100,11 +98,11 @@ Please see [CONTRIBUTING](https://github.com/spatie/.github/blob/main/CONTRIBUTI
 
 ## Security
 
-If you've found a bug regarding security please mail [security@spatie.be](mailto:security@spatie.be) instead of using the issue tracker.
+If you've found a bug regarding security, please mail [security@spatie.be](mailto:security@spatie.be) instead of using the issue tracker.
 
 ## Postcardware
 
-You're free to use this package (it's [MIT-licensed](LICENSE.md)), but if it makes it to your production environment we highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using.
+You're free to use this package (it's [MIT-licensed](LICENSE.md)), but if it makes it to your production environment, we highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using.
 
 Our address is: Spatie, Samberstraat 69D, 2060 Antwerp, Belgium.
 
