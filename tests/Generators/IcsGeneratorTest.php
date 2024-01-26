@@ -17,6 +17,7 @@ class IcsGeneratorTest extends TestCase
     protected function generator(array $options = [], array $presentationOptions = []): Generator
     {
         $presentationOptions['format'] ??= 'file';
+
         return new Ics($options, $presentationOptions);
     }
 
