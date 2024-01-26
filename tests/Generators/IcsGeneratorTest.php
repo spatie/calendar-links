@@ -90,7 +90,7 @@ class IcsGeneratorTest extends TestCase
         $this->assertMatchesSnapshot(
             $this->generator(['REMINDER' => [
                 'DESCRIPTION' => 'Party with balloons and cake!',
-                'TIME' => DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 08:15', new DateTimeZone('UTC'))
+                'TIME' => DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 08:15', new DateTimeZone('UTC')),
             ]])->generate($this->createShortEventLink())
         );
     }
