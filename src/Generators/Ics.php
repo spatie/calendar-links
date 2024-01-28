@@ -7,23 +7,33 @@ use Spatie\CalendarLinks\Link;
 
 /**
  * @see https://icalendar.org/RFC-Specifications/iCalendar-RFC-5545/
+ * @psalm-type IcsOptions = array{UID?: string, URL?: string, REMINDER?: array{DESCRIPTION?: string, TIME?: \DateTimeInterface}}
  */
 class Ics implements Generator
 {
+    public const FORMAT_HTML = 'html';
+    public const FORMAT_FILE = 'file';
+
     /** @see https://www.php.net/manual/en/function.date.php */
     protected string $dateFormat = 'Ymd';
 
+
     protected string $dateTimeFormat = 'Ymd\THis\Z';
 
-    /** @var array<non-empty-string, non-empty-string> */
+    /** @var IcsOptions */
     protected array $options = [];
 
+    /** @var array{format?: self::FORMAT_*} */
+    protected $presentationOptions = [];
+
     /**
-     * @param array<non-empty-string, non-empty-string> $options
+     * @param IcsOptions $options Optional ICS properties and components
+     * @param array{format?: self::FORMAT_*} $presentationOptions
      */
-    public function __construct(array $options = [])
+    public function __construct(array $options = [], array $presentationOptions = [])
     {
         $this->options = $options;
+        $this->presentationOptions = $presentationOptions;
     }
 
     /** @inheritDoc */
@@ -41,8 +51,8 @@ class Ics implements Generator
         $dateTimeFormat = $link->allDay ? $this->dateFormat : $this->dateTimeFormat;
 
         if ($link->allDay) {
-            $url[] = 'DTSTAMP:'.gmdate($dateTimeFormat, $link->from->getTimestamp());
-            $url[] = 'DTSTART:'.gmdate($dateTimeFormat, $link->from->getTimestamp());
+            $url[] = 'DTSTAMP:'.$link->from->format($dateTimeFormat);
+            $url[] = 'DTSTART:'.$link->from->format($dateTimeFormat);
             $url[] = 'DURATION:P'.(max(1, $link->from->diff($link->to)->days)).'D';
         } else {
             $url[] = 'DTSTAMP:'.gmdate($dateTimeFormat, $link->from->getTimestamp());
@@ -61,10 +71,19 @@ class Ics implements Generator
             $url[] = 'URL;VALUE=URI:'.$this->options['URL'];
         }
 
+        if (is_array($this->options['REMINDER'] ?? null)) {
+            $url = [...$url, ...$this->generateAlertComponent($link)];
+        }
+
         $url[] = 'END:VEVENT';
         $url[] = 'END:VCALENDAR';
 
-        return $this->buildLink($url);
+        $format = $this->presentationOptions['format'] ?? self::FORMAT_HTML;
+
+        return match ($format) {
+            'file' => $this->buildFile($url),
+            default => $this->buildLink($url),
+        };
     }
 
     /**
@@ -74,6 +93,11 @@ class Ics implements Generator
     protected function buildLink(array $propertiesAndComponents): string
     {
         return 'data:text/calendar;charset=utf8;base64,'.base64_encode(implode("\r\n", $propertiesAndComponents));
+    }
+
+    protected function buildFile(array $propertiesAndComponents): string
+    {
+        return implode("\r\n", $propertiesAndComponents);
     }
 
     /** @see https://tools.ietf.org/html/rfc5545.html#section-3.3.11 */
@@ -92,5 +116,31 @@ class Ics implements Generator
             $link->title,
             $link->address
         ));
+    }
+
+    /**
+     * @param \Spatie\CalendarLinks\Link $link
+     * @return list<string>
+     */
+    private function generateAlertComponent(Link $link): array
+    {
+        $description = $this->options['REMINDER']['DESCRIPTION'] ?? null;
+        if (! is_string($description)) {
+            $description = 'Reminder: '.$this->escapeString($link->title);
+        }
+
+        $trigger = '-PT15M';
+        if (($reminderTime = $this->options['REMINDER']['TIME'] ?? null) instanceof \DateTimeInterface) {
+            $trigger = 'VALUE=DATE-TIME:'.gmdate($this->dateTimeFormat, $reminderTime->getTimestamp());
+        }
+
+        $alarmComponent = [];
+        $alarmComponent[] = 'BEGIN:VALARM';
+        $alarmComponent[] = 'ACTION:DISPLAY';
+        $alarmComponent[] = 'DESCRIPTION:'.$description;
+        $alarmComponent[] = 'TRIGGER:'.$trigger;
+        $alarmComponent[] = 'END:VALARM';
+
+        return $alarmComponent;
     }
 }

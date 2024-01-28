@@ -1,6 +1,3 @@
-
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/support-ukraine.svg?t=1" />](https://supportukrainenow.org)
-
 # Generate add to calendar links for Google, iCal and other calendar systems
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/spatie/calendar-links.svg?style=flat-square)](https://packagist.org/packages/spatie/calendar-links)
@@ -11,7 +8,7 @@
 [![Psalm level](https://shepherd.dev/github/spatie/calendar-links/level.svg)](https://shepherd.dev/github/spatie/calendar-links)
 
 
-Using this package you can generate links to add events to calendar systems. Here's a quick example:
+Using this package, you can generate links to add events to calendar systems. Here's a quick example:
 
 ```php
 use Spatie\CalendarLinks\Link;
@@ -25,7 +22,7 @@ Link::create(
 
 This will output: `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Birthday&dates=20180201T090000/20180201T180000&sprop=&sprop=name:`
 
-If you follow that link (and are authenticated with Google) you'll see a screen to add the event to your calendar.
+If you follow that link (and are authenticated with Google), you’ll see a screen to add the event to your calendar.
 
 The package can also generate ics files that you can open in several email and calendar programs, including Microsoft Outlook, Google Calendar, and Apple Calendar.
 
@@ -70,24 +67,27 @@ echo $link->webOutlook();
 // Generate a link to create an event on outlook.office.com calendar
 echo $link->webOffice();
 
-// Generate a data uri for an ics file (for iCal & Outlook)
+// Generate a data URI for an ics file (for iCal & Outlook)
 echo $link->ics();
+echo $link->ics(['UID' => 'custom-id']); // Custom UID (to update existing events)
+echo $link->ics(['URL' => 'https://my-page.com']); // Custom URL
+echo $link->ics(['REMINDER' => []]); // Add the default reminder (for iCal & Outlook)
+echo $link->ics(['REMINDER' => ['DESCRIPTION' => 'Remind me', 'TIME' => new \DateTime('tomorrow 12:30 UTC')]]); // Add a custom reminder
+echo $link->ics([], ['format' => 'file']); // use file output; e.g. to attach ics as a file to an email.
 
 // Generate a data URI using arbitrary generator:
 echo $link->formatWith(new \Your\Generator());
 ```
 
-> ⚠️ ICS download links don't work in IE and EdgeHTML-based Edge browsers, see [details](https://github.com/spatie/calendar-links/issues/71).
-
 ## Package principles
 
-1. it should produce a small output (to keep pagesize small)
+1. it should produce a small output (to keep page-size small)
 2. it should be fast (no any external heavy dependencies)
-3. all features should be supported by at least 2 generators (different services have different features)
+3. all `Link` class features should be supported by at least 2 generators (different services have different features)
 
 ## Changelog
 
-Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
+Please see [CHANGELOG](CHANGELOG.md) for more information.
 
 ## Testing
 
@@ -101,11 +101,11 @@ Please see [CONTRIBUTING](https://github.com/spatie/.github/blob/main/CONTRIBUTI
 
 ## Security
 
-If you've found a bug regarding security please mail [security@spatie.be](mailto:security@spatie.be) instead of using the issue tracker.
+If you've found a bug regarding security, please mail [security@spatie.be](mailto:security@spatie.be) instead of using the issue tracker.
 
 ## Postcardware
 
-You're free to use this package (it's [MIT-licensed](LICENSE.md)), but if it makes it to your production environment we highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using.
+You're free to use this package (it's [MIT-licensed](LICENSE.md)), but if it makes it to your production environment, we highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using.
 
 Our address is: Spatie, Samberstraat 69D, 2060 Antwerp, Belgium.
 

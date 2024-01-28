@@ -19,4 +19,20 @@ final class GoogleGeneratorTest extends TestCase
     {
         return 'google';
     }
+
+    /** @test */
+    public function it_correctly_generates_all_day_events_by_days(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator()->generate($this->createAllDayEventMultipleDaysWithTimezoneLink())
+        );
+    }
+
+    /** @test */
+    public function it_correctly_generates_all_day_events_by_dates(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator()->generate($this->createEventMultipleDaysViaStartEndWithTimezoneLink())
+        );
+    }
 }

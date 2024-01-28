@@ -9,6 +9,15 @@ use Spatie\CalendarLinks\Generators\WebOffice;
 use Spatie\CalendarLinks\Generators\WebOutlook;
 use Spatie\CalendarLinks\Generators\Yahoo;
 
+/**
+ * @property-read string $title
+ * @property-read \DateTimeInterface|\DateTime|\DateTimeImmutable $from
+ * @property-read \DateTimeInterface|\DateTime|\DateTimeImmutable $to
+ * @property-read string $description
+ * @property-read string $address
+ * @property-read bool $allDay
+ * @psalm-import-type IcsOptions from \Spatie\CalendarLinks\Generators\Ics
+ */
 class Link
 {
     public readonly string $title;
@@ -41,6 +50,14 @@ class Link
      */
     public static function create(string $title, \DateTimeInterface $from, \DateTimeInterface $to, bool $allDay = false): static
     {
+        // When creating all day events, we need to be in the UTC timezone as all day events are "floating" based on the user's timezone
+        if ($allDay) {
+            $startDate = new \DateTime($from->format('Y-m-d'), new \DateTimeZone('UTC'));
+            $numberOfDays = $from->diff($to)->days + 1;
+
+            return self::createAllDay($title, $startDate, $numberOfDays);
+        }
+
         return new static($title, $from, $to, $allDay);
     }
 
@@ -50,6 +67,11 @@ class Link
      */
     public static function createAllDay(string $title, \DateTimeInterface $fromDate, int $numberOfDays = 1): self
     {
+        // In cases where the from date is not UTC, make sure it's UTC, size all day events are floating and non UTC dates cause bugs in the generators
+        if ($fromDate->getTimezone() !== new \DateTimeZone('UTC')) {
+            $fromDate = \DateTime::createFromFormat('Y-m-d', $fromDate->format('Y-m-d'));
+        }
+
         $from = \DateTimeImmutable::createFromInterface($fromDate)->modify('midnight');
         $to = $from->modify("+$numberOfDays days");
         assert($to instanceof \DateTimeImmutable);
@@ -83,10 +105,15 @@ class Link
         return $this->formatWith(new Google());
     }
 
-    /** @param array<non-empty-string, non-empty-string> $options */
-    public function ics(array $options = []): string
+    /**
+     * @psalm-param IcsOptions $options ICS specific properties and components
+     * @param array<non-empty-string, non-empty-string> $options ICS specific properties and components
+     * @param array{format?: \Spatie\CalendarLinks\Generators\Ics::FORMAT_*} $presentationOptions
+     * @return string
+     */
+    public function ics(array $options = [], array $presentationOptions = []): string
     {
-        return $this->formatWith(new Ics($options));
+        return $this->formatWith(new Ics($options, $presentationOptions));
     }
 
     public function yahoo(): string
