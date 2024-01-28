@@ -3,7 +3,6 @@
 namespace Spatie\CalendarLinks\Tests;
 
 use DateTime;
-use DateTimeImmutable;
 use DateTimeZone;
 use PHPUnit\Framework\TestCase as BaseTestCase;
 use Spatie\CalendarLinks\Link;
@@ -13,89 +12,77 @@ abstract class TestCase extends BaseTestCase
 {
     use MatchesSnapshots;
 
-    protected function createShortEventLink(bool $immutable = false): Link
+    protected function createShortEventLink(): Link
     {
         $description = 'With balloons, clowns and stuff
 Bring a dog, bring a frog';
-
-        $dateTimeClass = $immutable ? DateTimeImmutable::class : DateTime::class;
 
         return Link::create(
             'Birthday',
-            $dateTimeClass::createFromFormat('Y-m-d H:i', '2018-02-01 09:00', new DateTimeZone('UTC')),
-            $dateTimeClass::createFromFormat('Y-m-d H:i', '2018-02-01 18:00', new DateTimeZone('UTC'))
+            DateTime::class::createFromFormat('Y-m-d H:i', '2018-02-01 09:00', new DateTimeZone('UTC')),
+            DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00', new DateTimeZone('UTC'))
         )->description($description)->address('Party Lane 1A, 1337 Funtown');
     }
 
-    protected function createMultipleDaysEventLink(bool $immutable = false): Link
+    protected function createMultipleDaysEventLink(): Link
     {
         $description = 'With balloons, clowns and stuff
 Bring a dog, bring a frog';
-
-        $dateTimeClass = $immutable ? DateTimeImmutable::class : DateTime::class;
 
         return Link::create(
             'New Year',
-            $dateTimeClass::createFromFormat('Y-m-d H:i', '2019-12-31 23:00', new DateTimeZone('UTC')),
-            $dateTimeClass::createFromFormat('Y-m-d H:i', '2020-01-01 1:00', new DateTimeZone('UTC'))
+            DateTime::createFromFormat('Y-m-d H:i', '2019-12-31 23:00', new DateTimeZone('UTC')),
+            DateTime::createFromFormat('Y-m-d H:i', '2020-01-01 1:00', new DateTimeZone('UTC'))
         )->description($description)->address('Party Lane 1A, 1337 Funtown');
     }
 
-    protected function createSingleDayAllDayEventLink(bool $immutable = false): Link
+    protected function createSingleDayAllDayEventLink(): Link
     {
         $description = 'With balloons, clowns and stuff
 Bring a dog, bring a frog';
 
-        $dateTimeClass = $immutable ? DateTimeImmutable::class : DateTime::class;
-
         return Link::createAllDay(
             'Birthday',
-            $dateTimeClass::createFromFormat('Y-m-d', '2018-02-01', new DateTimeZone('UTC'))
+            DateTime::createFromFormat('Y-m-d', '2018-02-01', new DateTimeZone('UTC'))
         )->description($description)->address('Party Lane 1A, 1337 Funtown');
     }
 
-    protected function createMultipleDaysAllDayEventLink(bool $immutable = false): Link
+    protected function createMultipleDaysAllDayEventLink(): Link
     {
         $description = 'With balloons, clowns and stuff
 Bring a dog, bring a frog';
 
-        $dateTimeClass = $immutable ? DateTimeImmutable::class : DateTime::class;
 
         return Link::createAllDay(
             'Birthday',
-            $dateTimeClass::createFromFormat('Y-m-d', '2018-02-01', new DateTimeZone('UTC')),
+            DateTime::createFromFormat('Y-m-d', '2018-02-01', new DateTimeZone('UTC')),
             5
         )->description($description)->address('Party Lane 1A, 1337 Funtown');
     }
 
-    protected function createAllDayEventMultipleDaysWithTimezoneLink(bool $immutable = false): Link
+    protected function createAllDayEventMultipleDaysWithTimezoneLink(): Link
     {
         $description = 'Testing all day';
 
-        $dateTimeClass = $immutable ? DateTimeImmutable::class : DateTime::class;
-
         return Link::createAllDay(
             'All day bugs',
-            $dateTimeClass::createFromFormat('Y-m-d', '2024-01-25', new DateTimeZone('Pacific/Wake'))->setTime(0, 0),
+            DateTime::createFromFormat('Y-m-d', '2024-01-25', new DateTimeZone('Pacific/Wake'))->setTime(0, 0),
             5
         )->description($description);
     }
 
-    protected function createEventMultipleDaysViaStartEndWithTimezoneLink(bool $immutable = false): Link
+    protected function createEventMultipleDaysViaStartEndWithTimezoneLink(): Link
     {
         $description = 'Testing all day';
 
-        $dateTimeClass = $immutable ? DateTimeImmutable::class : DateTime::class;
-
-        return Link::create(
+        return Link::createAllDay(
             'All day bugs',
-            $dateTimeClass::createFromFormat('Y-m-d', '2024-01-25', new DateTimeZone('Pacific/Wake'))->setTime(0, 0),
-            $dateTimeClass::createFromFormat('Y-m-d', '2024-01-30', new DateTimeZone('Pacific/Wake'))->setTime(0, 0),
-            true,
+            \DateTime::createFromFormat('Y-m-d', '2024-01-25', new DateTimeZone('Pacific/Wake'))->setTime(0, 0),
+            6,
         )->description($description);
     }
 
-    protected function createDescriptionIsHTMLcodeEventLink(bool $immutable = false): Link
+    protected function createDescriptionIsHtmlCodeEventLink(): Link
     {
         $description = 'With balloons, clowns and stuff
 Bring a dog, bring a frog.
@@ -106,12 +93,10 @@ Project link <a href="https://github.com/spatie/calendar-links">calendar-links</
 Thank you.
 ';
 
-        $dateTimeClass = $immutable ? DateTimeImmutable::class : DateTime::class;
-
         return Link::create(
             'Birthday Party +1',
-            $dateTimeClass::createFromFormat('Y-m-d H:i', '2018-02-01 09:00', new DateTimeZone('UTC')),
-            $dateTimeClass::createFromFormat('Y-m-d H:i', '2018-02-01 18:00', new DateTimeZone('UTC'))
+            DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00', new DateTimeZone('UTC')),
+            DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00', new DateTimeZone('UTC'))
         )->description($description)->address('Party Lane 1A, 1337 Funtown');
     }
 }

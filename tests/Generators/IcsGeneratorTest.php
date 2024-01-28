@@ -32,30 +32,6 @@ final class IcsGeneratorTest extends TestCase
     }
 
     /** @test */
-    public function it_can_generate_an_ics_link_with_custom_uid(): void
-    {
-        $this->assertMatchesSnapshot(
-            $this->generator(['UID' => 'random-uid'])->generate($this->createShortEventLink())
-        );
-    }
-
-    /** @test */
-    public function it_supports_custom_product_id(): void
-    {
-        $this->assertMatchesSnapshot(
-            $this->generator(['PRODID' => 'My Product'])->generate($this->createShortEventLink())
-        );
-    }
-
-    /** @test */
-    public function it_generates_base64_encoded_link_for_html(): void
-    {
-        $this->assertMatchesSnapshot(
-            $this->generator([], ['format' => Ics::FORMAT_HTML])->generate($this->createShortEventLink())
-        );
-    }
-
-    /** @test */
     public function it_correctly_generates_all_day_events_by_days(): void
     {
         $this->assertMatchesSnapshot(
@@ -68,6 +44,30 @@ final class IcsGeneratorTest extends TestCase
     {
         $this->assertMatchesSnapshot(
             $this->generator()->generate($this->createEventMultipleDaysViaStartEndWithTimezoneLink())
+        );
+    }
+
+    /** @test */
+    public function it_generates_base64_encoded_link_for_html(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator([], ['format' => Ics::FORMAT_HTML])->generate($this->createShortEventLink())
+        );
+    }
+
+    /** @test */
+    public function it_can_generate_an_ics_link_with_custom_uid(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator(['UID' => 'random-uid'])->generate($this->createShortEventLink())
+        );
+    }
+
+    /** @test */
+    public function it_supports_custom_product_id(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator(['PRODID' => 'My Product'])->generate($this->createShortEventLink())
         );
     }
 

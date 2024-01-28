@@ -42,17 +42,9 @@ class Link
     /**
      * @throws \Spatie\CalendarLinks\Exceptions\InvalidLink When date range is invalid.
      */
-    public static function create(string $title, \DateTimeInterface $from, \DateTimeInterface $to, bool $allDay = false): static
+    public static function create(string $title, \DateTimeInterface $from, \DateTimeInterface $to): static
     {
-        // When creating all day events, we need to be in the UTC timezone as all day events are "floating" based on the user's timezone
-        if ($allDay) {
-            $startDate = new \DateTimeImmutable($from->format('Y-m-d'), new \DateTimeZone('UTC'));
-            $numberOfDays = $from->diff($to)->days + 1;
-
-            return static::createAllDay($title, $startDate, $numberOfDays);
-        }
-
-        return new static($title, $from, $to, $allDay);
+        return new static($title, $from, $to);
     }
 
     /**

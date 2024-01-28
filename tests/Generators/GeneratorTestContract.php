@@ -67,12 +67,12 @@ trait GeneratorTestContract
     public function it_can_generate_a_description_is_html_code_event_link_with_allday_flag(): void
     {
         $this->assertMatchesSnapshot(
-            $this->generator()->generate($this->createDescriptionIsHTMLcodeEventLink())
+            $this->generator()->generate($this->createDescriptionIsHtmlCodeEventLink())
         );
 
         $this->assertSame(
-            $this->generator()->generate($this->createDescriptionIsHTMLcodeEventLink(false)),
-            $this->generator()->generate($this->createDescriptionIsHTMLcodeEventLink(true))
+            $this->generator()->generate($this->createDescriptionIsHtmlCodeEventLink(false)),
+            $this->generator()->generate($this->createDescriptionIsHtmlCodeEventLink(true))
         );
     }
 }
