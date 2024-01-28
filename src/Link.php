@@ -55,7 +55,7 @@ class Link
             $startDate = new \DateTimeImmutable($from->format('Y-m-d'), new \DateTimeZone('UTC'));
             $numberOfDays = $from->diff($to)->days + 1;
 
-            return self::createAllDay($title, $startDate, $numberOfDays);
+            return static::createAllDay($title, $startDate, $numberOfDays);
         }
 
         return new static($title, $from, $to, $allDay);
@@ -65,7 +65,7 @@ class Link
      * @param positive-int $numberOfDays
      * @throws \Spatie\CalendarLinks\Exceptions\InvalidLink When date range is invalid.
      */
-    public static function createAllDay(string $title, \DateTimeInterface $fromDate, int $numberOfDays = 1): self
+    public static function createAllDay(string $title, \DateTimeInterface $fromDate, int $numberOfDays = 1): static
     {
         // In cases where the from date is not UTC, make sure it's UTC, size all day events are floating and non UTC dates cause bugs in the generators
         if ($fromDate->getTimezone() !== new \DateTimeZone('UTC')) {
@@ -73,10 +73,16 @@ class Link
         }
 
         $from = \DateTimeImmutable::createFromInterface($fromDate)->modify('midnight');
-        $to = $from->modify("+$numberOfDays days");
-        assert($to instanceof \DateTimeImmutable);
+        if (! $from instanceof \DateTimeImmutable) {
+            throw new InvalidLink('Could not modify $fromDate while building all day link.');
+        }
 
-        return new self($title, $from, $to, true);
+        $to = $from->modify("+$numberOfDays days");
+        if (! $to instanceof \DateTimeImmutable) {
+            throw new InvalidLink('Could not modify $fromDate while calculating $to date.');
+        }
+
+        return new static($title, $from, $to, true);
     }
 
     /** Set description of the Event. */
