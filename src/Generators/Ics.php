@@ -7,7 +7,7 @@ use Spatie\CalendarLinks\Link;
 
 /**
  * @see https://icalendar.org/RFC-Specifications/iCalendar-RFC-5545/
- * @psalm-type IcsOptions = array{UID?: string, URL?: string, REMINDER?: array{DESCRIPTION?: string, TIME?: \DateTimeInterface}}
+ * @psalm-type IcsOptions = array{UID?: string, URL?: string, PRODID?: string, REMINDER?: array{DESCRIPTION?: string, TIME?: \DateTimeInterface}}
  */
 class Ics implements Generator
 {
@@ -86,7 +86,7 @@ class Ics implements Generator
     }
 
     /**
-     * @param non-empty-list<non-empty-string> $propertiesAndComponents
+     * @param non-empty-list<string> $propertiesAndComponents
      * @return non-empty-string
      */
     protected function buildLink(array $propertiesAndComponents): string
@@ -94,6 +94,10 @@ class Ics implements Generator
         return 'data:text/calendar;charset=utf8;base64,'.base64_encode(implode("\r\n", $propertiesAndComponents));
     }
 
+    /**
+     * @param non-empty-list<string> $propertiesAndComponents
+     * @return non-empty-string
+     */
     protected function buildFile(array $propertiesAndComponents): string
     {
         return implode("\r\n", $propertiesAndComponents);

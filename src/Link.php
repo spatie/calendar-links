@@ -10,12 +10,6 @@ use Spatie\CalendarLinks\Generators\WebOutlook;
 use Spatie\CalendarLinks\Generators\Yahoo;
 
 /**
- * @property-read string $title
- * @property-read \DateTimeInterface|\DateTime|\DateTimeImmutable $from
- * @property-read \DateTimeInterface|\DateTime|\DateTimeImmutable $to
- * @property-read string $description
- * @property-read string $address
- * @property-read bool $allDay
  * @psalm-import-type IcsOptions from \Spatie\CalendarLinks\Generators\Ics
  */
 class Link
