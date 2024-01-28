@@ -12,18 +12,22 @@ use Spatie\CalendarLinks\Link;
 class Google implements Generator
 {
     /** @see https://www.php.net/manual/en/function.date.php */
-    protected string $dateFormat = 'Ymd';
+    private const DATE_FORMAT = 'Ymd';
 
-    protected string $dateTimeFormat = 'Ymd\THis\Z';
+    /** @see https://www.php.net/manual/en/function.date.php */
+    private const DATETIME_FORMAT = 'Ymd\THis\Z';
+
+    /** @var non-empty-string */
+    protected const BASE_URL = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
 
     /** @inheritDoc */
     public function generate(Link $link): string
     {
-        $url = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
+        $url = self::BASE_URL;
 
         $utcStartDateTime = $link->from->setTimezone(new DateTimeZone('UTC'));
         $utcEndDateTime = $link->to->setTimezone(new DateTimeZone('UTC'));
-        $dateTimeFormat = $link->allDay ? $this->dateFormat : $this->dateTimeFormat;
+        $dateTimeFormat = $link->allDay ? self::DATE_FORMAT : self::DATETIME_FORMAT;
         $url .= '&dates='.$utcStartDateTime->format($dateTimeFormat).'/'.$utcEndDateTime->format($dateTimeFormat);
 
         // Add timezone name if it is specified in both from and to dates and is the same for both
