@@ -11,6 +11,7 @@ use Spatie\CalendarLinks\Generators\Yahoo;
 
 /**
  * @psalm-import-type IcsOptions from \Spatie\CalendarLinks\Generators\Ics
+ * @psalm-import-type IcsPresentationOptions from \Spatie\CalendarLinks\Generators\Ics
  */
 class Link
 {
@@ -56,17 +57,13 @@ class Link
         // In cases where the from date is not UTC, make sure it's UTC, size all day events are floating and non UTC dates cause bugs in the generators
         if ($fromDate->getTimezone() !== new \DateTimeZone('UTC')) {
             $fromDate = \DateTimeImmutable::createFromFormat('Y-m-d', $fromDate->format('Y-m-d'));
+            assert($fromDate instanceof \DateTimeImmutable);
         }
 
         $from = \DateTimeImmutable::createFromInterface($fromDate)->modify('midnight');
-        if (! $from instanceof \DateTimeImmutable) {
-            throw new InvalidLink('Could not modify $fromDate while building all day link.');
-        }
 
         $to = $from->modify("+$numberOfDays days");
-        if (! $to instanceof \DateTimeImmutable) {
-            throw new InvalidLink('Could not modify $fromDate while calculating $to date.');
-        }
+        assert($to instanceof \DateTimeImmutable);
 
         return new static($title, $from, $to, true);
     }
@@ -79,7 +76,7 @@ class Link
         return $this;
     }
 
-    /** Set address of the Event. */
+    /** Set the address of the Event. */
     public function address(string $address): static
     {
         $this->address = $address;
@@ -99,8 +96,7 @@ class Link
 
     /**
      * @psalm-param IcsOptions $options ICS specific properties and components
-     * @param array<non-empty-string, non-empty-string> $options ICS specific properties and components
-     * @param array{format?: \Spatie\CalendarLinks\Generators\Ics::FORMAT_*} $presentationOptions
+     * @psalm-param IcsPresentationOptions $presentationOptions
      * @return string
      */
     public function ics(array $options = [], array $presentationOptions = []): string

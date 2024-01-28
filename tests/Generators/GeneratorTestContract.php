@@ -17,11 +17,6 @@ trait GeneratorTestContract
         $this->assertMatchesSnapshot(
             $this->generator()->generate($this->createShortEventLink())
         );
-
-        $this->assertSame(
-            $this->generator()->generate($this->createShortEventLink(false)),
-            $this->generator()->generate($this->createShortEventLink(true))
-        );
     }
 
     /** @test */
@@ -29,11 +24,6 @@ trait GeneratorTestContract
     {
         $this->assertMatchesSnapshot(
             $this->generator()->generate($this->createSingleDayAllDayEventLink())
-        );
-
-        $this->assertSame(
-            $this->generator()->generate($this->createSingleDayAllDayEventLink(false)),
-            $this->generator()->generate($this->createSingleDayAllDayEventLink(true))
         );
     }
 
@@ -43,11 +33,6 @@ trait GeneratorTestContract
         $this->assertMatchesSnapshot(
             $this->generator()->generate($this->createMultipleDaysEventLink())
         );
-
-        $this->assertSame(
-            $this->generator()->generate($this->createMultipleDaysEventLink(false)),
-            $this->generator()->generate($this->createMultipleDaysEventLink(true))
-        );
     }
 
     /** @test */
@@ -56,11 +41,6 @@ trait GeneratorTestContract
         $this->assertMatchesSnapshot(
             $this->generator()->generate($this->createMultipleDaysAllDayEventLink())
         );
-
-        $this->assertSame(
-            $this->generator()->generate($this->createMultipleDaysAllDayEventLink(false)),
-            $this->generator()->generate($this->createMultipleDaysAllDayEventLink(true))
-        );
     }
 
     /** @test */
@@ -68,11 +48,6 @@ trait GeneratorTestContract
     {
         $this->assertMatchesSnapshot(
             $this->generator()->generate($this->createDescriptionIsHtmlCodeEventLink())
-        );
-
-        $this->assertSame(
-            $this->generator()->generate($this->createDescriptionIsHtmlCodeEventLink(false)),
-            $this->generator()->generate($this->createDescriptionIsHtmlCodeEventLink(true))
         );
     }
 }

@@ -8,15 +8,18 @@ use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Generators\Ics;
 use Spatie\CalendarLinks\Tests\TestCase;
 
-/** @psalm-import-type IcsOptions from \Spatie\CalendarLinks\Generators\Ics */
+/**
+ * @psalm-import-type IcsOptions from \Spatie\CalendarLinks\Generators\Ics
+ * @psalm-import-type IcsPresentationOptions from \Spatie\CalendarLinks\Generators\Ics
+ */
 final class IcsGeneratorTest extends TestCase
 {
     use GeneratorTestContract;
 
     /**
      * @psalm-param IcsOptions $options ICS specific properties and components
-     * @param array<non-empty-string, non-empty-string> $options ICS specific properties and components
-     * @param array{format?: \Spatie\CalendarLinks\Generators\Ics::FORMAT_*} $presentationOptions
+     * @param IcsOptions $options ICS specific properties and components
+     * @param IcsPresentationOptions $presentationOptions
      * @return \Spatie\CalendarLinks\Generator
      */
     protected function generator(array $options = [], array $presentationOptions = []): Generator

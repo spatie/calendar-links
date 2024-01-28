@@ -8,6 +8,7 @@ use Spatie\CalendarLinks\Link;
 /**
  * @see https://icalendar.org/RFC-Specifications/iCalendar-RFC-5545/
  * @psalm-type IcsOptions = array{UID?: string, URL?: string, PRODID?: string, REMINDER?: array{DESCRIPTION?: string, TIME?: \DateTimeInterface}}
+ * @psalm-type IcsPresentationOptions = array{format?: self::FORMAT_*}
  */
 class Ics implements Generator
 {
@@ -19,15 +20,15 @@ class Ics implements Generator
 
     protected string $dateTimeFormat = 'Ymd\THis\Z';
 
-    /** @var IcsOptions */
+    /** @psalm-var IcsOptions */
     protected array $options = [];
 
-    /** @var array{format?: self::FORMAT_*} */
+    /** @psalm-var IcsPresentationOptions */
     protected $presentationOptions = [];
 
     /**
      * @param IcsOptions $options Optional ICS properties and components
-     * @param array{format?: self::FORMAT_*} $presentationOptions
+     * @param IcsPresentationOptions $presentationOptions
      */
     public function __construct(array $options = [], array $presentationOptions = [])
     {
