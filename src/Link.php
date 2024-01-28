@@ -52,7 +52,7 @@ class Link
     {
         // When creating all day events, we need to be in the UTC timezone as all day events are "floating" based on the user's timezone
         if ($allDay) {
-            $startDate = new \DateTime($from->format('Y-m-d'), new \DateTimeZone('UTC'));
+            $startDate = new \DateTimeImmutable($from->format('Y-m-d'), new \DateTimeZone('UTC'));
             $numberOfDays = $from->diff($to)->days + 1;
 
             return self::createAllDay($title, $startDate, $numberOfDays);
@@ -69,7 +69,7 @@ class Link
     {
         // In cases where the from date is not UTC, make sure it's UTC, size all day events are floating and non UTC dates cause bugs in the generators
         if ($fromDate->getTimezone() !== new \DateTimeZone('UTC')) {
-            $fromDate = \DateTime::createFromFormat('Y-m-d', $fromDate->format('Y-m-d'));
+            $fromDate = \DateTimeImmutable::createFromFormat('Y-m-d', $fromDate->format('Y-m-d'));
         }
 
         $from = \DateTimeImmutable::createFromInterface($fromDate)->modify('midnight');

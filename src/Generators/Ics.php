@@ -17,7 +17,6 @@ class Ics implements Generator
     /** @see https://www.php.net/manual/en/function.date.php */
     protected string $dateFormat = 'Ymd';
 
-
     protected string $dateTimeFormat = 'Ymd\THis\Z';
 
     /** @var IcsOptions */
