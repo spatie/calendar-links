@@ -12,16 +12,20 @@ use Spatie\CalendarLinks\Link;
 class Yahoo implements Generator
 {
     /** @see https://www.php.net/manual/en/function.date.php */
-    protected string $dateFormat = 'Ymd';
+    private const DATE_FORMAT = 'Ymd';
 
-    protected string $dateTimeFormat = 'Ymd\THis\Z';
+    /** @see https://www.php.net/manual/en/function.date.php */
+    private const DATETIME_FORMAT = 'Ymd\THis\Z';
+
+    /** @var non-empty-string */
+    protected const BASE_URL = 'https://calendar.yahoo.com/?v=60&view=d&type=20';
 
     /** @inheritDoc */
     public function generate(Link $link): string
     {
-        $url = 'https://calendar.yahoo.com/?v=60&view=d&type=20';
+        $url = self::BASE_URL;
 
-        $dateTimeFormat = $link->allDay ? $this->dateFormat : $this->dateTimeFormat;
+        $dateTimeFormat = $link->allDay ? self::DATE_FORMAT : self::DATETIME_FORMAT;
 
         if ($link->allDay) {
             $url .= '&ST='.$link->from->format($dateTimeFormat);

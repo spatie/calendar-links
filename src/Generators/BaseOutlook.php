@@ -12,23 +12,23 @@ use Spatie\CalendarLinks\Link;
 abstract class BaseOutlook implements Generator
 {
     /** @see https://www.php.net/manual/en/function.date.php */
-    protected string $dateFormat = 'Y-m-d';
+    private const DATE_FORMAT = 'Y-m-d';
 
     /** @see https://www.php.net/manual/en/function.date.php */
-    protected string $dateTimeFormat = 'Y-m-d\TH:i:s\Z';
+    private const DATETIME_FORMAT = 'Y-m-d\TH:i:s\Z';
 
     /**
      * Get base URL for links.
      * @return non-empty-string
      */
-    abstract public function baseUrl(): string;
+    abstract protected function baseUrl(): string;
 
     /** @inheritDoc */
     public function generate(Link $link): string
     {
         $url = $this->baseUrl();
 
-        $dateTimeFormat = $link->allDay ? $this->dateFormat : $this->dateTimeFormat;
+        $dateTimeFormat = $link->allDay ? self::DATE_FORMAT : self::DATETIME_FORMAT;
 
         $utcStartDateTime = $link->from->setTimezone(new DateTimeZone('UTC'));
         $utcEndDateTime = $link->to->setTimezone(new DateTimeZone('UTC'));
