@@ -34,4 +34,12 @@ class YahooGeneratorTest extends TestCase
 
         $this->assertMatchesSnapshot($link->yahoo());
     }
+
+    /** @test */
+    public function it_can_generate_an_url_with_custom_parameters(): void
+    {
+        $link = $this->createShortEventLink();
+
+        $this->assertMatchesSnapshot($link->yahoo(['uid' => '750e0c92aa33a7382460a280c2dfb8e6', 'msngr' => null]));
+    }
 }

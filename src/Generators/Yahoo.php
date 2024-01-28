@@ -8,6 +8,7 @@ use Spatie\CalendarLinks\Link;
 
 /**
  * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/master/services/yahoo.md
+ * @psalm-type YahooOptions = array<string, scalar|null>
  */
 class Yahoo implements Generator
 {
@@ -15,6 +16,15 @@ class Yahoo implements Generator
     protected $dateFormat = 'Ymd';
     /** @var string */
     protected $dateTimeFormat = 'Ymd\THis\Z';
+
+    /** @psalm-var YahooOptions */
+    protected array $options = [];
+
+    /** @psalm-param YahooOptions $options */
+    public function __construct(array $options = [])
+    {
+        $this->options = $options;
+    }
 
     /** {@inheritDoc} */
     public function generate(Link $link): string
@@ -42,6 +52,10 @@ class Yahoo implements Generator
 
         if ($link->address) {
             $url .= '&in_loc='.$this->sanitizeText($link->address);
+        }
+
+        foreach ($this->options as $key => $value) {
+            $url .= '&'.urlencode($key).(in_array($value, [null, ''], true) ? '' : '='.$this->sanitizeText((string) $value));
         }
 
         return $url;

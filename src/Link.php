@@ -17,6 +17,9 @@ use Spatie\CalendarLinks\Generators\Yahoo;
  * @property-read string $address
  * @property-read bool $allDay
  * @psalm-import-type IcsOptions from \Spatie\CalendarLinks\Generators\Ics
+ * @psalm-import-type GoogleOptions from \Spatie\CalendarLinks\Generators\Google
+ * @psalm-import-type YahooOptions from \Spatie\CalendarLinks\Generators\Yahoo
+ * @psalm-import-type OutlookOptions from \Spatie\CalendarLinks\Generators\BaseOutlook
  */
 class Link
 {
@@ -123,9 +126,10 @@ class Link
         return $generator->generate($this);
     }
 
-    public function google(): string
+    /** @psalm-param GoogleOptions $options */
+    public function google(array $options = []): string
     {
-        return $this->formatWith(new Google());
+        return $this->formatWith(new Google($options));
     }
 
     /**
@@ -139,19 +143,22 @@ class Link
         return $this->formatWith(new Ics($options, $presentationOptions));
     }
 
-    public function yahoo(): string
+    /** @psalm-param YahooOptions $options */
+    public function yahoo(array $options = []): string
     {
-        return $this->formatWith(new Yahoo());
+        return $this->formatWith(new Yahoo($options));
     }
 
-    public function webOutlook(): string
+    /** @psalm-param OutlookOptions $options */
+    public function webOutlook(array $options = []): string
     {
-        return $this->formatWith(new WebOutlook());
+        return $this->formatWith(new WebOutlook($options));
     }
 
-    public function webOffice(): string
+    /** @psalm-param OutlookOptions $options */
+    public function webOffice(array $options = []): string
     {
-        return $this->formatWith(new WebOffice());
+        return $this->formatWith(new WebOffice($options));
     }
 
     public function __get($property)
