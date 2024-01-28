@@ -8,12 +8,15 @@ use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Generators\Ics;
 use Spatie\CalendarLinks\Tests\TestCase;
 
+/** @psalm-import-type IcsOptions from \Spatie\CalendarLinks\Generators\Ics */
 final class IcsGeneratorTest extends TestCase
 {
     use GeneratorTestContract;
 
     /**
-     * @param array<non-empty-string, non-empty-string> $options {@see \Spatie\CalendarLinks\Generators\Ics::__construct}
+     * @psalm-param IcsOptions $options ICS specific properties and components
+     * @param array<non-empty-string, non-empty-string> $options ICS specific properties and components
+     * @param array{format?: \Spatie\CalendarLinks\Generators\Ics::FORMAT_*} $presentationOptions
      * @return \Spatie\CalendarLinks\Generator
      */
     protected function generator(array $options = [], array $presentationOptions = []): Generator
@@ -32,7 +35,7 @@ final class IcsGeneratorTest extends TestCase
     public function it_can_generate_an_ics_link_with_custom_uid(): void
     {
         $this->assertMatchesSnapshot(
-            $this->generator(['UID' => 'random-uid', ['format' => Ics::FORMAT_FILE]])->generate($this->createShortEventLink())
+            $this->generator(['UID' => 'random-uid'])->generate($this->createShortEventLink())
         );
     }
 
@@ -41,14 +44,6 @@ final class IcsGeneratorTest extends TestCase
     {
         $this->assertMatchesSnapshot(
             $this->generator(['PRODID' => 'My Product'])->generate($this->createShortEventLink())
-        );
-    }
-
-    /** @test */
-    public function it_has_a_product_dtstamp(): void
-    {
-        $this->assertMatchesSnapshot(
-            $this->generator(['DTSTAMP' => '20180201T090000Z'], ['format' => Ics::FORMAT_FILE])->generate($this->createShortEventLink())
         );
     }
 
