@@ -83,7 +83,7 @@ echo $link->formatWith(new \Your\Generator());
 
 1. it should produce a small output (to keep page-size small)
 2. it should be fast (no any external heavy dependencies)
-3. all features should be supported by at least 2 generators (different services have different features)
+3. all `Link` class features should be supported by at least 2 generators (different services have different features)
 
 ## Changelog
 
