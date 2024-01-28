@@ -8,7 +8,7 @@ use Spatie\CalendarLinks\Link;
 
 /**
  * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/master/services/outlook-web.md
- * @psalm-type OutlookOptions = array<string, scalar|null>
+ * @psalm-type OutlookUrlParameters = array<string, scalar|null>
  */
 abstract class BaseOutlook implements Generator
 {
@@ -18,13 +18,13 @@ abstract class BaseOutlook implements Generator
     /** @var string {@see https://www.php.net/manual/en/function.date.php} */
     protected $dateTimeFormat = 'Y-m-d\TH:i:s\Z';
 
-    /** @psalm-var OutlookOptions */
-    protected array $options = [];
+    /** @psalm-var OutlookUrlParameters */
+    protected array $urlParameters = [];
 
-    /** @psalm-param OutlookOptions $options */
-    public function __construct(array $options = [])
+    /** @psalm-param OutlookUrlParameters $urlParameters */
+    public function __construct(array $urlParameters = [])
     {
-        $this->options = $options;
+        $this->urlParameters = $urlParameters;
     }
 
     /** Get base URL for links. */
@@ -57,7 +57,7 @@ abstract class BaseOutlook implements Generator
             $url .= '&location='.$this->sanitizeString($link->address);
         }
 
-        foreach ($this->options as $key => $value) {
+        foreach ($this->urlParameters as $key => $value) {
             $url .= '&'.urlencode($key).(in_array($value, [null, ''], true) ? '' : '='.$this->sanitizeString((string) $value));
         }
 

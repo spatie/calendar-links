@@ -8,7 +8,7 @@ use Spatie\CalendarLinks\Link;
 
 /**
  * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/master/services/google.md
- * @psalm-type GoogleOptions = array<string, scalar|null>
+ * @psalm-type GoogleUrlParameters = array<string, scalar|null>
  */
 class Google implements Generator
 {
@@ -17,13 +17,13 @@ class Google implements Generator
     /** @var string */
     protected $dateTimeFormat = 'Ymd\THis\Z';
 
-    /** @psalm-var GoogleOptions */
-    protected array $options = [];
+    /** @psalm-var GoogleUrlParameters */
+    protected array $urlParameters = [];
 
-    /** @psalm-param GoogleOptions $options */
-    public function __construct(array $options = [])
+    /** @psalm-param GoogleUrlParameters $urlParameters */
+    public function __construct(array $urlParameters = [])
     {
-        $this->options = $options;
+        $this->urlParameters = $urlParameters;
     }
 
     /** {@inheritDoc} */
@@ -54,7 +54,7 @@ class Google implements Generator
             $url .= '&location='.urlencode($link->address);
         }
 
-        foreach ($this->options as $key => $value) {
+        foreach ($this->urlParameters as $key => $value) {
             $url .= '&'.urlencode($key).(in_array($value, [null, ''], true) ? '' : '='.urlencode((string) $value));
         }
 

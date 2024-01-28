@@ -17,9 +17,9 @@ use Spatie\CalendarLinks\Generators\Yahoo;
  * @property-read string $address
  * @property-read bool $allDay
  * @psalm-import-type IcsOptions from \Spatie\CalendarLinks\Generators\Ics
- * @psalm-import-type GoogleOptions from \Spatie\CalendarLinks\Generators\Google
- * @psalm-import-type YahooOptions from \Spatie\CalendarLinks\Generators\Yahoo
- * @psalm-import-type OutlookOptions from \Spatie\CalendarLinks\Generators\BaseOutlook
+ * @psalm-import-type GoogleUrlParameters from \Spatie\CalendarLinks\Generators\Google
+ * @psalm-import-type YahooUrlParameters from \Spatie\CalendarLinks\Generators\Yahoo
+ * @psalm-import-type OutlookUrlParameters from \Spatie\CalendarLinks\Generators\BaseOutlook
  */
 class Link
 {
@@ -126,10 +126,10 @@ class Link
         return $generator->generate($this);
     }
 
-    /** @psalm-param GoogleOptions $options */
-    public function google(array $options = []): string
+    /** @psalm-param GoogleUrlParameters $urlParameters */
+    public function google(array $urlParameters = []): string
     {
-        return $this->formatWith(new Google($options));
+        return $this->formatWith(new Google($urlParameters));
     }
 
     /**
@@ -143,22 +143,22 @@ class Link
         return $this->formatWith(new Ics($options, $presentationOptions));
     }
 
-    /** @psalm-param YahooOptions $options */
-    public function yahoo(array $options = []): string
+    /** @psalm-param YahooUrlParameters $urlParameters */
+    public function yahoo(array $urlParameters = []): string
     {
-        return $this->formatWith(new Yahoo($options));
+        return $this->formatWith(new Yahoo($urlParameters));
     }
 
-    /** @psalm-param OutlookOptions $options */
-    public function webOutlook(array $options = []): string
+    /** @psalm-param OutlookUrlParameters $urlParameters */
+    public function webOutlook(array $urlParameters = []): string
     {
-        return $this->formatWith(new WebOutlook($options));
+        return $this->formatWith(new WebOutlook($urlParameters));
     }
 
-    /** @psalm-param OutlookOptions $options */
-    public function webOffice(array $options = []): string
+    /** @psalm-param OutlookUrlParameters $urlParameters */
+    public function webOffice(array $urlParameters = []): string
     {
-        return $this->formatWith(new WebOffice($options));
+        return $this->formatWith(new WebOffice($urlParameters));
     }
 
     public function __get($property)
