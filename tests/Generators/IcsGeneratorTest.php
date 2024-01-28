@@ -37,10 +37,10 @@ final class IcsGeneratorTest extends TestCase
     }
 
     /** @test */
-    public function it_has_a_product_id(): void
+    public function it_supports_custom_product_id(): void
     {
         $this->assertMatchesSnapshot(
-            $this->generator(['PRODID' => 'Spatie calendar-links'], ['format' => Ics::FORMAT_FILE])->generate($this->createShortEventLink())
+            $this->generator(['PRODID' => 'My Product'])->generate($this->createShortEventLink())
         );
     }
 
