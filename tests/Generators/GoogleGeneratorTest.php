@@ -35,4 +35,12 @@ class GoogleGeneratorTest extends TestCase
             $this->generator()->generate($this->createEventMultipleDaysViaStartEndWithTimezoneLink())
         );
     }
+
+    /** @test */
+    public function it_correctly_generates_all_day_events_by_dates_diff_tz(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator()->generate($this->createEventMultipleDaysViaStartEndWithDiffTimezoneLink())
+        );
+    }
 }
