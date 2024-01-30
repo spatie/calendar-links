@@ -20,7 +20,7 @@ class Ics implements Generator
     /** @var string */
     protected $dateTimeFormat = 'Ymd\THis\Z';
 
-    /** @var IcsOptions */
+    /** @psalm-var IcsOptions */
     protected $options = [];
 
     /** @var array{format?: self::FORMAT_*} */

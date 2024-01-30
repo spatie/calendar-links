@@ -35,4 +35,12 @@ class GoogleGeneratorTest extends TestCase
             $this->generator()->generate($this->createEventMultipleDaysViaStartEndWithTimezoneLink())
         );
     }
+
+    /** @test */
+    public function it_can_generate_an_url_with_custom_parameters(): void
+    {
+        $link = $this->createShortEventLink();
+
+        $this->assertMatchesSnapshot($link->google(['recur' => 'RRULE:FREQ=DAILY']));
+    }
 }
