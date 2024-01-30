@@ -17,6 +17,9 @@ use Spatie\CalendarLinks\Generators\Yahoo;
  * @property-read string $address
  * @property-read bool $allDay
  * @psalm-import-type IcsOptions from \Spatie\CalendarLinks\Generators\Ics
+ * @psalm-import-type GoogleUrlParameters from \Spatie\CalendarLinks\Generators\Google
+ * @psalm-import-type YahooUrlParameters from \Spatie\CalendarLinks\Generators\Yahoo
+ * @psalm-import-type OutlookUrlParameters from \Spatie\CalendarLinks\Generators\BaseOutlook
  */
 class Link
 {
@@ -123,9 +126,10 @@ class Link
         return $generator->generate($this);
     }
 
-    public function google(): string
+    /** @psalm-param GoogleUrlParameters $urlParameters */
+    public function google(array $urlParameters = []): string
     {
-        return $this->formatWith(new Google());
+        return $this->formatWith(new Google($urlParameters));
     }
 
     /**
@@ -139,19 +143,22 @@ class Link
         return $this->formatWith(new Ics($options, $presentationOptions));
     }
 
-    public function yahoo(): string
+    /** @psalm-param YahooUrlParameters $urlParameters */
+    public function yahoo(array $urlParameters = []): string
     {
-        return $this->formatWith(new Yahoo());
+        return $this->formatWith(new Yahoo($urlParameters));
     }
 
-    public function webOutlook(): string
+    /** @psalm-param OutlookUrlParameters $urlParameters */
+    public function webOutlook(array $urlParameters = []): string
     {
-        return $this->formatWith(new WebOutlook());
+        return $this->formatWith(new WebOutlook($urlParameters));
     }
 
-    public function webOffice(): string
+    /** @psalm-param OutlookUrlParameters $urlParameters */
+    public function webOffice(array $urlParameters = []): string
     {
-        return $this->formatWith(new WebOffice());
+        return $this->formatWith(new WebOffice($urlParameters));
     }
 
     public function __get($property)
