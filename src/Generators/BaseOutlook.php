@@ -35,16 +35,14 @@ abstract class BaseOutlook implements Generator
     {
         $url = $this->baseUrl();
 
-        $dateTimeFormat = $link->allDay ? $this->dateFormat : $this->dateTimeFormat;
-
-        $utcStartDateTime = (clone $link->from)->setTimezone(new DateTimeZone('UTC'));
-        $utcEndDateTime = (clone $link->to)->setTimezone(new DateTimeZone('UTC'));
-
-        $url .= '&startdt='.$utcStartDateTime->format($dateTimeFormat);
-        $url .= '&enddt='.$utcEndDateTime->format($dateTimeFormat);
-
         if ($link->allDay) {
+            $url .= '&startdt='.$link->from->format($this->dateFormat);
+            $url .= '&enddt='.$link->to->format($this->dateFormat);
             $url .= '&allday=true';
+        }
+        else {
+            $url .= '&startdt='.(clone $link->from)->setTimezone(new DateTimeZone('UTC'))->format($this->dateTimeFormat);
+            $url .= '&enddt='.(clone $link->to)->setTimezone(new DateTimeZone('UTC'))->format($this->dateTimeFormat);
         }
 
         $url .= '&subject='.$this->sanitizeString($link->title);
