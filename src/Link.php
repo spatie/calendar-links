@@ -48,14 +48,14 @@ class Link
         $this->title = $title;
         $this->allDay = $allDay;
 
-        // Ensures from date is earlier than to date.
-        if ($this->from > $this->to) {
-            throw InvalidLink::negativeDateRange($from, $to);
-        }
-
         // Ensures timezones match.
         if ($this->from->getTimezone()->getName() !== $this->to->getTimezone()->getName()) {
             $this->to->setTimezone($from->getTimezone());
+        }
+
+        // Ensures from date is earlier than to date.
+        if ($this->from > $this->to) {
+            throw InvalidLink::negativeDateRange($from, $to);
         }
     }
 
