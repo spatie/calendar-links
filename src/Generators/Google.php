@@ -2,7 +2,6 @@
 
 namespace Spatie\CalendarLinks\Generators;
 
-use DateTimeZone;
 use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Link;
 

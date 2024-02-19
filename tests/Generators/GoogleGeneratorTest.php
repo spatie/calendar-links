@@ -37,7 +37,6 @@ class GoogleGeneratorTest extends TestCase
     }
 
     /** @test */
-
     public function it_correctly_generates_all_day_events_by_dates_diff_tz(): void
     {
         $this->assertMatchesSnapshot(
