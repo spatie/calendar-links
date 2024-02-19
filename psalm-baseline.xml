@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<files psalm-version="5.20.0@3f284e96c9d9be6fe6b15c79416e1d1903dcfef4">
+<files psalm-version="5.22.1@e9dad66e11274315dac27e08349c628c7d6a1a43">
   <file src="src/Generators/BaseOutlook.php">
     <MissingDocblockType>
       <code><![CDATA[protected $dateFormat = 'Y-m-d';]]></code>
       <code><![CDATA[protected $dateTimeFormat = 'Y-m-d\TH:i:s\Z';]]></code>
     </MissingDocblockType>
     <MissingPropertyType>
-      <code>$dateFormat</code>
-      <code>$dateTimeFormat</code>
+      <code><![CDATA[$dateFormat]]></code>
+      <code><![CDATA[$dateTimeFormat]]></code>
     </MissingPropertyType>
     <UndefinedInterfaceMethod>
-      <code>setTimezone</code>
-      <code>setTimezone</code>
+      <code><![CDATA[setTimezone]]></code>
+      <code><![CDATA[setTimezone]]></code>
     </UndefinedInterfaceMethod>
   </file>
   <file src="src/Generators/Google.php">
@@ -19,19 +19,15 @@
       <code><![CDATA[protected $dateFormat = 'Ymd';]]></code>
     </MissingDocblockType>
     <MissingPropertyType>
-      <code>$dateFormat</code>
+      <code><![CDATA[$dateFormat]]></code>
     </MissingPropertyType>
-    <UndefinedInterfaceMethod>
-      <code>setTimezone</code>
-      <code>setTimezone</code>
-    </UndefinedInterfaceMethod>
   </file>
   <file src="src/Generators/Ics.php">
     <MissingDocblockType>
       <code><![CDATA[protected $dateFormat = 'Ymd';]]></code>
     </MissingDocblockType>
     <MissingPropertyType>
-      <code>$dateFormat</code>
+      <code><![CDATA[$dateFormat]]></code>
     </MissingPropertyType>
   </file>
   <file src="src/Generators/Yahoo.php">
@@ -39,34 +35,29 @@
       <code><![CDATA[protected $dateFormat = 'Ymd';]]></code>
     </MissingDocblockType>
     <MissingPropertyType>
-      <code>$dateFormat</code>
+      <code><![CDATA[$dateFormat]]></code>
     </MissingPropertyType>
     <UndefinedInterfaceMethod>
-      <code>setTimezone</code>
-      <code>setTimezone</code>
+      <code><![CDATA[setTimezone]]></code>
+      <code><![CDATA[setTimezone]]></code>
     </UndefinedInterfaceMethod>
   </file>
   <file src="src/Link.php">
-    <LessSpecificReturnStatement>
-      <code>self::createAllDay($title, $startDate, $numberOfDays)</code>
-    </LessSpecificReturnStatement>
     <MissingParamType>
-      <code>$property</code>
+      <code><![CDATA[$property]]></code>
     </MissingParamType>
     <PropertyTypeCoercion>
-      <code>clone $from</code>
-      <code>clone $to</code>
+      <code><![CDATA[clone $from]]></code>
+      <code><![CDATA[clone $to]]></code>
     </PropertyTypeCoercion>
     <UndefinedInterfaceMethod>
-      <code>modify</code>
+      <code><![CDATA[modify]]></code>
     </UndefinedInterfaceMethod>
-    <UnsafeInstantiation>
-      <code>new static($title, $from, $to, $allDay)</code>
-    </UnsafeInstantiation>
+    <UnsafeInstantiation/>
   </file>
   <file src="tests/Generators/IcsGeneratorTest.php">
     <InvalidArgument>
-      <code>$presentationOptions</code>
+      <code><![CDATA[$presentationOptions]]></code>
     </InvalidArgument>
   </file>
 </files>
