@@ -1,0 +1,1 @@
+https://outlook.office.com/calendar/deeplink/compose?path=/calendar/action/compose&rru=addevent&startdt=2024-01-25&enddt=2024-01-31&allday=true&subject=All%20day%20bugs
