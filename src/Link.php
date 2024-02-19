@@ -43,15 +43,20 @@ class Link
 
     public function __construct(string $title, \DateTimeInterface $from, \DateTimeInterface $to, bool $allDay = false)
     {
+        $this->from = clone $from;
+        $this->to = clone $to;
         $this->title = $title;
         $this->allDay = $allDay;
 
-        if ($from > $to) {
-            throw InvalidLink::negativeDateRange($from, $to);
+        // Ensures timezones match.
+        if ($this->from->getTimezone()->getName() !== $this->to->getTimezone()->getName()) {
+            $this->to->setTimezone($from->getTimezone());
         }
 
-        $this->from = clone $from;
-        $this->to = clone $to;
+        // Ensures from date is earlier than to date.
+        if ($this->from > $this->to) {
+            throw InvalidLink::negativeDateRange($from, $to);
+        }
     }
 
     /**
@@ -65,15 +70,15 @@ class Link
      */
     public static function create(string $title, \DateTimeInterface $from, \DateTimeInterface $to, bool $allDay = false)
     {
-        // When creating all day events, we need to be in the UTC timezone as all day events are "floating" based on the user's timezone
-        if ($allDay) {
-            $startDate = new \DateTime($from->format('Y-m-d'), new \DateTimeZone('UTC'));
-            $numberOfDays = $from->diff($to)->days + 1;
+        $from_date = clone $from;
+        $to_date = clone $to;
 
-            return self::createAllDay($title, $startDate, $numberOfDays);
+        // If all day, we need to add 1 day to end date to get the correct duration.
+        if ($allDay) {
+            $to_date->modify('+1 day');
         }
 
-        return new static($title, $from, $to, $allDay);
+        return new static($title, $from_date, $to_date, $allDay);
     }
 
     /**
@@ -86,12 +91,7 @@ class Link
      */
     public static function createAllDay(string $title, \DateTimeInterface $fromDate, int $numberOfDays = 1): self
     {
-        // In cases where the from date is not UTC, make sure it's UTC, size all day events are floating and non UTC dates cause bugs in the generators
-        if ($fromDate->getTimezone() !== new \DateTimeZone('UTC')) {
-            $fromDate = \DateTime::createFromFormat('Y-m-d', $fromDate->format('Y-m-d'));
-        }
-
-        $from = (clone $fromDate)->modify('midnight');
+        $from = (clone $fromDate);
         $to = (clone $from)->modify("+$numberOfDays days");
 
         return new self($title, $from, $to, true);

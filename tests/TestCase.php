@@ -50,7 +50,7 @@ Bring a dog, bring a frog';
 
         return Link::createAllDay(
             'Birthday',
-            $dateTimeClass::createFromFormat('Y-m-d', '2018-02-01', new DateTimeZone('UTC'))
+            $dateTimeClass::createFromFormat('Y-m-d', '2018-02-01', new DateTimeZone('UTC'))->setTime(0, 0)
         )->description($description)->address('Party Lane 1A, 1337 Funtown');
     }
 
@@ -63,7 +63,7 @@ Bring a dog, bring a frog';
 
         return Link::createAllDay(
             'Birthday',
-            $dateTimeClass::createFromFormat('Y-m-d', '2018-02-01', new DateTimeZone('UTC')),
+            $dateTimeClass::createFromFormat('Y-m-d', '2018-02-01', new DateTimeZone('UTC'))->setTime(0, 0),
             5
         )->description($description)->address('Party Lane 1A, 1337 Funtown');
     }
@@ -91,6 +91,21 @@ Bring a dog, bring a frog';
             'All day bugs',
             $dateTimeClass::createFromFormat('Y-m-d', '2024-01-25', new DateTimeZone('Pacific/Wake'))->setTime(0, 0),
             $dateTimeClass::createFromFormat('Y-m-d', '2024-01-30', new DateTimeZone('Pacific/Wake'))->setTime(0, 0),
+            true,
+        )->description($description);
+    }
+
+    protected function createEventMultipleDaysViaStartEndWithDiffTimezoneLink(bool $immutable = false): Link
+    {
+        $description = 'Testing all day';
+
+        $dateTimeClass = $immutable ? DateTimeImmutable::class : DateTime::class;
+
+        // This should result in 7 days duration (2024-01-25 00:00 to 2024-01-31 00:00 Pacific/Wake).
+        return Link::create(
+            'All day bugs',
+            $dateTimeClass::createFromFormat('Y-m-d', '2024-01-25', new DateTimeZone('Pacific/Wake'))->setTime(0, 0),
+            $dateTimeClass::createFromFormat('Y-m-d', '2024-01-30', new DateTimeZone('Europe/Luxembourg'))->setTime(13, 00),
             true,
         )->description($description);
     }
