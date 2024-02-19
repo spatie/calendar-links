@@ -11,6 +11,9 @@ use Spatie\CalendarLinks\Generators\Yahoo;
 
 /**
  * @psalm-import-type IcsOptions from \Spatie\CalendarLinks\Generators\Ics
+ * @psalm-import-type GoogleUrlParameters from \Spatie\CalendarLinks\Generators\Google
+ * @psalm-import-type YahooUrlParameters from \Spatie\CalendarLinks\Generators\Yahoo
+ * @psalm-import-type OutlookUrlParameters from \Spatie\CalendarLinks\Generators\BaseOutlook
  * @psalm-import-type IcsPresentationOptions from \Spatie\CalendarLinks\Generators\Ics
  */
 class Link
@@ -32,12 +35,18 @@ class Link
         $this->title = $title;
         $this->allDay = $allDay;
 
-        if ($from > $to) {
-            throw InvalidLink::negativeDateRange($from, $to);
+        // Ensures timezones match.
+        if ($from->getTimezone()->getName() !== $to->getTimezone()->getName()) {
+            $to = (clone $to)->setTimezone($from->getTimezone());
         }
 
         $this->from = \DateTimeImmutable::createFromInterface($from);
         $this->to = \DateTimeImmutable::createFromInterface($to);
+
+        // Ensures from date is earlier than to date.
+        if ($this->from > $this->to) {
+            throw InvalidLink::negativeDateRange($this->from, $this->to);
+        }
     }
 
     /**
@@ -52,18 +61,10 @@ class Link
      * @param positive-int $numberOfDays
      * @throws \Spatie\CalendarLinks\Exceptions\InvalidLink When date range is invalid.
      */
-    public static function createAllDay(string $title, \DateTimeInterface $fromDate, int $numberOfDays = 1): static
+    public static function createAllDay(string $title, \DateTimeInterface $from, int $numberOfDays = 1): static
     {
-        // In cases where the from date is not UTC, make sure it's UTC, size all day events are floating and non UTC dates cause bugs in the generators
-        if ($fromDate->getTimezone() !== new \DateTimeZone('UTC')) {
-            $fromDate = \DateTimeImmutable::createFromFormat('Y-m-d', $fromDate->format('Y-m-d'));
-            assert($fromDate instanceof \DateTimeImmutable);
-        }
-
-        $from = \DateTimeImmutable::createFromInterface($fromDate)->modify('midnight');
-
-        $to = $from->modify("+$numberOfDays days");
-        assert($to instanceof \DateTimeImmutable);
+        $to = (clone $from)->modify("+$numberOfDays days");
+        assert($to instanceof \DateTimeInterface);
 
         return new static($title, $from, $to, true);
     }
@@ -72,7 +73,6 @@ class Link
     public function description(string $description): static
     {
         $this->description = $description;
-
         return $this;
     }
 
@@ -80,7 +80,6 @@ class Link
     public function address(string $address): static
     {
         $this->address = $address;
-
         return $this;
     }
 
@@ -89,9 +88,10 @@ class Link
         return $generator->generate($this);
     }
 
-    public function google(): string
+    /** @psalm-param GoogleUrlParameters $urlParameters */
+    public function google(array $urlParameters = []): string
     {
-        return $this->formatWith(new Google());
+        return $this->formatWith(new Google($urlParameters));
     }
 
     /**
@@ -104,18 +104,21 @@ class Link
         return $this->formatWith(new Ics($options, $presentationOptions));
     }
 
-    public function yahoo(): string
+    /** @psalm-param YahooUrlParameters $urlParameters */
+    public function yahoo(array $urlParameters = []): string
     {
-        return $this->formatWith(new Yahoo());
+        return $this->formatWith(new Yahoo($urlParameters));
     }
 
-    public function webOutlook(): string
+    /** @psalm-param OutlookUrlParameters $urlParameters */
+    public function webOutlook(array $urlParameters = []): string
     {
-        return $this->formatWith(new WebOutlook());
+        return $this->formatWith(new WebOutlook($urlParameters));
     }
 
-    public function webOffice(): string
+    /** @psalm-param OutlookUrlParameters $urlParameters */
+    public function webOffice(array $urlParameters = []): string
     {
-        return $this->formatWith(new WebOffice());
+        return $this->formatWith(new WebOffice($urlParameters));
     }
 }

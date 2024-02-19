@@ -1,0 +1,1 @@
+https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20240125/20240131&ctz=Pacific/Wake&text=All+day+bugs

@@ -2,12 +2,12 @@
 
 namespace Spatie\CalendarLinks\Generators;
 
-use DateTimeZone;
 use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Link;
 
 /**
  * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/main/services/google.md
+ * @psalm-type GoogleUrlParameters = array<string, scalar|null>
  */
 class Google implements Generator
 {
@@ -15,7 +15,16 @@ class Google implements Generator
     private const DATE_FORMAT = 'Ymd';
 
     /** @see https://www.php.net/manual/en/function.date.php */
-    private const DATETIME_FORMAT = 'Ymd\THis\Z';
+    private const DATETIME_FORMAT = 'Ymd\THis';
+
+    /** @psalm-var GoogleUrlParameters */
+    protected array $urlParameters = [];
+
+    /** @psalm-param GoogleUrlParameters $urlParameters */
+    public function __construct(array $urlParameters = [])
+    {
+        $this->urlParameters = $urlParameters;
+    }
 
     /** @var non-empty-string */
     protected const BASE_URL = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
@@ -25,16 +34,9 @@ class Google implements Generator
     {
         $url = self::BASE_URL;
 
-        $utcStartDateTime = $link->from->setTimezone(new DateTimeZone('UTC'));
-        $utcEndDateTime = $link->to->setTimezone(new DateTimeZone('UTC'));
         $dateTimeFormat = $link->allDay ? self::DATE_FORMAT : self::DATETIME_FORMAT;
-        $url .= '&dates='.$utcStartDateTime->format($dateTimeFormat).'/'.$utcEndDateTime->format($dateTimeFormat);
-
-        // Add timezone name if it is specified in both from and to dates and is the same for both
-        if ($link->from->getTimezone()->getName() === $link->to->getTimezone()->getName()) {
-            $url .= '&ctz=' . $link->from->getTimezone()->getName();
-        }
-
+        $url .= '&dates='.$link->from->format($dateTimeFormat).'/'.$link->to->format($dateTimeFormat);
+        $url .= '&ctz=' . $link->from->getTimezone()->getName();
         $url .= '&text='.urlencode($link->title);
 
         if ($link->description) {
@@ -43,6 +45,10 @@ class Google implements Generator
 
         if ($link->address) {
             $url .= '&location='.urlencode($link->address);
+        }
+
+        foreach ($this->urlParameters as $key => $value) {
+            $url .= '&'.urlencode($key).(in_array($value, [null, ''], true) ? '' : '='.urlencode((string) $value));
         }
 
         return $url;

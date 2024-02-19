@@ -8,6 +8,7 @@ use Spatie\CalendarLinks\Link;
 
 /**
  * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/main/services/yahoo.md
+ * @psalm-type YahooUrlParameters = array<string, scalar|null>
  */
 class Yahoo implements Generator
 {
@@ -21,6 +22,16 @@ class Yahoo implements Generator
     protected const BASE_URL = 'https://calendar.yahoo.com/?v=60&view=d&type=20';
 
     /** @inheritDoc */
+    /** @psalm-var YahooUrlParameters */
+    protected array $urlParameters = [];
+
+    /** @psalm-param YahooUrlParameters $urlParameters */
+    public function __construct(array $urlParameters = [])
+    {
+        $this->urlParameters = $urlParameters;
+    }
+
+    /** {@inheritDoc} */
     public function generate(Link $link): string
     {
         $url = self::BASE_URL;
@@ -46,6 +57,10 @@ class Yahoo implements Generator
 
         if ($link->address) {
             $url .= '&in_loc='.$this->sanitizeText($link->address);
+        }
+
+        foreach ($this->urlParameters as $key => $value) {
+            $url .= '&'.urlencode($key).(in_array($value, [null, ''], true) ? '' : '='.$this->sanitizeText((string) $value));
         }
 
         return $url;
