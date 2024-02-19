@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Spatie\CalendarLinks;
 
@@ -73,6 +75,7 @@ class Link
     public function description(string $description): static
     {
         $this->description = $description;
+
         return $this;
     }
 
@@ -80,6 +83,7 @@ class Link
     public function address(string $address): static
     {
         $this->address = $address;
+
         return $this;
     }
 
