@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Spatie\CalendarLinks\Generators;
 
@@ -7,19 +9,25 @@ use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Link;
 
 /**
- * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/master/services/outlook-web.md
+ * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/main/services/outlook-web.md
  * @psalm-type OutlookUrlParameters = array<string, scalar|null>
  */
 abstract class BaseOutlook implements Generator
 {
-    /** @var string {@see https://www.php.net/manual/en/function.date.php} */
-    protected $dateFormat = 'Y-m-d';
+    /** @see https://www.php.net/manual/en/function.date.php */
+    private const DATE_FORMAT = 'Y-m-d';
 
-    /** @var string {@see https://www.php.net/manual/en/function.date.php} */
-    protected $dateTimeFormat = 'Y-m-d\TH:i:s\Z';
+    /** @see https://www.php.net/manual/en/function.date.php */
+    private const DATETIME_FORMAT = 'Y-m-d\TH:i:s\Z';
 
     /** @psalm-var OutlookUrlParameters */
     protected array $urlParameters = [];
+
+    /**
+     * Get base URL for links.
+     * @return non-empty-string
+     */
+    abstract protected function baseUrl(): string;
 
     /** @psalm-param OutlookUrlParameters $urlParameters */
     public function __construct(array $urlParameters = [])
@@ -27,21 +35,18 @@ abstract class BaseOutlook implements Generator
         $this->urlParameters = $urlParameters;
     }
 
-    /** Get base URL for links. */
-    abstract public function baseUrl(): string;
-
-    /** {@inheritDoc} */
+    /** @inheritDoc */
     public function generate(Link $link): string
     {
         $url = $this->baseUrl();
 
         if ($link->allDay) {
-            $url .= '&startdt='.$link->from->format($this->dateFormat);
-            $url .= '&enddt='.$link->to->format($this->dateFormat);
+            $url .= '&startdt='.$link->from->format(self::DATE_FORMAT);
+            $url .= '&enddt='.$link->to->format(self::DATE_FORMAT);
             $url .= '&allday=true';
         } else {
-            $url .= '&startdt='.(clone $link->from)->setTimezone(new DateTimeZone('UTC'))->format($this->dateTimeFormat);
-            $url .= '&enddt='.(clone $link->to)->setTimezone(new DateTimeZone('UTC'))->format($this->dateTimeFormat);
+            $url .= '&startdt='.(clone $link->from)->setTimezone(new DateTimeZone('UTC'))->format(self::DATETIME_FORMAT);
+            $url .= '&enddt='.(clone $link->to)->setTimezone(new DateTimeZone('UTC'))->format(self::DATETIME_FORMAT);
         }
 
         $url .= '&subject='.$this->sanitizeString($link->title);

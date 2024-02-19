@@ -1,20 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Spatie\CalendarLinks\Generators;
 
 use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Link;
 
 /**
- * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/master/services/google.md
+ * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/main/services/google.md
  * @psalm-type GoogleUrlParameters = array<string, scalar|null>
  */
 class Google implements Generator
 {
-    /** @var string {@see https://www.php.net/manual/en/function.date.php} */
-    protected $dateFormat = 'Ymd';
-    /** @var string */
-    protected $dateTimeFormat = 'Ymd\THis';
+    /** @see https://www.php.net/manual/en/function.date.php */
+    private const DATE_FORMAT = 'Ymd';
+
+    /** @see https://www.php.net/manual/en/function.date.php */
+    private const DATETIME_FORMAT = 'Ymd\THis';
 
     /** @psalm-var GoogleUrlParameters */
     protected array $urlParameters = [];
@@ -25,12 +28,15 @@ class Google implements Generator
         $this->urlParameters = $urlParameters;
     }
 
-    /** {@inheritDoc} */
+    /** @var non-empty-string */
+    protected const BASE_URL = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
+
+    /** @inheritDoc */
     public function generate(Link $link): string
     {
-        $url = 'https://calendar.google.com/calendar/render?action=TEMPLATE';
+        $url = self::BASE_URL;
 
-        $dateTimeFormat = $link->allDay ? $this->dateFormat : $this->dateTimeFormat;
+        $dateTimeFormat = $link->allDay ? self::DATE_FORMAT : self::DATETIME_FORMAT;
         $url .= '&dates='.$link->from->format($dateTimeFormat).'/'.$link->to->format($dateTimeFormat);
         $url .= '&ctz=' . $link->from->getTimezone()->getName();
         $url .= '&text='.urlencode($link->title);

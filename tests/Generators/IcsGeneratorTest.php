@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Spatie\CalendarLinks\Tests\Generators;
 
 use DateTime;
@@ -8,12 +10,18 @@ use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Generators\Ics;
 use Spatie\CalendarLinks\Tests\TestCase;
 
-class IcsGeneratorTest extends TestCase
+/**
+ * @psalm-import-type IcsOptions from \Spatie\CalendarLinks\Generators\Ics
+ * @psalm-import-type IcsPresentationOptions from \Spatie\CalendarLinks\Generators\Ics
+ */
+final class IcsGeneratorTest extends TestCase
 {
     use GeneratorTestContract;
 
     /**
-     * @param array $options @see \Spatie\CalendarLinks\Generators\Ics::__construct
+     * @psalm-param IcsOptions $options ICS specific properties and components
+     * @param IcsOptions $options ICS specific properties and components
+     * @param IcsPresentationOptions $presentationOptions
      * @return \Spatie\CalendarLinks\Generator
      */
     protected function generator(array $options = [], array $presentationOptions = []): Generator
@@ -29,38 +37,6 @@ class IcsGeneratorTest extends TestCase
     }
 
     /** @test */
-    public function it_can_generate_an_ics_link_with_custom_uid(): void
-    {
-        $this->assertMatchesSnapshot(
-            $this->generator(['UID' => 'random-uid', ['format' => Ics::FORMAT_FILE]])->generate($this->createShortEventLink())
-        );
-    }
-
-    /** @test */
-    public function it_has_a_product_id(): void
-    {
-        $this->assertMatchesSnapshot(
-            $this->generator(['PRODID' => 'Spatie calendar-links'], ['format' => Ics::FORMAT_FILE])->generate($this->createShortEventLink())
-        );
-    }
-
-    /** @test */
-    public function it_has_a_product_dtstamp(): void
-    {
-        $this->assertMatchesSnapshot(
-            $this->generator(['DTSTAMP' => '20180201T090000Z'], ['format' => Ics::FORMAT_FILE])->generate($this->createShortEventLink())
-        );
-    }
-
-    /** @test */
-    public function it_generates_base64_encoded_link_for_html(): void
-    {
-        $this->assertMatchesSnapshot(
-            $this->generator([], ['format' => Ics::FORMAT_HTML])->generate($this->createShortEventLink())
-        );
-    }
-
-    /** @test */
     public function it_correctly_generates_all_day_events_by_days(): void
     {
         $this->assertMatchesSnapshot(
@@ -73,6 +49,30 @@ class IcsGeneratorTest extends TestCase
     {
         $this->assertMatchesSnapshot(
             $this->generator()->generate($this->createEventMultipleDaysViaStartEndWithTimezoneLink())
+        );
+    }
+
+    /** @test */
+    public function it_generates_base64_encoded_link_for_html(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator([], ['format' => Ics::FORMAT_HTML])->generate($this->createShortEventLink())
+        );
+    }
+
+    /** @test */
+    public function it_can_generate_an_ics_link_with_custom_uid(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator(['UID' => 'random-uid'])->generate($this->createShortEventLink())
+        );
+    }
+
+    /** @test */
+    public function it_supports_custom_product_id(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator(['PRODID' => 'My Product'])->generate($this->createShortEventLink())
         );
     }
 

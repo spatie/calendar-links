@@ -1,63 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <files psalm-version="5.22.1@e9dad66e11274315dac27e08349c628c7d6a1a43">
-  <file src="src/Generators/BaseOutlook.php">
-    <MissingDocblockType>
-      <code><![CDATA[protected $dateFormat = 'Y-m-d';]]></code>
-      <code><![CDATA[protected $dateTimeFormat = 'Y-m-d\TH:i:s\Z';]]></code>
-    </MissingDocblockType>
-    <MissingPropertyType>
-      <code><![CDATA[$dateFormat]]></code>
-      <code><![CDATA[$dateTimeFormat]]></code>
-    </MissingPropertyType>
-    <UndefinedInterfaceMethod>
-      <code><![CDATA[setTimezone]]></code>
-      <code><![CDATA[setTimezone]]></code>
-    </UndefinedInterfaceMethod>
-  </file>
-  <file src="src/Generators/Google.php">
-    <MissingDocblockType>
-      <code><![CDATA[protected $dateFormat = 'Ymd';]]></code>
-    </MissingDocblockType>
-    <MissingPropertyType>
-      <code><![CDATA[$dateFormat]]></code>
-    </MissingPropertyType>
-  </file>
-  <file src="src/Generators/Ics.php">
-    <MissingDocblockType>
-      <code><![CDATA[protected $dateFormat = 'Ymd';]]></code>
-    </MissingDocblockType>
-    <MissingPropertyType>
-      <code><![CDATA[$dateFormat]]></code>
-    </MissingPropertyType>
-  </file>
-  <file src="src/Generators/Yahoo.php">
-    <MissingDocblockType>
-      <code><![CDATA[protected $dateFormat = 'Ymd';]]></code>
-    </MissingDocblockType>
-    <MissingPropertyType>
-      <code><![CDATA[$dateFormat]]></code>
-    </MissingPropertyType>
-    <UndefinedInterfaceMethod>
-      <code><![CDATA[setTimezone]]></code>
-      <code><![CDATA[setTimezone]]></code>
-    </UndefinedInterfaceMethod>
-  </file>
   <file src="src/Link.php">
-    <MissingParamType>
-      <code><![CDATA[$property]]></code>
-    </MissingParamType>
-    <PropertyTypeCoercion>
-      <code><![CDATA[clone $from]]></code>
-      <code><![CDATA[clone $to]]></code>
-    </PropertyTypeCoercion>
     <UndefinedInterfaceMethod>
       <code><![CDATA[modify]]></code>
+      <code><![CDATA[setTimezone]]></code>
     </UndefinedInterfaceMethod>
-    <UnsafeInstantiation/>
-  </file>
-  <file src="tests/Generators/IcsGeneratorTest.php">
-    <InvalidArgument>
-      <code><![CDATA[$presentationOptions]]></code>
-    </InvalidArgument>
   </file>
 </files>

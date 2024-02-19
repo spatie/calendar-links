@@ -4,8 +4,7 @@ on:
   push:
     paths:
       - '**.php'
-      - 'psalm.xml'
-      - 'psalm.yml'
+      - 'psalm*'
 
 jobs:
   psalm:

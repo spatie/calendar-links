@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Spatie\CalendarLinks\Tests\Generators;
 
 use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Generators\WebOffice;
 use Spatie\CalendarLinks\Tests\TestCase;
 
-class WebOfficeGeneratorTest extends TestCase
+final class WebOfficeGeneratorTest extends TestCase
 {
     use GeneratorTestContract;
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Spatie\CalendarLinks;
 
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
@@ -10,111 +12,75 @@ use Spatie\CalendarLinks\Generators\WebOutlook;
 use Spatie\CalendarLinks\Generators\Yahoo;
 
 /**
- * @property-read string $title
- * @property-read \DateTimeInterface|\DateTime|\DateTimeImmutable $from
- * @property-read \DateTimeInterface|\DateTime|\DateTimeImmutable $to
- * @property-read string $description
- * @property-read string $address
- * @property-read bool $allDay
  * @psalm-import-type IcsOptions from \Spatie\CalendarLinks\Generators\Ics
  * @psalm-import-type GoogleUrlParameters from \Spatie\CalendarLinks\Generators\Google
  * @psalm-import-type YahooUrlParameters from \Spatie\CalendarLinks\Generators\Yahoo
  * @psalm-import-type OutlookUrlParameters from \Spatie\CalendarLinks\Generators\BaseOutlook
+ * @psalm-import-type IcsPresentationOptions from \Spatie\CalendarLinks\Generators\Ics
  */
 class Link
 {
-    /** @var string */
-    protected $title;
+    public readonly string $title;
 
-    /** @var \DateTime */
-    protected $from;
+    public readonly \DateTimeImmutable $from;
 
-    /** @var \DateTime */
-    protected $to;
+    public readonly \DateTimeImmutable $to;
 
-    /** @var string */
-    protected $description;
+    public readonly bool $allDay;
 
-    /** @var bool */
-    protected $allDay;
+    public string $description = '';
 
-    /** @var string */
-    protected $address;
+    public string $address = '';
 
-    public function __construct(string $title, \DateTimeInterface $from, \DateTimeInterface $to, bool $allDay = false)
+    final public function __construct(string $title, \DateTimeInterface $from, \DateTimeInterface $to, bool $allDay = false)
     {
-        $this->from = clone $from;
-        $this->to = clone $to;
         $this->title = $title;
         $this->allDay = $allDay;
 
         // Ensures timezones match.
-        if ($this->from->getTimezone()->getName() !== $this->to->getTimezone()->getName()) {
-            $this->to->setTimezone($from->getTimezone());
+        if ($from->getTimezone()->getName() !== $to->getTimezone()->getName()) {
+            $to = (clone $to)->setTimezone($from->getTimezone());
         }
+
+        $this->from = \DateTimeImmutable::createFromInterface($from);
+        $this->to = \DateTimeImmutable::createFromInterface($to);
 
         // Ensures from date is earlier than to date.
         if ($this->from > $this->to) {
-            throw InvalidLink::negativeDateRange($from, $to);
+            throw InvalidLink::negativeDateRange($this->from, $this->to);
         }
     }
 
     /**
-     * @param string $title
-     * @param \DateTimeInterface $from
-     * @param \DateTimeInterface $to
-     * @param bool $allDay
-     *
-     * @return static
-     * @throws InvalidLink
+     * @throws \Spatie\CalendarLinks\Exceptions\InvalidLink When date range is invalid.
      */
-    public static function create(string $title, \DateTimeInterface $from, \DateTimeInterface $to, bool $allDay = false)
+    public static function create(string $title, \DateTimeInterface $from, \DateTimeInterface $to): static
     {
-        $from_date = clone $from;
-        $to_date = clone $to;
-
-        // If all day, we need to add 1 day to end date to get the correct duration.
-        if ($allDay) {
-            $to_date->modify('+1 day');
-        }
-
-        return new static($title, $from_date, $to_date, $allDay);
+        return new static($title, $from, $to);
     }
 
     /**
-     * @param string $title
-     * @param \DateTimeInterface|\DateTime|\DateTimeImmutable $fromDate
-     * @param int $numberOfDays
-     *
-     * @return Link
-     * @throws InvalidLink
+     * @param positive-int $numberOfDays
+     * @throws \Spatie\CalendarLinks\Exceptions\InvalidLink When date range is invalid.
      */
-    public static function createAllDay(string $title, \DateTimeInterface $fromDate, int $numberOfDays = 1): self
+    public static function createAllDay(string $title, \DateTimeInterface $from, int $numberOfDays = 1): static
     {
-        $from = (clone $fromDate);
         $to = (clone $from)->modify("+$numberOfDays days");
+        assert($to instanceof \DateTimeInterface);
 
-        return new self($title, $from, $to, true);
+        return new static($title, $from, $to, true);
     }
 
-    /**
-     * @param string $description
-     *
-     * @return $this
-     */
-    public function description(string $description)
+    /** Set description of the Event. */
+    public function description(string $description): static
     {
         $this->description = $description;
 
         return $this;
     }
 
-    /**
-     * @param string $address
-     *
-     * @return $this
-     */
-    public function address(string $address)
+    /** Set the address of the Event. */
+    public function address(string $address): static
     {
         $this->address = $address;
 
@@ -134,8 +100,7 @@ class Link
 
     /**
      * @psalm-param IcsOptions $options ICS specific properties and components
-     * @param array<non-empty-string, non-empty-string> $options ICS specific properties and components
-     * @param array{format?: \Spatie\CalendarLinks\Generators\Ics::FORMAT_*} $presentationOptions
+     * @psalm-param IcsPresentationOptions $presentationOptions
      * @return string
      */
     public function ics(array $options = [], array $presentationOptions = []): string
@@ -159,10 +124,5 @@ class Link
     public function webOffice(array $urlParameters = []): string
     {
         return $this->formatWith(new WebOffice($urlParameters));
-    }
-
-    public function __get($property)
-    {
-        return $this->$property;
     }
 }

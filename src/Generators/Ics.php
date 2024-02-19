@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Spatie\CalendarLinks\Generators;
 
 use Spatie\CalendarLinks\Generator;
@@ -7,28 +9,28 @@ use Spatie\CalendarLinks\Link;
 
 /**
  * @see https://icalendar.org/RFC-Specifications/iCalendar-RFC-5545/
- * @psalm-type IcsOptions = array{UID?: string, URL?: string, REMINDER?: array{DESCRIPTION?: string, TIME?: \DateTimeInterface}}
+ * @psalm-type IcsOptions = array{UID?: string, URL?: string, PRODID?: string, REMINDER?: array{DESCRIPTION?: string, TIME?: \DateTimeInterface}}
+ * @psalm-type IcsPresentationOptions = array{format?: self::FORMAT_*}
  */
 class Ics implements Generator
 {
     public const FORMAT_HTML = 'html';
     public const FORMAT_FILE = 'file';
 
-    /** @var string {@see https://www.php.net/manual/en/function.date.php} */
-    protected $dateFormat = 'Ymd';
+    /** @see https://www.php.net/manual/en/function.date.php */
+    protected string $dateFormat = 'Ymd';
 
-    /** @var string */
-    protected $dateTimeFormat = 'Ymd\THis\Z';
+    protected string $dateTimeFormat = 'Ymd\THis\Z';
 
     /** @psalm-var IcsOptions */
-    protected $options = [];
+    protected array $options = [];
 
-    /** @var array{format?: self::FORMAT_*} */
+    /** @psalm-var IcsPresentationOptions */
     protected $presentationOptions = [];
 
     /**
      * @param IcsOptions $options Optional ICS properties and components
-     * @param array{format?: self::FORMAT_*} $presentationOptions
+     * @param IcsPresentationOptions $presentationOptions
      */
     public function __construct(array $options = [], array $presentationOptions = [])
     {
@@ -36,13 +38,13 @@ class Ics implements Generator
         $this->presentationOptions = $presentationOptions;
     }
 
-    /** {@inheritDoc} */
+    /** @inheritDoc */
     public function generate(Link $link): string
     {
         $url = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0', // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.7.4
-            'PRODID:Spatie calendar-links', // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.7.3
+            'PRODID:'.($this->options['PRODID'] ?? 'Spatie calendar-links'), // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.7.3
             'BEGIN:VEVENT',
             'UID:'.($this->options['UID'] ?? $this->generateEventUid($link)),
             'SUMMARY:'.$this->escapeString($link->title),
@@ -86,11 +88,19 @@ class Ics implements Generator
         };
     }
 
+    /**
+     * @param non-empty-list<string> $propertiesAndComponents
+     * @return non-empty-string
+     */
     protected function buildLink(array $propertiesAndComponents): string
     {
         return 'data:text/calendar;charset=utf8;base64,'.base64_encode(implode("\r\n", $propertiesAndComponents));
     }
 
+    /**
+     * @param non-empty-list<string> $propertiesAndComponents
+     * @return non-empty-string
+     */
     protected function buildFile(array $propertiesAndComponents): string
     {
         return implode("\r\n", $propertiesAndComponents);

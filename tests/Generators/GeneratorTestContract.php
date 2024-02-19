@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Spatie\CalendarLinks\Tests\Generators;
 
 use Spatie\CalendarLinks\Generator;
@@ -17,11 +19,6 @@ trait GeneratorTestContract
         $this->assertMatchesSnapshot(
             $this->generator()->generate($this->createShortEventLink())
         );
-
-        $this->assertSame(
-            $this->generator()->generate($this->createShortEventLink(false)),
-            $this->generator()->generate($this->createShortEventLink(true))
-        );
     }
 
     /** @test */
@@ -29,11 +26,6 @@ trait GeneratorTestContract
     {
         $this->assertMatchesSnapshot(
             $this->generator()->generate($this->createSingleDayAllDayEventLink())
-        );
-
-        $this->assertSame(
-            $this->generator()->generate($this->createSingleDayAllDayEventLink(false)),
-            $this->generator()->generate($this->createSingleDayAllDayEventLink(true))
         );
     }
 
@@ -43,11 +35,6 @@ trait GeneratorTestContract
         $this->assertMatchesSnapshot(
             $this->generator()->generate($this->createMultipleDaysEventLink())
         );
-
-        $this->assertSame(
-            $this->generator()->generate($this->createMultipleDaysEventLink(false)),
-            $this->generator()->generate($this->createMultipleDaysEventLink(true))
-        );
     }
 
     /** @test */
@@ -56,23 +43,37 @@ trait GeneratorTestContract
         $this->assertMatchesSnapshot(
             $this->generator()->generate($this->createMultipleDaysAllDayEventLink())
         );
-
-        $this->assertSame(
-            $this->generator()->generate($this->createMultipleDaysAllDayEventLink(false)),
-            $this->generator()->generate($this->createMultipleDaysAllDayEventLink(true))
-        );
     }
 
     /** @test */
     public function it_can_generate_a_description_is_html_code_event_link_with_allday_flag(): void
     {
         $this->assertMatchesSnapshot(
-            $this->generator()->generate($this->createDescriptionIsHTMLcodeEventLink())
+            $this->generator()->generate($this->createDescriptionIsHtmlCodeEventLink())
         );
+    }
 
-        $this->assertSame(
-            $this->generator()->generate($this->createDescriptionIsHTMLcodeEventLink(false)),
-            $this->generator()->generate($this->createDescriptionIsHTMLcodeEventLink(true))
+    /** @test */
+    public function it_correctly_generates_all_day_events_by_days(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator()->generate($this->createAllDayEventMultipleDaysWithTimezoneLink())
+        );
+    }
+
+    /** @test */
+    public function it_correctly_generates_all_day_events_by_dates(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator()->generate($this->createEventMultipleDaysViaStartEndWithTimezoneLink())
+        );
+    }
+
+    /** @test */
+    public function it_correctly_generates_all_day_events_by_dates_diff_tz(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator()->generate($this->createEventMultipleDaysViaStartEndWithDiffTimezoneLink())
         );
     }
 }

@@ -1,13 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Spatie\CalendarLinks;
 
 interface Generator
 {
     /**
-     * Generate an URL to add event to calendar.
-     * @param \Spatie\CalendarLinks\Link $link
-     * @return string
+     * Generate a URL to add event to calendar.
+     * @return non-empty-string
      */
     public function generate(Link $link): string;
 }
