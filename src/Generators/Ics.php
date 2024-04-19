@@ -37,8 +37,8 @@ class Ics implements Generator
         $dateTimeFormat = $link->allDay ? $this->dateFormat : $this->dateTimeFormat;
 
         if ($link->allDay) {
-            $url[] = 'DTSTAMP;VALUE=DATE:'.$link->from->format($dateTimeFormat);
-            $url[] = 'DTSTART;VALUE=DATE:'.$link->from->format($dateTimeFormat);
+            $url[] = 'DTSTAMP:'.$link->from->format($dateTimeFormat);
+            $url[] = 'DTSTART:'.$link->from->format($dateTimeFormat);
             $url[] = 'DURATION:P'.(max(1, $link->from->diff($link->to)->days)).'D';
         } else {
             $url[] = 'DTSTAMP:'.gmdate($dateTimeFormat, $link->from->getTimestamp());
@@ -101,16 +101,16 @@ class Ics implements Generator
             $description = 'Reminder: '.$this->escapeString($link->title);
         }
 
-        $trigger = '-PT15M';
+        $trigger = 'TRIGGER:-PT15M';
         if (($reminderTime = $this->options['REMINDER']['TIME'] ?? null) instanceof \DateTimeInterface) {
-            $trigger = 'VALUE=DATE-TIME:'.gmdate($this->dateTimeFormat, $reminderTime->getTimestamp());
+            $trigger = 'TRIGGER;VALUE=DATE-TIME:'.gmdate($this->dateTimeFormat, $reminderTime->getTimestamp());
         }
 
         $alarmComponent = [];
         $alarmComponent[] = 'BEGIN:VALARM';
         $alarmComponent[] = 'ACTION:DISPLAY';
         $alarmComponent[] = 'DESCRIPTION:'.$description;
-        $alarmComponent[] = 'TRIGGER:'.$trigger;
+        $alarmComponent[] = $trigger;
         $alarmComponent[] = 'END:VALARM';
 
         return $alarmComponent;
