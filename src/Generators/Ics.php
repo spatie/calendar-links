@@ -12,7 +12,7 @@ class Ics implements Generator
 {
     /** @var string {@see https://www.php.net/manual/en/function.date.php} */
     protected $dateFormat = 'Ymd';
-    protected $dateTimeFormat = 'e:Ymd\THis';
+    protected $dateTimeFormat = 'Ymd\THis\Z';
 
     /** @var array */
     protected $options = [];
@@ -37,13 +37,13 @@ class Ics implements Generator
         $dateTimeFormat = $link->allDay ? $this->dateFormat : $this->dateTimeFormat;
 
         if ($link->allDay) {
-            $url[] = 'DTSTAMP;TZID='.$link->from->format($dateTimeFormat);
+            $url[] = 'DTSTAMP:'.$link->from->format($dateTimeFormat);
             $url[] = 'DTSTART:'.$link->from->format($dateTimeFormat);
             $url[] = 'DURATION:P'.(max(1, $link->from->diff($link->to)->days)).'D';
         } else {
-            $url[] = 'DTSTAMP;TZID='.$link->from->format($dateTimeFormat);
-            $url[] = 'DTSTART;TZID='.$link->from->format($dateTimeFormat);
-            $url[] = 'DTEND;TZID='.$link->to->format($dateTimeFormat);
+            $url[] = 'DTSTAMP:'.gmdate($dateTimeFormat, $link->from->getTimestamp());
+            $url[] = 'DTSTART:'.gmdate($dateTimeFormat, $link->from->getTimestamp());
+            $url[] = 'DTEND:'.gmdate($dateTimeFormat, $link->to->getTimestamp());
         }
 
         if ($link->description) {
@@ -55,6 +55,10 @@ class Ics implements Generator
 
         if (isset($this->options['URL'])) {
             $url[] = 'URL;VALUE=URI:'.$this->options['URL'];
+        }
+
+        if (is_array($this->options['REMINDER'] ?? null)) {
+            $url = array_merge($url, $this->generateAlertComponent($link));
         }
 
         $url[] = 'END:VEVENT';
@@ -84,5 +88,31 @@ class Ics implements Generator
             $link->title,
             $link->address
         ));
+    }
+
+    /**
+     * @param \Spatie\CalendarLinks\Link $link
+     * @return list<string>
+     */
+    private function generateAlertComponent(Link $link): array
+    {
+        $description = $this->options['REMINDER']['DESCRIPTION'] ?? null;
+        if (! is_string($description)) {
+            $description = 'Reminder: '.$this->escapeString($link->title);
+        }
+
+        $trigger = '-PT15M';
+        if (($reminderTime = $this->options['REMINDER']['TIME'] ?? null) instanceof \DateTimeInterface) {
+            $trigger = 'VALUE=DATE-TIME:'.gmdate($this->dateTimeFormat, $reminderTime->getTimestamp());
+        }
+
+        $alarmComponent = [];
+        $alarmComponent[] = 'BEGIN:VALARM';
+        $alarmComponent[] = 'ACTION:DISPLAY';
+        $alarmComponent[] = 'DESCRIPTION:'.$description;
+        $alarmComponent[] = 'TRIGGER:'.$trigger;
+        $alarmComponent[] = 'END:VALARM';
+
+        return $alarmComponent;
     }
 }

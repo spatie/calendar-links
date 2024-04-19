@@ -51,33 +51,23 @@ class Link
     }
 
     /**
-     * @param string $title
-     * @param \DateTimeInterface $from
-     * @param \DateTimeInterface $to
-     * @param bool $allDay
-     *
-     * @return static
-     * @throws InvalidLink
+     * @throws \Spatie\CalendarLinks\Exceptions\InvalidLink When date range is invalid.
      */
-    public static function create(string $title, \DateTimeInterface $from, \DateTimeInterface $to, bool $allDay = false)
+    public static function create(string $title, \DateTimeInterface $from, \DateTimeInterface $to)
     {
-        return new static($title, $from, $to, $allDay);
+        return new static($title, $from, $to);
     }
 
     /**
-     * @param string $title
-     * @param \DateTimeInterface|\DateTime|\DateTimeImmutable $fromDate
-     * @param int $numberOfDays
-     *
-     * @return Link
-     * @throws InvalidLink
+     * @param positive-int $numberOfDays
+     * @throws \Spatie\CalendarLinks\Exceptions\InvalidLink When date range is invalid.
      */
-    public static function createAllDay(string $title, \DateTimeInterface $fromDate, int $numberOfDays = 1): self
+    public static function createAllDay(string $title, \DateTimeInterface $from, int $numberOfDays = 1)
     {
-        $from = (clone $fromDate)->modify('midnight');
         $to = (clone $from)->modify("+$numberOfDays days");
+        assert($to instanceof \DateTimeInterface);
 
-        return new self($title, $from, $to, true);
+        return new static($title, $from, $to, true);
     }
 
     /**
@@ -132,10 +122,5 @@ class Link
     public function webOffice(): string
     {
         return $this->formatWith(new WebOffice());
-    }
-
-    public function __get($property)
-    {
-        return $this->$property;
     }
 }
