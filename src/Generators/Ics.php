@@ -57,7 +57,7 @@ class Ics implements Generator
             $url[] = 'URL;VALUE=URI:'.$this->options['URL'];
         }
 
-        if (is_array($this->options['REMINDER'] ?? null)) {
+        if (is_array($this->options['REMINDERS'] ?? null)) {
             $url = array_merge($url, $this->generateAlertComponent($link));
         }
 
@@ -96,22 +96,25 @@ class Ics implements Generator
      */
     private function generateAlertComponent(Link $link): array
     {
-        $description = $this->options['REMINDER']['DESCRIPTION'] ?? null;
-        if (! is_string($description)) {
-            $description = 'Reminder: '.$this->escapeString($link->title);
-        }
-
-        $trigger = 'TRIGGER:-PT15M';
-        if (($reminderTime = $this->options['REMINDER']['TIME'] ?? null) instanceof \DateTimeInterface) {
-            $trigger = 'TRIGGER;VALUE=DATE-TIME:'.gmdate($this->dateTimeFormat, $reminderTime->getTimestamp());
-        }
-
         $alarmComponent = [];
-        $alarmComponent[] = 'BEGIN:VALARM';
-        $alarmComponent[] = 'ACTION:DISPLAY';
-        $alarmComponent[] = 'DESCRIPTION:'.$description;
-        $alarmComponent[] = $trigger;
-        $alarmComponent[] = 'END:VALARM';
+
+        foreach ($this->options['REMINDERS'] as $reminder) {
+            $description = $reminder['DESCRIPTION'] ?? null;
+            if (! is_string($description)) {
+                $description = 'Reminder: '.$this->escapeString($link->title);
+            }
+
+            $trigger = 'TRIGGER:-PT15M';
+            if (($reminderTime = $reminder['TIME'] ?? null) instanceof \DateTimeInterface) {
+                $trigger = 'TRIGGER;VALUE=DATE-TIME:'.gmdate($this->dateTimeFormat, $reminderTime->getTimestamp());
+            }
+
+            $alarmComponent[] = 'BEGIN:VALARM';
+            $alarmComponent[] = 'ACTION:DISPLAY';
+            $alarmComponent[] = 'DESCRIPTION:'.$description;
+            $alarmComponent[] = $trigger;
+            $alarmComponent[] = 'END:VALARM';
+        }
 
         return $alarmComponent;
     }
