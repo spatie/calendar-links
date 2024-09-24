@@ -1,12 +1,11 @@
 {
     "name": "spatie/calendar-links",
     "description": "Generate add to calendar links for Google, iCal and other calendar systems",
+    "license": "MIT",
     "keywords": [
         "spatie",
         "calendar-links"
     ],
-    "homepage": "https://github.com/SimplyTheBecks/calendar-links",
-    "license": "MIT",
     "authors": [
         {
             "name": "Sebastian De Deyne",
@@ -15,14 +14,15 @@
             "role": "Developer"
         }
     ],
+    "homepage": "https://github.com/SimplyTheBecks/calendar-links",
     "require": {
-        "php": "^7.4"
+        "php": "^8.1"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.0",
-        "phpunit/phpunit": "^9.5",
-        "spatie/phpunit-snapshot-assertions": "^4.0",
-        "vimeo/psalm": "^4.20"
+        "friendsofphp/php-cs-fixer": "^3.49",
+        "phpunit/phpunit": "^10.5",
+        "spatie/phpunit-snapshot-assertions": "^5.1",
+        "vimeo/psalm": "^5.22"
     },
     "autoload": {
         "psr-4": {
@@ -34,13 +34,14 @@
             "Spatie\\CalendarLinks\\Tests\\": "tests"
         }
     },
+    "config": {
+        "sort-packages": true
+    },
     "scripts": {
         "format": "vendor/bin/php-cs-fixer fix --allow-risky=yes",
         "psalm": "vendor/bin/psalm",
+        "psalm:ci": "vendor/bin/psalm --shepherd",
         "test": "vendor/bin/phpunit",
         "test:update-snapshots": "vendor/bin/phpunit -d --update-snapshots"
-    },
-    "config": {
-        "sort-packages": true
     }
 }

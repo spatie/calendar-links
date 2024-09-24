@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Spatie\CalendarLinks\Generators;
 
@@ -7,33 +9,44 @@ use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Link;
 
 /**
- * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/master/services/outlook-web.md
+ * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/main/services/outlook-web.md
+ * @psalm-type OutlookUrlParameters = array<string, scalar|null>
  */
 abstract class BaseOutlook implements Generator
 {
-    /** @var string {@see https://www.php.net/manual/en/function.date.php} */
-    protected $dateFormat = 'Y-m-d';
-    /** @var string {@see https://www.php.net/manual/en/function.date.php} */
-    protected $dateTimeFormat = 'Y-m-d\TH:i:s\Z';
+    /** @see https://www.php.net/manual/en/function.date.php */
+    private const DATE_FORMAT = 'Y-m-d';
 
-    /** Get base URL for links. */
-    abstract public function baseUrl(): string;
+    /** @see https://www.php.net/manual/en/function.date.php */
+    private const DATETIME_FORMAT = 'Y-m-d\TH:i:s\Z';
 
-    /** {@inheritDoc} */
+    /** @psalm-var OutlookUrlParameters */
+    protected array $urlParameters = [];
+
+    /**
+     * Get base URL for links.
+     * @return non-empty-string
+     */
+    abstract protected function baseUrl(): string;
+
+    /** @psalm-param OutlookUrlParameters $urlParameters */
+    public function __construct(array $urlParameters = [])
+    {
+        $this->urlParameters = $urlParameters;
+    }
+
+    /** @inheritDoc */
     public function generate(Link $link): string
     {
         $url = $this->baseUrl();
 
-        $dateTimeFormat = $link->allDay ? $this->dateFormat : $this->dateTimeFormat;
-
-        $utcStartDateTime = (clone $link->from)->setTimezone(new DateTimeZone('UTC'));
-        $utcEndDateTime = (clone $link->to)->setTimezone(new DateTimeZone('UTC'));
-
-        $url .= '&startdt='.$utcStartDateTime->format($dateTimeFormat);
-        $url .= '&enddt='.$utcEndDateTime->format($dateTimeFormat);
-
         if ($link->allDay) {
+            $url .= '&startdt='.$link->from->format(self::DATE_FORMAT);
+            $url .= '&enddt='.$link->to->format(self::DATE_FORMAT);
             $url .= '&allday=true';
+        } else {
+            $url .= '&startdt='.(clone $link->from)->setTimezone(new DateTimeZone('UTC'))->format(self::DATETIME_FORMAT);
+            $url .= '&enddt='.(clone $link->to)->setTimezone(new DateTimeZone('UTC'))->format(self::DATETIME_FORMAT);
         }
 
         $url .= '&subject='.$this->sanitizeString($link->title);
@@ -44,6 +57,10 @@ abstract class BaseOutlook implements Generator
 
         if ($link->address) {
             $url .= '&location='.$this->sanitizeString($link->address);
+        }
+
+        foreach ($this->urlParameters as $key => $value) {
+            $url .= '&'.urlencode($key).(in_array($value, [null, ''], true) ? '' : '='.$this->sanitizeString((string) $value));
         }
 
         return $url;

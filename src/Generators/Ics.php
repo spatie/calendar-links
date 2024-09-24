@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Spatie\CalendarLinks\Generators;
 
 use Spatie\CalendarLinks\Generator;
@@ -7,28 +9,42 @@ use Spatie\CalendarLinks\Link;
 
 /**
  * @see https://icalendar.org/RFC-Specifications/iCalendar-RFC-5545/
+ * @psalm-type IcsOptions = array{UID?: string, URL?: string, PRODID?: string, REMINDER?: array{DESCRIPTION?: string, TIME?: \DateTimeInterface}}
+ * @psalm-type IcsPresentationOptions = array{format?: self::FORMAT_*}
  */
 class Ics implements Generator
 {
-    /** @var string {@see https://www.php.net/manual/en/function.date.php} */
-    protected $dateFormat = 'Ymd';
-    protected $dateTimeFormat = 'Ymd\THis\Z';
+    public const FORMAT_HTML = 'html';
+    public const FORMAT_FILE = 'file';
 
-    /** @var array */
-    protected $options = [];
+    /** @see https://www.php.net/manual/en/function.date.php */
+    protected string $dateFormat = 'Ymd';
 
-    public function __construct(array $options = [])
+    protected string $dateTimeFormat = 'Ymd\THis\Z';
+
+    /** @psalm-var IcsOptions */
+    protected array $options = [];
+
+    /** @psalm-var IcsPresentationOptions */
+    protected $presentationOptions = [];
+
+    /**
+     * @param IcsOptions $options Optional ICS properties and components
+     * @param IcsPresentationOptions $presentationOptions
+     */
+    public function __construct(array $options = [], array $presentationOptions = [])
     {
         $this->options = $options;
+        $this->presentationOptions = $presentationOptions;
     }
 
-    /** {@inheritDoc} */
+    /** @inheritDoc */
     public function generate(Link $link): string
     {
         $url = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0', // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.7.4
-            'PRODID:Spatie calendar-links', // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.7.3
+            'PRODID:'.($this->options['PRODID'] ?? 'Spatie calendar-links'), // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.7.3
             'BEGIN:VEVENT',
             'UID:'.($this->options['UID'] ?? $this->generateEventUid($link)),
             'SUMMARY:'.$this->escapeString($link->title),
@@ -47,7 +63,7 @@ class Ics implements Generator
         }
 
         if ($link->description) {
-            $url[] = 'X-ALT-DESC;FMTTYPE=text/html:'.$this->escapeString($link->description);
+            $url[] = 'DESCRIPTION:'.$this->escapeString(strip_tags($link->description));
         }
         if ($link->address) {
             $url[] = 'LOCATION:'.$this->escapeString($link->address);
@@ -64,12 +80,30 @@ class Ics implements Generator
         $url[] = 'END:VEVENT';
         $url[] = 'END:VCALENDAR';
 
-        return $this->buildLink($url);
+        $format = $this->presentationOptions['format'] ?? self::FORMAT_HTML;
+
+        return match ($format) {
+            'file' => $this->buildFile($url),
+            default => $this->buildLink($url),
+        };
     }
 
+    /**
+     * @param non-empty-list<string> $propertiesAndComponents
+     * @return non-empty-string
+     */
     protected function buildLink(array $propertiesAndComponents): string
     {
         return 'data:text/calendar;charset=utf8;base64,'.base64_encode(implode("\r\n", $propertiesAndComponents));
+    }
+
+    /**
+     * @param non-empty-list<string> $propertiesAndComponents
+     * @return non-empty-string
+     */
+    protected function buildFile(array $propertiesAndComponents): string
+    {
+        return implode("\r\n", $propertiesAndComponents);
     }
 
     /** @see https://tools.ietf.org/html/rfc5545.html#section-3.3.11 */

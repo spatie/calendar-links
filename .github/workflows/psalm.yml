@@ -4,24 +4,23 @@ on:
   push:
     paths:
       - '**.php'
-      - 'psalm.xml'
+      - 'psalm*'
 
 jobs:
   psalm:
     name: psalm
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '7.4'
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick
+          php-version: '8.3'
           coverage: none
 
       - name: Cache composer dependencies
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: vendor
           key: composer-${{ hashFiles('composer.lock') }}
@@ -29,5 +28,5 @@ jobs:
       - name: Run composer install
         run: composer install -n --prefer-dist
 
-      - name: Run psalm
-        run: composer psalm
+      - name: Run Psalm
+        run: composer psalm:ci

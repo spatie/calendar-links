@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Spatie\CalendarLinks\Tests\Generators;
 
 use DateTime;
@@ -9,7 +11,7 @@ use Spatie\CalendarLinks\Generators\Yahoo;
 use Spatie\CalendarLinks\Link;
 use Spatie\CalendarLinks\Tests\TestCase;
 
-class YahooGeneratorTest extends TestCase
+final class YahooGeneratorTest extends TestCase
 {
     use GeneratorTestContract;
 
@@ -24,7 +26,7 @@ class YahooGeneratorTest extends TestCase
     }
 
     /** @test */
-    public function it_can_generate_a_yahoo_link_for_long_multiple_days_event()
+    public function it_can_generate_a_yahoo_link_for_long_multiple_days_event(): void
     {
         $link = Link::create(
             'Christmas and New Year',
@@ -33,5 +35,13 @@ class YahooGeneratorTest extends TestCase
         )->description('Long event')->address('Party Lane 1A, 1337 Funtown');
 
         $this->assertMatchesSnapshot($link->yahoo());
+    }
+
+    /** @test */
+    public function it_can_generate_an_url_with_custom_parameters(): void
+    {
+        $link = $this->createShortEventLink();
+
+        $this->assertMatchesSnapshot($link->yahoo(['uid' => '750e0c92aa33a7382460a280c2dfb8e6', 'msngr' => null]));
     }
 }

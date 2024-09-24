@@ -1,13 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Spatie\CalendarLinks\Generators;
 
-class WebOffice extends BaseOutlook
+final class WebOffice extends BaseOutlook
 {
-    protected const BASE_URL = 'https://outlook.office.com/calendar/deeplink/compose?path=/calendar/action/compose&rru=addevent';
+    /** @var non-empty-string */
+    private const BASE_URL = 'https://outlook.office.com/calendar/deeplink/compose?path=/calendar/action/compose&rru=addevent';
 
     /** @inheritDoc */
-    public function baseUrl(): string
+    protected function baseUrl(): string
     {
         return static::BASE_URL;
     }

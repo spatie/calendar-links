@@ -4,10 +4,10 @@ PRODID:Spatie calendar-links
 BEGIN:VEVENT
 UID:aaf6b0d9a2c43d4a1c803a8c80793a08
 SUMMARY:Birthday
-DTSTAMP;TZID=20180201
+DTSTAMP:20180201
 DTSTART:20180201
 DURATION:P1D
-X-ALT-DESC;FMTTYPE=text/html:With balloons\, clowns and stuff\nBring a dog\, bring a frog
+DESCRIPTION:With balloons\, clowns and stuff\nBring a dog\, bring a frog
 LOCATION:Party Lane 1A\, 1337 Funtown
 END:VEVENT
 END:VCALENDAR

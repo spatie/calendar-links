@@ -3,8 +3,19 @@
 name: Run Tests
 
 on:
-  - pull_request
-  - push
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '**.php'
+      - '**.txt'
+      - '**.json'
+      - 'composer.*'
+  push:
+    paths:
+      - '**.php'
+      - '**.txt'
+      - '**.json'
+      - 'composer.*'
 
 jobs:
   tests:
@@ -13,20 +24,19 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest]
-        php: [7.4, 8.0, 8.1]
+        php: [8.1, 8.2, 8.3]
         dependency-version: [prefer-lowest, prefer-stable]
 
     name: P${{ matrix.php }} - ${{ matrix.dependency-version }} - ${{ matrix.os }}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: dom, json, libxml, mbstring, pcre, reflection, spl, xml, xmlwriter
           coverage: none
           ini-values: assert.exception=1, zend.assertions=1
 
