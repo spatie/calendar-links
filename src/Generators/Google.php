@@ -38,8 +38,11 @@ class Google implements Generator
 
         $dateTimeFormat = $link->allDay ? self::DATE_FORMAT : self::DATETIME_FORMAT;
         $url .= '&dates='.$link->from->format($dateTimeFormat).'/'.$link->to->format($dateTimeFormat);
-        $url .= '&ctz=' . $link->from->getTimezone()->getName();
         $url .= '&text='.urlencode($link->title);
+        
+        if (!$link->allDay) {
+            $url .= '&ctz=' . $link->from->getTimezone()->getName();
+        }
 
         if ($link->description) {
             $url .= '&details='.urlencode($link->description);
