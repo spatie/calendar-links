@@ -125,16 +125,16 @@ class Ics implements Generator
             $description = 'Reminder: '.$this->escapeString($link->title);
         }
 
-        $trigger = '-PT15M';
+        $trigger = 'TRIGGER:-PT15M';
         if (($reminderTime = $this->options['REMINDER']['TIME'] ?? null) instanceof \DateTimeInterface) {
-            $trigger = 'VALUE=DATE-TIME:'.gmdate($this->dateTimeFormat, $reminderTime->getTimestamp());
+            $trigger = 'TRIGGER;VALUE=DATE-TIME:'.gmdate($this->dateTimeFormat, $reminderTime->getTimestamp());
         }
 
         $alarmComponent = [];
         $alarmComponent[] = 'BEGIN:VALARM';
         $alarmComponent[] = 'ACTION:DISPLAY';
         $alarmComponent[] = 'DESCRIPTION:'.$description;
-        $alarmComponent[] = 'TRIGGER:'.$trigger;
+        $alarmComponent[] = $trigger;
         $alarmComponent[] = 'END:VALARM';
 
         return $alarmComponent;
