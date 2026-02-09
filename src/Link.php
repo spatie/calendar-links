@@ -43,12 +43,17 @@ class Link
         }
 
         $this->from = \DateTimeImmutable::createFromInterface($from);
-        $this->to = \DateTimeImmutable::createFromInterface($to);
+
+        $immutableTo = \DateTimeImmutable::createFromInterface($to);
 
         // Ensures from date is earlier than to date.
-        if ($this->from > $this->to) {
-            throw InvalidLink::negativeDateRange($this->from, $this->to);
+        if ($this->from > $immutableTo) {
+            throw InvalidLink::negativeDateRange($this->from, $immutableTo);
         }
+
+        // All-day events: convert inclusive end date to exclusive end date,
+        // as calendar services expect the end date to be the day after the last event day.
+        $this->to = $allDay ? $immutableTo->modify('+1 day') : $immutableTo;
     }
 
     /**
@@ -65,7 +70,8 @@ class Link
      */
     public static function createAllDay(string $title, \DateTimeInterface $from, int $numberOfDays = 1): static
     {
-        $to = (clone $from)->modify("+$numberOfDays days");
+        $lastDay = $numberOfDays - 1;
+        $to = (clone $from)->modify("+$lastDay days");
         assert($to instanceof \DateTimeInterface);
 
         return new static($title, $from, $to, true);
