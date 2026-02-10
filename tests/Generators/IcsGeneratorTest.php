@@ -24,6 +24,7 @@ final class IcsGeneratorTest extends TestCase
      * @param IcsPresentationOptions $presentationOptions
      * @return \Spatie\CalendarLinks\Generator
      */
+    #[\Override]
     protected function generator(array $options = [], array $presentationOptions = []): Generator
     {
         $presentationOptions['format'] ??= Ics::FORMAT_FILE;
@@ -31,6 +32,7 @@ final class IcsGeneratorTest extends TestCase
         return new Ics($options, $presentationOptions);
     }
 
+    #[\Override]
     protected function linkMethodName(): string
     {
         return 'ics';

@@ -8,14 +8,15 @@ use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Link;
 
 /**
+ * @api
  * @see https://icalendar.org/RFC-Specifications/iCalendar-RFC-5545/
  * @psalm-type IcsOptions = array{UID?: string, URL?: string, PRODID?: string, REMINDER?: array{DESCRIPTION?: string, TIME?: \DateTimeInterface}}
  * @psalm-type IcsPresentationOptions = array{format?: self::FORMAT_*}
  */
 class Ics implements Generator
 {
-    public const FORMAT_HTML = 'html';
-    public const FORMAT_FILE = 'file';
+    public const string FORMAT_HTML = 'html';
+    public const string FORMAT_FILE = 'file';
 
     /** @see https://www.php.net/manual/en/function.date.php */
     protected string $dateFormat = 'Ymd';
@@ -39,6 +40,7 @@ class Ics implements Generator
     }
 
     /** @inheritDoc */
+    #[\Override]
     public function generate(Link $link): string
     {
         $url = [
@@ -56,7 +58,7 @@ class Ics implements Generator
         if ($link->allDay) {
             $url[] = 'DTSTAMP:'.gmdate($this->dateTimeFormat, $link->from->getTimestamp());
             $url[] = 'DTSTART;VALUE=DATE:'.$link->from->format($dateTimeFormat);
-            $url[] = 'DURATION:P'.(max(1, $link->from->diff($link->to)->days)).'D';
+            $url[] = 'DURATION:P'.(max(1, (int) $link->from->diff($link->to)->days)).'D';
         } else {
             $url[] = 'DTSTAMP:'.gmdate($dateTimeFormat, $link->from->getTimestamp());
             $url[] = 'DTSTART:'.gmdate($dateTimeFormat, $link->from->getTimestamp());

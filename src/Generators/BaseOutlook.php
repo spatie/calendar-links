@@ -15,10 +15,10 @@ use Spatie\CalendarLinks\Link;
 abstract class BaseOutlook implements Generator
 {
     /** @see https://www.php.net/manual/en/function.date.php */
-    private const DATE_FORMAT = 'Y-m-d';
+    private const string DATE_FORMAT = 'Y-m-d';
 
     /** @see https://www.php.net/manual/en/function.date.php */
-    private const DATETIME_FORMAT = 'Y-m-d\TH:i:s\Z';
+    private const string DATETIME_FORMAT = 'Y-m-d\TH:i:s\Z';
 
     /** @psalm-var OutlookUrlParameters */
     protected array $urlParameters = [];
@@ -36,6 +36,7 @@ abstract class BaseOutlook implements Generator
     }
 
     /** @inheritDoc */
+    #[\Override]
     public function generate(Link $link): string
     {
         $url = $this->baseUrl();

@@ -9,21 +9,21 @@ use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Link;
 
 /**
+ * @api
  * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/main/services/yahoo.md
  * @psalm-type YahooUrlParameters = array<string, scalar|null>
  */
 class Yahoo implements Generator
 {
     /** @see https://www.php.net/manual/en/function.date.php */
-    private const DATE_FORMAT = 'Ymd';
+    private const string DATE_FORMAT = 'Ymd';
 
     /** @see https://www.php.net/manual/en/function.date.php */
-    private const DATETIME_FORMAT = 'Ymd\THis\Z';
+    private const string DATETIME_FORMAT = 'Ymd\THis\Z';
 
     /** @var non-empty-string */
-    protected const BASE_URL = 'https://calendar.yahoo.com/?v=60&view=d&type=20';
+    protected const string BASE_URL = 'https://calendar.yahoo.com/?v=60&view=d&type=20';
 
-    /** @inheritDoc */
     /** @psalm-var YahooUrlParameters */
     protected array $urlParameters = [];
 
@@ -34,6 +34,7 @@ class Yahoo implements Generator
     }
 
     /** {@inheritDoc} */
+    #[\Override]
     public function generate(Link $link): string
     {
         $url = self::BASE_URL;

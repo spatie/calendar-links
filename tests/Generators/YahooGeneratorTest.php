@@ -15,11 +15,13 @@ final class YahooGeneratorTest extends TestCase
 {
     use GeneratorTestContract;
 
+    #[\Override]
     protected function generator(): Generator
     {
         return new Yahoo();
     }
 
+    #[\Override]
     protected function linkMethodName(): string
     {
         return 'yahoo';

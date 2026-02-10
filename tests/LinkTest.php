@@ -8,7 +8,7 @@ use DateTime;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
 use Spatie\CalendarLinks\Link;
 
-class LinkTest extends TestCase
+final class LinkTest extends TestCase
 {
     /** @test */
     public function it_is_initializable(): void

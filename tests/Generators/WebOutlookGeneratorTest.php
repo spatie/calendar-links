@@ -12,11 +12,13 @@ final class WebOutlookGeneratorTest extends TestCase
 {
     use GeneratorTestContract;
 
+    #[\Override]
     protected function generator(): Generator
     {
         return new WebOutlook();
     }
 
+    #[\Override]
     protected function linkMethodName(): string
     {
         return 'webOutlook';

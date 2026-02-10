@@ -12,11 +12,13 @@ final class WebOfficeGeneratorTest extends TestCase
 {
     use GeneratorTestContract;
 
+    #[\Override]
     protected function generator(): Generator
     {
         return new WebOffice();
     }
 
+    #[\Override]
     protected function linkMethodName(): string
     {
         return 'webOffice';

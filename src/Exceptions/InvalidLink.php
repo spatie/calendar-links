@@ -7,9 +7,10 @@ namespace Spatie\CalendarLinks\Exceptions;
 use DateTimeInterface;
 use InvalidArgumentException;
 
+/** @api */
 class InvalidLink extends InvalidArgumentException
 {
-    private const DATETIME_FORMAT = 'Y-m-d H:i:s';
+    private const string DATETIME_FORMAT = 'Y-m-d H:i:s';
 
     public static function negativeDateRange(DateTimeInterface $from, DateTimeInterface $to): self
     {
