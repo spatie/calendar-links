@@ -8,6 +8,7 @@ use DateTime;
 use DateTimeZone;
 use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Generators\Ics;
+use Spatie\CalendarLinks\Link;
 use Spatie\CalendarLinks\Tests\TestCase;
 
 /**
@@ -93,5 +94,34 @@ final class IcsGeneratorTest extends TestCase
                 'TIME' => DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 08:15', new DateTimeZone('UTC')),
             ]])->generate($this->createShortEventLink())
         );
+    }
+
+    /** @test */
+    public function it_escapes_backslashes_in_text_fields(): void
+    {
+        $link = Link::create(
+            'Event with \\ backslash',
+            DateTime::createFromFormat('Y-m-d H:i', '2024-01-01 09:00', new DateTimeZone('UTC')),
+            DateTime::createFromFormat('Y-m-d H:i', '2024-01-01 10:00', new DateTimeZone('UTC')),
+        )->description('Path: C:\\Users\\test');
+
+        $output = $this->generator()->generate($link);
+
+        $this->assertStringContainsString('SUMMARY:Event with \\\\ backslash', $output);
+        $this->assertStringContainsString('DESCRIPTION:Path: C:\\\\Users\\\\test', $output);
+    }
+
+    /** @test */
+    public function it_escapes_newlines_as_backslash_n(): void
+    {
+        $link = Link::create(
+            'Event',
+            DateTime::createFromFormat('Y-m-d H:i', '2024-01-01 09:00', new DateTimeZone('UTC')),
+            DateTime::createFromFormat('Y-m-d H:i', '2024-01-01 10:00', new DateTimeZone('UTC')),
+        )->description("Line 1\r\nLine 2\rLine 3\nLine 4");
+
+        $output = $this->generator()->generate($link);
+
+        $this->assertStringContainsString('DESCRIPTION:Line 1\\nLine 2\\nLine 3\\nLine 4', $output);
     }
 }
