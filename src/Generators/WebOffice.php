@@ -10,6 +10,7 @@ final class WebOffice extends BaseOutlook
     private const BASE_URL = 'https://outlook.office.com/calendar/deeplink/compose?path=/calendar/action/compose&rru=addevent';
 
     /** @inheritDoc */
+    #[\Override]
     protected function baseUrl(): string
     {
         return static::BASE_URL;

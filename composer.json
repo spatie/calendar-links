@@ -16,13 +16,13 @@
     ],
     "homepage": "https://github.com/spatie/calendar-links",
     "require": {
-        "php": "^8.1"
+        "php": "^8.3"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.49",
-        "phpunit/phpunit": "^10.5",
-        "spatie/phpunit-snapshot-assertions": "^5.1",
-        "vimeo/psalm": "^5.22"
+        "friendsofphp/php-cs-fixer": "^3.93",
+        "phpunit/phpunit": "^12.5 || ^13.0",
+        "spatie/phpunit-snapshot-assertions": "^5.3",
+        "vimeo/psalm": "^6.15"
     },
     "autoload": {
         "psr-4": {

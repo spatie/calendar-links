@@ -12,6 +12,7 @@ use Spatie\CalendarLinks\Generators\WebOutlook;
 use Spatie\CalendarLinks\Generators\Yahoo;
 
 /**
+ * @api
  * @psalm-import-type IcsOptions from \Spatie\CalendarLinks\Generators\Ics
  * @psalm-import-type GoogleUrlParameters from \Spatie\CalendarLinks\Generators\Google
  * @psalm-import-type YahooUrlParameters from \Spatie\CalendarLinks\Generators\Yahoo

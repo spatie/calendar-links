@@ -5,18 +5,19 @@ declare(strict_types=1);
 namespace Spatie\CalendarLinks\Tests;
 
 use DateTime;
+use PHPUnit\Framework\Attributes\Test;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
 use Spatie\CalendarLinks\Link;
 
-class LinkTest extends TestCase
+final class LinkTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function it_is_initializable(): void
     {
         $this->assertInstanceOf(Link::class, $this->createShortEventLink());
     }
 
-    /** @test */
+    #[Test]
     public function it_will_throw_an_exception_when_to_comes_after_from(): void
     {
         $this->expectException(InvalidLink::class);
@@ -28,37 +29,37 @@ class LinkTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function it_has_a_title(): void
     {
         $this->assertEquals('Birthday', $this->createShortEventLink()->title);
     }
 
-    /** @test */
+    #[Test]
     public function it_has_a_mutable_from_date(): void
     {
         $this->assertEquals(new DateTime('20180201T090000 UTC'), $this->createShortEventLink()->from);
     }
 
-    /** @test */
+    #[Test]
     public function it_has_a_mutable_to_date(): void
     {
         $this->assertEquals(new DateTime('20180201T180000 UTC'), $this->createShortEventLink()->to);
     }
 
-    /** @test */
+    #[Test]
     public function it_has_an_immutable_from_date(): void
     {
         $this->assertEquals(new DateTime('20180201T090000 UTC'), $this->createShortEventLink()->from);
     }
 
-    /** @test */
+    #[Test]
     public function it_has_an_immutable_to_date(): void
     {
         $this->assertEquals(new \DateTimeImmutable('20180201T180000 UTC'), $this->createShortEventLink()->to);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_have_a_description(): void
     {
         $link = $this->createShortEventLink();
@@ -67,7 +68,7 @@ Bring a dog, bring a frog';
         $this->assertEquals($correctDescription, $link->description);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_have_an_address(): void
     {
         $link = $this->createShortEventLink();

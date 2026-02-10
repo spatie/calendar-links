@@ -6,6 +6,7 @@ namespace Spatie\CalendarLinks\Tests\Generators;
 
 use DateTime;
 use DateTimeZone;
+use PHPUnit\Framework\Attributes\Test;
 use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Generators\Ics;
 use Spatie\CalendarLinks\Link;
@@ -20,11 +21,12 @@ final class IcsGeneratorTest extends TestCase
     use GeneratorTestContract;
 
     /**
-     * @psalm-param IcsOptions $options ICS specific properties and components
-     * @param IcsOptions $options ICS specific properties and components
+     * @psalm-param IcsOptions $options ICS-specific properties and components
+     * @param IcsOptions $options ICS-specific properties and components
      * @param IcsPresentationOptions $presentationOptions
      * @return \Spatie\CalendarLinks\Generator
      */
+    #[\Override]
     protected function generator(array $options = [], array $presentationOptions = []): Generator
     {
         $presentationOptions['format'] ??= Ics::FORMAT_FILE;
@@ -32,12 +34,13 @@ final class IcsGeneratorTest extends TestCase
         return new Ics($options, $presentationOptions);
     }
 
+    #[\Override]
     protected function linkMethodName(): string
     {
         return 'ics';
     }
 
-    /** @test */
+    #[Test]
     public function it_correctly_generates_all_day_events_by_days(): void
     {
         $this->assertMatchesSnapshot(
@@ -45,7 +48,7 @@ final class IcsGeneratorTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function it_correctly_generates_all_day_events_by_dates(): void
     {
         $this->assertMatchesSnapshot(
@@ -53,7 +56,7 @@ final class IcsGeneratorTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_base64_encoded_link_for_html(): void
     {
         $this->assertMatchesSnapshot(
@@ -61,7 +64,7 @@ final class IcsGeneratorTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function it_can_generate_an_ics_link_with_custom_uid(): void
     {
         $this->assertMatchesSnapshot(
@@ -69,7 +72,7 @@ final class IcsGeneratorTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function it_supports_custom_product_id(): void
     {
         $this->assertMatchesSnapshot(
@@ -77,7 +80,7 @@ final class IcsGeneratorTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function it_can_generate_with_a_default_reminder(): void
     {
         $this->assertMatchesSnapshot(
@@ -85,7 +88,7 @@ final class IcsGeneratorTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function it_can_generate_with_a_custom_reminder(): void
     {
         $this->assertMatchesSnapshot(

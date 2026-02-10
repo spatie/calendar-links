@@ -10,6 +10,7 @@ final class WebOutlook extends BaseOutlook
     private const BASE_URL = 'https://outlook.live.com/calendar/action/compose?path=/calendar/action/compose&rru=addevent';
 
     /** @inheritDoc */
+    #[\Override]
     protected function baseUrl(): string
     {
         return static::BASE_URL;
