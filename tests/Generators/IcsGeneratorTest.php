@@ -20,8 +20,8 @@ final class IcsGeneratorTest extends TestCase
     use GeneratorTestContract;
 
     /**
-     * @psalm-param IcsOptions $options ICS specific properties and components
-     * @param IcsOptions $options ICS specific properties and components
+     * @psalm-param IcsOptions $options ICS-specific properties and components
+     * @param IcsOptions $options ICS-specific properties and components
      * @param IcsPresentationOptions $presentationOptions
      * @return \Spatie\CalendarLinks\Generator
      */
