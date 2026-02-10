@@ -38,6 +38,7 @@ class Google implements Generator
 
         $dateTimeFormat = $link->allDay ? self::DATE_FORMAT : self::DATETIME_FORMAT;
         $url .= '&dates='.$link->from->format($dateTimeFormat).'/'.$link->to->format($dateTimeFormat);
+        // Not URL-encoded intentionally: Google Calendar handles unencoded timezone names (e.g. Etc/GMT+5) correctly.
         $url .= '&ctz=' . $link->from->getTimezone()->getName();
         $url .= '&text='.urlencode($link->title);
 

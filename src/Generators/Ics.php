@@ -52,9 +52,10 @@ class Ics implements Generator
 
         $dateTimeFormat = $link->allDay ? $this->dateFormat : $this->dateTimeFormat;
 
+        // DTSTAMP must always be UTC datetime. @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.2
         if ($link->allDay) {
-            $url[] = 'DTSTAMP:'.$link->from->format($dateTimeFormat);
-            $url[] = 'DTSTART:'.$link->from->format($dateTimeFormat);
+            $url[] = 'DTSTAMP:'.gmdate($this->dateTimeFormat, $link->from->getTimestamp());
+            $url[] = 'DTSTART;VALUE=DATE:'.$link->from->format($dateTimeFormat);
             $url[] = 'DURATION:P'.(max(1, $link->from->diff($link->to)->days)).'D';
         } else {
             $url[] = 'DTSTAMP:'.gmdate($dateTimeFormat, $link->from->getTimestamp());
