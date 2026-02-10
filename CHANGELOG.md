@@ -2,6 +2,44 @@
 
 All notable changes to `calendar-links` will be documented in this file
 
+## 2.0.0 - 2026-02-10
+
+### Breaking Changes
+- Require PHP 8.3+ (previously 8.1+)
+- `Link::$from` and `Link::$to` are now `DateTimeImmutable` (previously `DateTime`)
+- `Link::$title`, `$from`, `$to`, and `$allDay` are now `public readonly`; `$description` and `$address` are `public`. The magic `__get()` method has been removed.
+- Remove `$allDay` parameter from `Link::create()` — use `Link::createAllDay()` instead
+- `Link::createAllDay()` end date is now inclusive (the constructor internally adds +1 day for calendar services)
+- `Link` constructor is now `final`
+- Remove deprecated `InvalidLink::invalidDateRange()` — use `InvalidLink::negativeDateRange()` instead
+- `BaseOutlook::baseUrl()` visibility changed from `public` to `protected`
+- `WebOffice` and `WebOutlook` classes are now `final`
+- Date/time format properties in generators replaced with `private const` (prevents override via subclassing)
+- Require PHPUnit 12+ / 13
+
+### Added
+- ICS: Allow custom `PRODID` via options array
+- `Link::createAllDay()` now returns `static` instead of `self`
+
+### Fixed
+- Fix all-day events created via constructor being 1 day short
+- ICS: `DTSTAMP` now always uses UTC datetime for all-day events (RFC 5545 compliance)
+- ICS: Add `VALUE=DATE` parameter to `DTSTART` for all-day events (RFC 5545 compliance)
+- ICS: `escapeString()` now properly handles backslashes, semicolons, commas, and newlines per RFC 5545 section 3.3.11
+- ICS: Fix VALARM trigger not working when a specific date was set
+
+### Internal
+- Add `declare(strict_types=1)` to all source files
+- Use PHP 8.3 typed class constants and `#[\Override]` attributes
+- Use `DateTimeImmutable` throughout instead of mutable `DateTime`
+- Replace `@test` annotations with PHPUnit `#[Test]` attributes
+- Apply PSR-12 coding style
+- Upgrade Psalm to v6 with improved type annotations
+
+## 1.11.1 - 2024-03-07
+
+## 1.11.0 - 2024-02-20
+
 ## 1.8.2 - 2022-12-11
 ### Changed
  - ICS: Use `DESCRIPTION` instead of `X-ALT-DESC` (as it has better support) by @cdubz in #158
