@@ -72,6 +72,11 @@ class Ics implements Generator
             $url[] = 'LOCATION:'.$this->escapeString($link->address);
         }
 
+        foreach ($link->guests as $guest) {
+            $role = $guest['optional'] ? 'OPT-PARTICIPANT' : 'REQ-PARTICIPANT';
+            $url[] = 'ATTENDEE;ROLE='.$role.':mailto:'.$this->escapeCalendarAddress($guest['email']);
+        }
+
         if (isset($this->options['URL'])) {
             $url[] = 'URL;VALUE=URI:'.$this->options['URL'];
         }
@@ -116,6 +121,23 @@ class Ics implements Generator
             ['\\', ';', ',', "\r\n", "\r", "\n"],
             ['\\\\', '\\;', '\\,', '\\n', '\\n', '\\n'],
             $field
+        );
+    }
+
+    /**
+     * An ATTENDEE value is a CAL-ADDRESS, which is a URI rather than TEXT, so the backslash escaping
+     * of escapeString() does not apply to it. Characters that are legal in an email address but would
+     * change the meaning of the mailto URI are percent encoded instead.
+     *
+     * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.3
+     * @see https://datatracker.ietf.org/doc/html/rfc6068#section-2
+     */
+    protected function escapeCalendarAddress(string $email): string
+    {
+        return str_replace(
+            ['%', '&', '?', '=', '/', '#'],
+            ['%25', '%26', '%3F', '%3D', '%2F', '%23'],
+            $email
         );
     }
 
