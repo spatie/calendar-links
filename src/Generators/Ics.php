@@ -204,6 +204,17 @@ class Ics implements Generator
             // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.7.3
             'PRODID:'.$this->escapeString($this->options['PRODID'] ?? 'Spatie calendar-links'),
             ...$this->additionalCalendarProperties($link),
+        ];
+
+        // Properties precede components at the VCALENDAR level, which is why this sits after the
+        // calendar properties and before the event.
+        // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.5
+        if ($this->shouldDefineTimezones($link)) {
+            $url = [...$url, ...$this->generateTimezoneComponents($link)];
+        }
+
+        $url = [
+            ...$url,
             'BEGIN:VEVENT',
             // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.7
             'UID:'.$this->escapeString($this->options['UID'] ?? $this->generateEventUid($link)),
@@ -439,6 +450,170 @@ class Ics implements Generator
     protected function additionalEventProperties(Link $link): array
     {
         return [];
+    }
+
+    /**
+     * Whether the file needs VTIMEZONE components at all.
+     *
+     * This must stay in step with the condition in generate() that decides whether the endpoints are
+     * written with a TZID parameter, because a VTIMEZONE is only meaningful when a property in the
+     * file references it. Narrowing that condition has to narrow this one with it, or the file ends
+     * up carrying an orphan component that defines a zone nothing names.
+     *
+     * A zone the client cannot look up is the case in point: the endpoints fall back to UTC instants
+     * carrying no TZID, so there is nothing left to define, and defining it anyway would write the
+     * offset style name into a TZID that cannot hold it.
+     *
+     * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.5
+     */
+    protected function shouldDefineTimezones(Link $link): bool
+    {
+        return $link->hasDistinctTimezones() && $link->hasResolvableTimezones();
+    }
+
+    /**
+     * Extension point: the zones the generated file names with a TZID parameter, in the order their
+     * VTIMEZONE components should appear. Repeated names are collapsed by the caller, so an override
+     * is free to list a zone it cannot rule out being there already.
+     *
+     * @return list<\DateTimeZone>
+     */
+    protected function referencedTimezones(Link $link): array
+    {
+        return [$link->fromTimezone, $link->toTimezone];
+    }
+
+    /**
+     * "An individual VTIMEZONE calendar component MUST be specified for each unique TZID parameter
+     * value specified in the iCalendar object." Without them the file is invalid, and a client that
+     * does not resolve bare IANA identifiers (older Outlook desktop) reads the endpoints as floating
+     * local times, which shifts the event.
+     *
+     * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.5
+     * @return list<string>
+     */
+    protected function generateTimezoneComponents(Link $link): array
+    {
+        $components = [];
+        $definedTimezones = [];
+
+        foreach ($this->referencedTimezones($link) as $timezone) {
+            $tzid = $timezone->getName();
+
+            // Unique is per TZID value, not per referencing property, so an event that departs and
+            // lands in one zone still gets a single component.
+            if (isset($definedTimezones[$tzid])) {
+                continue;
+            }
+
+            $definedTimezones[$tzid] = true;
+
+            $components = [...$components, ...$this->generateTimezoneComponent($timezone, $link)];
+        }
+
+        return $components;
+    }
+
+    /**
+     * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.5
+     * @return list<string>
+     */
+    protected function generateTimezoneComponent(\DateTimeZone $timezone, Link $link): array
+    {
+        $component = ['BEGIN:VTIMEZONE'];
+        $component[] = 'TZID:'.$timezone->getName();
+
+        foreach ($this->generateTimezoneObservances($timezone, $link) as $observance) {
+            $component = [...$component, ...$observance];
+        }
+
+        $component[] = 'END:VTIMEZONE';
+
+        return $component;
+    }
+
+    /**
+     * Every change the zone makes inside a window around the event, in the order it makes them, one
+     * observance each. A local time is resolved against the observance with the latest onset at or
+     * before it, taken across the whole component, so a plain chronological list is what a parser
+     * wants and no change may be left out. Africa/Casablanca suspends its summer time for Ramadan
+     * and restores it weeks later, which puts two changes of one kind in a single year at two
+     * different offsets, and a component holding only one of each moves the event by an hour.
+     *
+     * The first entry is the offset already in effect when the window opens rather than a change, so
+     * it is written with TZOFFSETFROM equal to TZOFFSETTO. That covers the stretch before the zone's
+     * first real change, which the event itself can fall in.
+     *
+     * The window reaches a year either side of the event, which holds every change the event can be
+     * resolved against while keeping the component to a handful of observances. It is measured from
+     * the event rather than from today, so the same Link always produces the same file.
+     *
+     * These observances carry no recurrence rule, so they describe the window and nothing outside
+     * it. An event that recurs beyond the window is resolved by a client against the last observance
+     * in the file, which is the wrong offset for half of every later year.
+     *
+     * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.5
+     * @return list<list<string>>
+     */
+    private function generateTimezoneObservances(\DateTimeZone $timezone, Link $link): array
+    {
+        $windowStart = $link->from->modify('-1 year')->getTimestamp();
+        $transitions = $timezone->getTransitions($windowStart, $link->to->modify('+1 year')->getTimestamp());
+
+        // A zone named by a bare abbreviation or a fixed offset (EST, CET, +05:30) has no transition
+        // table for PHP to return. RFC 5545 still wants at least one subcomponent, so the one offset
+        // such a zone has stands in as the state at the window opening and runs through the loop
+        // below like any other.
+        if ($transitions === false || $transitions === []) {
+            $transitions = [[
+                'ts' => $windowStart,
+                'offset' => $timezone->getOffset($link->from),
+                'isdst' => false,
+                'abbr' => $link->from->setTimezone($timezone)->format('T'),
+            ]];
+        }
+
+        $observances = [];
+        $previousOffset = null;
+
+        foreach ($transitions as $transition) {
+            // There is no earlier offset to move away from on the first entry.
+            $offsetFrom = $previousOffset ?? $transition['offset'];
+            $previousOffset = $transition['offset'];
+            $type = $transition['isdst'] ? 'DAYLIGHT' : 'STANDARD';
+
+            $observances[] = [
+                'BEGIN:'.$type,
+                // An onset is a local time read against the offset being left behind.
+                // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.4
+                'DTSTART:'.gmdate(self::LOCAL_DATETIME_FORMAT, $transition['ts'] + $offsetFrom),
+                'TZOFFSETFROM:'.$this->formatUtcOffset($offsetFrom),
+                'TZOFFSETTO:'.$this->formatUtcOffset($transition['offset']),
+                'TZNAME:'.$this->escapeString($transition['abbr']),
+                'END:'.$type,
+            ];
+        }
+
+        return $observances;
+    }
+
+    /**
+     * A UTC offset is signed hours and minutes, with seconds appended only when a zone needs them,
+     * which in practice means the local mean times that predate standardised zones.
+     *
+     * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.14
+     */
+    private function formatUtcOffset(int $offsetInSeconds): string
+    {
+        $absoluteOffset = abs($offsetInSeconds);
+        $seconds = $absoluteOffset % 60;
+
+        return sprintf(
+            '%s%02d%02d',
+            $offsetInSeconds < 0 ? '-' : '+',
+            intdiv($absoluteOffset, 3600),
+            intdiv($absoluteOffset % 3600, 60),
+        ).($seconds !== 0 ? sprintf('%02d', $seconds) : '');
     }
 
     /**
