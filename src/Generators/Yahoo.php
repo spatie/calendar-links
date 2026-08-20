@@ -46,6 +46,9 @@ class Yahoo implements Generator
 
             // Yahoo ignores `DUR` as soon as `ET` is present, so only one of them can be sent:
             // the all-day marker for a single day, the exclusive end date for a longer event.
+            // Sending `ET` costs the all-day banner, because `DUR=allday` is the only thing that
+            // flips the all-day toggle and `DUR` has no multi-day value, so a multi-day all-day
+            // event is composed as a timed one running from midnight to midnight.
             $url .= $this->isSingleDayEvent($link)
                 ? '&DUR=allday'
                 : '&ET='.$link->to->format(self::DATE_FORMAT);
