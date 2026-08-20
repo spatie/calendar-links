@@ -28,6 +28,12 @@ class Link
 
     public readonly \DateTimeImmutable $to;
 
+    /** The timezone the event starts in. */
+    public readonly \DateTimeZone $fromTimezone;
+
+    /** The timezone the event ends in, which is only distinct from $fromTimezone for something like a flight. */
+    public readonly \DateTimeZone $toTimezone;
+
     public readonly bool $allDay;
 
     public string $description = '';
@@ -36,12 +42,6 @@ class Link
 
     /** @psalm-var list<LinkGuest> */
     public array $guests = [];
-
-    /** The timezone the event starts in. */
-    public readonly \DateTimeZone $fromTimezone;
-
-    /** The timezone the event ends in, which is only distinct from $fromTimezone for something like a flight. */
-    public readonly \DateTimeZone $toTimezone;
 
     final public function __construct(string $title, \DateTimeInterface $from, \DateTimeInterface $to, bool $allDay = false)
     {
@@ -92,7 +92,7 @@ class Link
         return new static($title, $from, $to, true);
     }
 
-    /** Set description of the Event. */
+    /** Set the description of the Event. */
     public function description(string $description): static
     {
         $this->description = $description;
