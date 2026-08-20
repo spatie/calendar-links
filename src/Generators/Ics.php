@@ -577,16 +577,31 @@ class Ics implements Generator
      * Whether the zone moves its clocks anywhere near the event, over the same stretch the VTIMEZONE
      * would describe. A zone that does not is one offset from end to end, which a UTC instant already
      * carries.
+     *
+     * generate() asks this through shouldNameTimezones(), which it reaches three times over one link:
+     * once to choose how to write the endpoints, and twice more through referencedTimezones(). The
+     * answer is a function of the zone and the event's two instants and nothing else, so it is worked
+     * out once and kept. Reading a zone's table is the most expensive thing this class does.
+     *
+     * @var array<string, bool>
      */
+    private array $observedChanges = [];
+
     private function observesAChange(\DateTimeZone $timezone, Link $link): bool
     {
-        $transitions = $timezone->getTransitions(
-            $link->from->modify('-1 year')->getTimestamp(),
-            $link->to->modify('+1 year')->getTimestamp() + self::RULE_PROBE_YEARS * self::SECONDS_PER_YEAR,
-        );
+        $windowStart = $link->from->modify('-1 year')->getTimestamp();
+        $windowEnd = $link->to->modify('+1 year')->getTimestamp() + self::RULE_PROBE_YEARS * self::SECONDS_PER_YEAR;
 
-        // The first entry is the offset already in force when the stretch opens, not a change.
-        return is_array($transitions) && count($transitions) > 1;
+        $key = $timezone->getName()."\0".$windowStart."\0".$windowEnd;
+
+        if (! isset($this->observedChanges[$key])) {
+            $transitions = $timezone->getTransitions($windowStart, $windowEnd);
+
+            // The first entry is the offset already in force when the stretch opens, not a change.
+            $this->observedChanges[$key] = is_array($transitions) && count($transitions) > 1;
+        }
+
+        return $this->observedChanges[$key];
     }
 
     /**
@@ -712,19 +727,22 @@ class Ics implements Generator
         // A zone named by a bare abbreviation or a fixed offset (EST, CET, +05:30) has no transition
         // table for PHP to return. RFC 5545 still wants at least one subcomponent, so the one offset
         // such a zone has stands in as the state at the window opening and runs through the loop
-        // below like any other. It never changes, so it needs no rule to carry it past the window.
+        // below like any other.
         if ($transitions === false || $transitions === []) {
-            return [[
-                'BEGIN:STANDARD',
-                'DTSTART:'.gmdate(self::LOCAL_DATETIME_FORMAT, $windowStart + $timezone->getOffset($link->from)),
-                'TZOFFSETFROM:'.$this->formatUtcOffset($timezone->getOffset($link->from)),
-                'TZOFFSETTO:'.$this->formatUtcOffset($timezone->getOffset($link->from)),
-                'TZNAME:'.$this->escapeString($link->from->setTimezone($timezone)->format('T')),
-                'END:STANDARD',
+            $transitions = [[
+                'ts' => $windowStart,
+                'offset' => $timezone->getOffset($link->from),
+                'isdst' => false,
+                'abbr' => $link->from->setTimezone($timezone)->format('T'),
             ]];
         }
 
-        $recurrenceRules = $this->annualRecurrenceRules($timezone, $transitions, $windowEnd);
+        // The entry at index 0 is the offset already in force when the window opened rather than a
+        // change the zone makes, so a table holding nothing else has no change for a rule to repeat
+        // and no reason to read the years beyond the window looking for one.
+        $recurrenceRules = count($transitions) > 1
+            ? $this->annualRecurrenceRules($timezone, $transitions, $windowEnd)
+            : [];
 
         $observances = [];
         $previousOffset = null;
@@ -779,25 +797,11 @@ class Ics implements Generator
 
         $rules = [];
 
-        foreach ([true, false] as $isDaylight) {
-            // The entry at index 0 is the offset already in force when the window opened rather than a
-            // change the zone makes, so it is never something a yearly rule can repeat.
-            $lastIndex = null;
-            $offsetFrom = null;
-            foreach ($transitions as $index => $transition) {
-                if ($index > 0 && $transition['isdst'] === $isDaylight) {
-                    $lastIndex = $index;
-                    $offsetFrom = $transitions[$index - 1]['offset'];
-                }
-            }
+        foreach ($this->lastOnsetOfEachKind($transitions) as $isDaylight => $lastOnset) {
+            $onsets = [$lastOnset];
 
-            if ($lastIndex === null || $offsetFrom === null) {
-                continue;
-            }
-
-            $onsets = [['ts' => $transitions[$lastIndex]['ts'], 'offsetFrom' => $offsetFrom]];
             foreach ($laterOnsets as $onset) {
-                if ($onset['isdst'] === $isDaylight) {
+                if ($onset['isdst'] === (bool) $isDaylight) {
                     $onsets[] = $onset;
                 }
             }
@@ -809,11 +813,40 @@ class Ics implements Generator
             $rule = $this->annualRuleFor($onsets);
 
             if ($rule !== null) {
-                $rules[$lastIndex] = $rule;
+                $rules[$lastOnset['index']] = $rule;
             }
         }
 
         return $rules;
+    }
+
+    /**
+     * The last change of each kind the window holds, keyed by whether it starts daylight saving, with
+     * the offset it moves away from and the index of the observance it belongs to.
+     *
+     * The entry at index 0 is the offset already in force when the window opened rather than a change
+     * the zone makes, so it is skipped: a yearly rule has nothing to repeat there.
+     *
+     * @param non-empty-list<array{ts: int, offset: int, isdst: bool, ...}> $transitions
+     * @return array<int, array{ts: int, offsetFrom: int, index: int}>
+     */
+    private function lastOnsetOfEachKind(array $transitions): array
+    {
+        $lastOnsets = [];
+
+        foreach ($transitions as $index => $transition) {
+            if ($index === 0) {
+                continue;
+            }
+
+            $lastOnsets[(int) $transition['isdst']] = [
+                'ts' => $transition['ts'],
+                'offsetFrom' => $transitions[$index - 1]['offset'],
+                'index' => $index,
+            ];
+        }
+
+        return $lastOnsets;
     }
 
     /**
@@ -833,9 +866,9 @@ class Ics implements Generator
         $onsets = [];
         $previousOffset = null;
 
-        foreach ($transitions as $index => $transition) {
+        foreach ($transitions as $transition) {
             // As in the window itself, the first entry is the state at the start rather than a change.
-            if ($index > 0 && $previousOffset !== null) {
+            if ($previousOffset !== null) {
                 $onsets[] = ['ts' => $transition['ts'], 'offsetFrom' => $previousOffset, 'isdst' => $transition['isdst']];
             }
 
@@ -856,46 +889,47 @@ class Ics implements Generator
     {
         $weekdays = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
 
-        $month = null;
-        $weekday = null;
-        $localTime = null;
-        $weekOfMonth = null;
+        $months = [];
+        $weekdayNumbers = [];
+        $localTimes = [];
+        $weeksOfMonth = [];
         $isAlwaysLastOfMonth = true;
 
         foreach ($onsets as $onset) {
             $local = $onset['ts'] + $onset['offsetFrom'];
             $dayOfMonth = (int) gmdate('j', $local);
 
-            $currentMonth = (int) gmdate('n', $local);
-            $currentWeekday = (int) gmdate('w', $local);
-            $currentLocalTime = gmdate('His', $local);
-            $currentWeekOfMonth = intdiv($dayOfMonth - 1, 7) + 1;
-
-            $month ??= $currentMonth;
-            $weekday ??= $currentWeekday;
-            $localTime ??= $currentLocalTime;
-            $weekOfMonth ??= $currentWeekOfMonth;
-
-            if ($currentMonth !== $month || $currentWeekday !== $weekday || $currentLocalTime !== $localTime) {
-                return null;
-            }
-
-            if ($currentWeekOfMonth !== $weekOfMonth) {
-                $weekOfMonth = null;
-            }
+            $months[] = (int) gmdate('n', $local);
+            $weekdayNumbers[] = (int) gmdate('w', $local);
+            $localTimes[] = gmdate('His', $local);
+            $weeksOfMonth[] = intdiv($dayOfMonth - 1, 7) + 1;
 
             $isAlwaysLastOfMonth = $isAlwaysLastOfMonth && $dayOfMonth + 7 > (int) gmdate('t', $local);
         }
 
-        if ($isAlwaysLastOfMonth) {
-            $weekOfMonth = -1;
+        // A yearly rule states one month, one weekday and one time, so onsets that disagree on any of
+        // the three follow no rule this can write.
+        if (! self::allTheSame($months) || ! self::allTheSame($weekdayNumbers) || ! self::allTheSame($localTimes)) {
+            return null;
         }
+
+        $weekOfMonth = match (true) {
+            $isAlwaysLastOfMonth => -1,
+            self::allTheSame($weeksOfMonth) => $weeksOfMonth[0],
+            default => null,
+        };
 
         if ($weekOfMonth === null) {
             return null;
         }
 
-        return 'RRULE:FREQ=YEARLY;BYMONTH='.$month.';BYDAY='.$weekOfMonth.$weekdays[$weekday];
+        return 'RRULE:FREQ=YEARLY;BYMONTH='.$months[0].';BYDAY='.$weekOfMonth.$weekdays[$weekdayNumbers[0]];
+    }
+
+    /** @param non-empty-list<int|string> $values */
+    private static function allTheSame(array $values): bool
+    {
+        return count(array_unique($values)) === 1;
     }
 
     /**
