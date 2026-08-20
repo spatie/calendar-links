@@ -42,6 +42,7 @@ The public API is unchanged, but two of the changes above are visible to a class
 
 - `Ics::$presentationOptions` is now declared `array`, where 2.0.x left it untyped. A subclass that redeclares the property without a type raises `Type of Sub::$presentationOptions must be array`. Drop the redeclaration, or type it `array` to match
 - `Ics::generateAlertComponent()`, `Yahoo::sanitizeText()`, `Yahoo::sanitizeAddressList()` and `BaseOutlook::sanitizeString()` went from `private` to `protected`. A subclass that happens to declare a `private` method of the same name raises `Access level to Sub::sanitizeText() must be protected or weaker`. Widen it to `protected`, which is what it now overrides
+- `Yahoo::BASE_URL` no longer carries the stale `view=d&type=20` pair. A subclass that built its own URL from the constant gets the shorter value
 
 ## 2.0.0 - 2026-02-10
 
