@@ -222,9 +222,13 @@ class Ics implements Generator
         if ($link->allDay) {
             $url[] = 'DTSTART;VALUE=DATE:'.$link->from->format($this->dateFormat);
             $url[] = 'DURATION:P'.(max(1, (int) $link->from->diff($link->to)->days)).'D';
-        } elseif ($link->hasDistinctTimezones()) {
-            // Both endpoints are written as local times, each named by its own TZID, so the file
-            // shows the event's own zones rather than flattening them to UTC.
+        } elseif ($link->hasDistinctTimezones() && $link->hasResolvableTimezones()) {
+            // Both endpoints are written as local times, each named by its own TZID, so the file shows
+            // the event's own zones rather than flattening them to UTC. A TZID may only name a zone the
+            // client can look up, and a param-value carries no unquoted `:`, so a zone that is only an
+            // offset (`+02:00`) would fail to resolve and cut the property value in half. Those events
+            // take the UTC branch below instead.
+            // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.1
             // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.19
             $url[] = 'DTSTART;TZID='.$link->fromTimezone->getName().':'.$link->from->format(self::LOCAL_DATETIME_FORMAT);
             $url[] = 'DTEND;TZID='.$link->toTimezone->getName().':'.$link->to->setTimezone($link->toTimezone)->format(self::LOCAL_DATETIME_FORMAT);

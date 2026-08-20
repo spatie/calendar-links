@@ -20,6 +20,12 @@ class Google implements Generator
     /** @see https://www.php.net/manual/en/function.date.php */
     private const string DATETIME_FORMAT = 'Ymd\THis';
 
+    /**
+     * An instant, with the Z suffix that marks a UTC value. Used when no zone can be named alongside.
+     * @see https://www.php.net/manual/en/function.date.php
+     */
+    private const string UTC_DATETIME_FORMAT = 'Ymd\THis\Z';
+
     /** @psalm-var GoogleUrlParameters */
     protected array $urlParameters = [];
 
@@ -38,20 +44,36 @@ class Google implements Generator
     {
         $url = static::BASE_URL;
 
-        $dateTimeFormat = $link->allDay ? self::DATE_FORMAT : self::DATETIME_FORMAT;
+        // The branches below write the two endpoints and, where they can, name the zone those times
+        // belong to. A zone name goes in unencoded: every name that gets this far is a TZDB name,
+        // spelled with unreserved characters and at most a `/`, and RFC 3986 lets that one stand as
+        // itself in a query.
+        // @see https://datatracker.ietf.org/doc/html/rfc3986#section-3.4
+        if ($link->allDay) {
+            // An all-day event is a pair of calendar dates rather than instants, so there is no clock
+            // time to move between zones and the dates are written as they were given either way.
+            $url .= '&dates='.$link->from->format(self::DATE_FORMAT).'/'.$link->to->format(self::DATE_FORMAT);
 
-        // Each endpoint is written as a local time in the zone that names it below.
-        $to = $link->hasDistinctTimezones() ? $link->to->setTimezone($link->toTimezone) : $link->to;
-        $url .= '&dates='.$link->from->format($dateTimeFormat).'/'.$to->format($dateTimeFormat);
+            if ($link->hasResolvableTimezones()) {
+                $url .= '&ctz='.$link->fromTimezone->getName();
+            }
+        } elseif (! $link->hasResolvableTimezones()) {
+            // Google silently ignores a ctz, stz or etz it cannot resolve, which leaves the local
+            // times in `dates` to be read in whichever zone the viewer sits in, so the event lands at
+            // the wrong instant for everyone else. UTC instants leave nothing to be interpreted.
+            $url .= '&dates='.gmdate(self::UTC_DATETIME_FORMAT, $link->from->getTimestamp()).'/'.gmdate(self::UTC_DATETIME_FORMAT, $link->to->getTimestamp());
+        } elseif ($link->hasDistinctTimezones()) {
+            // Each endpoint is written as a local time in the zone that names it.
+            $url .= '&dates='.$link->from->format(self::DATETIME_FORMAT).'/'.$link->to->setTimezone($link->toTimezone)->format(self::DATETIME_FORMAT);
 
-        // Not URL-encoded intentionally: Google Calendar handles unencoded timezone names (e.g. Etc/GMT+5) correctly.
-        if ($link->hasDistinctTimezones()) {
             // stz takes priority over ctz, so ctz is not emitted alongside the pair.
             $url .= '&stz='.$link->fromTimezone->getName();
             $url .= '&etz='.$link->toTimezone->getName();
         } else {
-            $url .= '&ctz='.$link->from->getTimezone()->getName();
+            $url .= '&dates='.$link->from->format(self::DATETIME_FORMAT).'/'.$link->to->format(self::DATETIME_FORMAT);
+            $url .= '&ctz='.$link->fromTimezone->getName();
         }
+
         $url .= '&text='.urlencode($link->title);
 
         if ($link->description !== '') {

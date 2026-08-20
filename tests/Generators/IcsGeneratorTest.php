@@ -8,6 +8,7 @@ use DateTime;
 use DateTimeZone;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\TestWith;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
 use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Generators\Ics;
@@ -112,6 +113,33 @@ final class IcsGeneratorTest extends TestCase
         $this->assertStringContainsString('DTSTAMP:20270315T000000Z', $output);
         $this->assertStringContainsString('DTSTART;TZID=Asia/Tokyo:20270315T090000', $output);
         $this->assertStringContainsString('DTEND;TZID=America/Los_Angeles:20270315T093000', $output);
+    }
+
+    /** @param non-empty-string $timezone */
+    #[Test]
+    #[TestWith(['+02:00', '20260101T080000Z', '20260101T090000Z'])]
+    #[TestWith(['-05:00', '20260101T150000Z', '20260101T160000Z'])]
+    #[TestWith(['Etc/GMT+5', '20260101T150000Z', '20260101T160000Z'])]
+    #[TestWith(['CEST', '20260101T080000Z', '20260101T090000Z'])]
+    public function it_writes_utc_endpoints_for_a_timezone_that_cannot_be_named(string $timezone, string $start, string $end): void
+    {
+        $output = $this->generator()->generate($this->createEventLinkInTimezone($timezone));
+
+        $this->assertStringContainsString('DTSTART:'.$start, $output);
+        $this->assertStringContainsString('DTEND:'.$end, $output);
+        $this->assertStringNotContainsString('TZID', $output);
+    }
+
+    #[Test]
+    public function it_falls_back_to_utc_when_only_one_end_of_a_flight_names_a_zone(): void
+    {
+        // An unquoted `:` inside a param-value would cut `DTSTART;TZID=+02:00:20270315T090000` in
+        // half, and naming only the departure would leave the pair inconsistent anyway.
+        $output = $this->generator()->generate($this->createFlightWithUnresolvableEndTimezoneLink());
+
+        $this->assertStringContainsString('DTSTART:20270315T000000Z', $output);
+        $this->assertStringContainsString('DTEND:20270315T163000Z', $output);
+        $this->assertStringNotContainsString('TZID', $output);
     }
 
     #[Test]

@@ -43,6 +43,32 @@ class Link
     /** @psalm-var list<LinkGuest> */
     public array $guests = [];
 
+    /**
+     * The TZDB entries that stand for no place, so no calendar can hold an event in one. They fall
+     * into three groups: the POSIX rule sets kept for compatibility with older systems (`EST`,
+     * `MST7MDT`), the spellings of UTC under its other names (`GMT`, `Greenwich`, `Zulu`, and the
+     * whole `Etc/` tree, whose `Etc/GMT±N` members run their sign the opposite way from the offset
+     * they name), and `Factory`, the placeholder that ships to make an unconfigured system complain
+     * rather than quietly guess.
+     *
+     * `UTC` is deliberately absent: it is the one placeless name every service resolves, and it is
+     * what the generators fall back to in any case.
+     *
+     * @see https://data.iana.org/time-zones/tzdb/etcetera
+     * @see https://data.iana.org/time-zones/tzdb/factory
+     */
+    private const array PLACELESS_TIMEZONE_NAMES = [
+        'CET', 'CST6CDT', 'EET', 'EST', 'EST5EDT', 'Factory', 'GMT', 'GMT+0', 'GMT-0', 'GMT0',
+        'Greenwich', 'HST', 'MET', 'MST', 'MST7MDT', 'PST8PDT', 'UCT', 'Universal', 'WET', 'Zulu',
+    ];
+
+    /**
+     * Every TZDB name, keyed for lookup. The list is fixed for the lifetime of the process, so it is
+     * built once instead of on every generated link.
+     * @psalm-var array<string, true>|null
+     */
+    private static ?array $timezoneIdentifiers = null;
+
     final public function __construct(string $title, \DateTimeInterface $from, \DateTimeInterface $to, bool $allDay = false)
     {
         $this->title = $title;
@@ -265,6 +291,56 @@ class Link
         $name = strtolower($timezone->getName());
 
         return ! in_array($name, self::UTC_ZONE_NAMES, true) && ! str_starts_with($name, 'etc/');
+    }
+
+    /**
+     * Whether a generator can name the zones this event carries instead of writing it in UTC. Only
+     * the zones that actually reach the output are judged, which is a different set on each path.
+     *
+     * On the distinct path both ends are named, so both have to resolve: naming one and not the
+     * other would leave the pair inconsistent, with half the event pinned to a zone and half of it
+     * loose. When the two zones collapse into one, the end zone is a label the generators discard
+     * anyway, so only the start zone is asked about. That is what keeps `UTC` to `Etc/UTC` coming
+     * out as `ctz=UTC` rather than losing its name to a spelling nothing was going to emit.
+     *
+     * Parsing an ISO 8601 string with an offset (`2026-01-01T10:00:00+02:00`) is the common way to
+     * end up with a zone that cannot be named, since the resulting zone is named `+02:00`.
+     */
+    public function hasResolvableTimezones(): bool
+    {
+        return self::isResolvableTimezone($this->fromTimezone)
+            && (! $this->hasDistinctTimezones() || self::isResolvableTimezone($this->toTimezone));
+    }
+
+    /**
+     * A calendar service can only hold an event in a zone that stands for a place. Every name the
+     * TZDB ships for one qualifies, the backward names (`US/Pacific`, `Japan`, `GB`) included: they
+     * are aliases of a region and resolve exactly like the region they point at. `UTC` is accepted
+     * alongside them as the one placeless name every service understands.
+     *
+     * Two kinds of name are turned down. The placeless TZDB entries above are one. The other is
+     * anything DateTimeZone accepts that the TZDB does not ship at all, which is to say an offset
+     * (`+02:00`) or an abbreviation (`CEST`): neither names a place or carries daylight saving
+     * rules, so a service has nothing to look up.
+     */
+    private static function isResolvableTimezone(\DateTimeZone $timezone): bool
+    {
+        $name = $timezone->getName();
+
+        if ($name === 'UTC') {
+            return true;
+        }
+
+        if (str_starts_with($name, 'Etc/') || in_array($name, self::PLACELESS_TIMEZONE_NAMES, true)) {
+            return false;
+        }
+
+        // Whatever is left still has to be a name the TZDB ships, which rules out the offsets and the
+        // abbreviations. The deprecated list is included so that a backward name is judged on the
+        // region it points at rather than on being deprecated.
+        self::$timezoneIdentifiers ??= array_fill_keys(\DateTimeZone::listIdentifiers(\DateTimeZone::ALL_WITH_BC), true);
+
+        return isset(self::$timezoneIdentifiers[$name]);
     }
 
     public function formatWith(Generator $generator): string

@@ -7,6 +7,7 @@ namespace Spatie\CalendarLinks\Tests;
 use DateTime;
 use DateTimeZone;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\TestWith;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
 use Spatie\CalendarLinks\Generators\Ics;
 use Spatie\CalendarLinks\Link;
@@ -97,6 +98,59 @@ Bring a dog, bring a frog';
         $this->assertSame('Asia/Tokyo', $flight->to->getTimezone()->getName());
         $this->assertSame('2027-03-16T01:30:00+09:00', $flight->to->format('c'));
         $this->assertSame('2027-03-15T09:30:00-07:00', $flight->to->setTimezone($flight->toTimezone)->format('c'));
+    }
+
+    /** @param non-empty-string $timezone */
+    #[Test]
+    #[TestWith(['UTC'])]
+    #[TestWith(['Asia/Tokyo'])]
+    #[TestWith(['Europe/Brussels'])]
+    // A backward name is an alias of a region, whether or not it is spelled with a slash.
+    #[TestWith(['US/Pacific'])]
+    #[TestWith(['Japan'])]
+    #[TestWith(['GB'])]
+    public function it_reports_a_name_that_stands_for_a_place_as_resolvable(string $timezone): void
+    {
+        $this->assertTrue($this->createEventLinkInTimezone($timezone)->hasResolvableTimezones());
+    }
+
+    /** @param non-empty-string $timezone */
+    #[Test]
+    #[TestWith(['+02:00'])]
+    #[TestWith(['-05:00'])]
+    #[TestWith(['CEST'])]
+    // The TZDB entries that stand for no place: a POSIX rule set, a spelling of UTC, the placeholder.
+    #[TestWith(['EST'])]
+    #[TestWith(['MST7MDT'])]
+    #[TestWith(['GMT'])]
+    #[TestWith(['Universal'])]
+    #[TestWith(['Etc/GMT+5'])]
+    #[TestWith(['Etc/UTC'])]
+    #[TestWith(['Factory'])]
+    public function it_does_not_report_a_placeless_name_as_resolvable(string $timezone): void
+    {
+        $this->assertFalse($this->createEventLinkInTimezone($timezone)->hasResolvableTimezones());
+    }
+
+    #[Test]
+    public function it_still_names_the_start_zone_when_the_other_end_is_a_refused_spelling(): void
+    {
+        // `UTC` to `Etc/UTC` collapses to a single zone, so the end zone is a label the generators
+        // discard. Refusing that spelling must not drag the event into the UTC fallback and cost the
+        // start zone the name it was going to be written under.
+        $link = $this->createEventAcrossUtcAliasesLink();
+
+        $this->assertFalse($link->hasDistinctTimezones());
+        $this->assertTrue($link->hasResolvableTimezones());
+        $this->assertStringContainsString('&ctz=UTC', $link->google());
+    }
+
+    #[Test]
+    public function it_does_not_report_resolvable_timezones_when_only_one_end_names_a_place(): void
+    {
+        // Naming one end and not the other would leave the pair inconsistent, so both go to UTC.
+        $this->assertFalse($this->createFlightWithUnresolvableEndTimezoneLink()->hasResolvableTimezones());
+        $this->assertTrue($this->createFlightWithDistinctTimezonesLink()->hasResolvableTimezones());
     }
 
     #[Test]
