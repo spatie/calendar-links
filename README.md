@@ -14,7 +14,7 @@ Using this package, you can generate links to add events to calendar systems. He
 use Spatie\CalendarLinks\Link;
 
 Link::create(
-    'Laravel testing workshop',
+    'Birthday party',
     new DateTime('2027-03-15 10:00', new DateTimeZone('Europe/Brussels')),
     new DateTime('2027-03-15 17:00', new DateTimeZone('Europe/Brussels')),
 )->google();
@@ -23,7 +23,7 @@ Link::create(
 This will output:
 
 ```
-https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20270315T100000/20270315T170000&ctz=Europe/Brussels&text=Laravel+testing+workshop
+https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20270315T100000/20270315T170000&ctz=Europe/Brussels&text=Birthday+party
 ```
 
 Give both dates an explicit timezone, as above. The `ctz` parameter is taken from the start date, so without one your links follow the `date.timezone` of whichever machine generated them.
@@ -57,7 +57,7 @@ use Spatie\CalendarLinks\Link;
 $from = new DateTime('2027-03-15 10:00', new DateTimeZone('Europe/Brussels'));
 $to = new DateTime('2027-03-15 17:00', new DateTimeZone('Europe/Brussels'));
 
-$link = Link::create('Laravel testing workshop', $from, $to)
+$link = Link::create('Birthday party', $from, $to)
     ->description('A full day of hands-on testing. Bring a laptop.')
     ->address('Samberstraat 69D, 2060 Antwerp, Belgium');
 
@@ -86,7 +86,7 @@ echo $link->formatWith(new \Your\Generator());
 `google()` produces:
 
 ```
-https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20270315T100000/20270315T170000&ctz=Europe/Brussels&text=Laravel+testing+workshop&details=A+full+day+of+hands-on+testing.+Bring+a+laptop.&location=Samberstraat+69D%2C+2060+Antwerp%2C+Belgium
+https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20270315T100000/20270315T170000&ctz=Europe/Brussels&text=Birthday+party&details=A+full+day+of+hands-on+testing.+Bring+a+laptop.&location=Samberstraat+69D%2C+2060+Antwerp%2C+Belgium
 ```
 
 and `ics([], ['format' => 'file'])` produces:
@@ -97,7 +97,7 @@ VERSION:2.0
 PRODID:Spatie calendar-links
 BEGIN:VEVENT
 UID:dc01d073bb7e6c2bfae1bd5c43283062
-SUMMARY:Laravel testing workshop
+SUMMARY:Birthday party
 DTSTAMP:20270315T090000Z
 DTSTART:20270315T090000Z
 DTEND:20270315T160000Z
@@ -192,7 +192,7 @@ A multi-day all-day event is composed as a timed event that runs from midnight o
 ```php
 echo $link->ics([
     'UID' => 'workshop-2027-03-15',
-    'URL' => 'https://example.com/workshops/laravel-testing',
+    'URL' => 'https://example.com/events/birthday-party',
     'RRULE' => 'FREQ=WEEKLY;BYDAY=MO,WE,FR',
     'TRANSP' => 'TRANSPARENT',
     'CLASS' => 'PRIVATE',
