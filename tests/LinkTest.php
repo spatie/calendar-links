@@ -133,6 +133,19 @@ Bring a dog, bring a frog';
     }
 
     #[Test]
+    public function it_still_names_the_start_zone_when_the_other_end_is_a_refused_spelling(): void
+    {
+        // `UTC` to `Etc/UTC` collapses to a single zone, so the end zone is a label the generators
+        // discard. Refusing that spelling must not drag the event into the UTC fallback and cost the
+        // start zone the name it was going to be written under.
+        $link = $this->createEventAcrossUtcAliasesLink();
+
+        $this->assertFalse($link->hasDistinctTimezones());
+        $this->assertTrue($link->hasResolvableTimezones());
+        $this->assertStringContainsString('&ctz=UTC', $link->google());
+    }
+
+    #[Test]
     public function it_does_not_report_resolvable_timezones_when_only_one_end_names_a_place(): void
     {
         // Naming one end and not the other would leave the pair inconsistent, so both go to UTC.

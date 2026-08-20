@@ -294,16 +294,22 @@ class Link
     }
 
     /**
-     * Whether both ends carry a timezone that a calendar service can resolve by name, so a generator
-     * may name the zone instead of writing the event in UTC. Both ends are judged together: naming
-     * only one of them would leave the pair inconsistent.
+     * Whether a generator can name the zones this event carries instead of writing it in UTC. Only
+     * the zones that actually reach the output are judged, which is a different set on each path.
+     *
+     * On the distinct path both ends are named, so both have to resolve: naming one and not the
+     * other would leave the pair inconsistent, with half the event pinned to a zone and half of it
+     * loose. When the two zones collapse into one, the end zone is a label the generators discard
+     * anyway, so only the start zone is asked about. That is what keeps `UTC` to `Etc/UTC` coming
+     * out as `ctz=UTC` rather than losing its name to a spelling nothing was going to emit.
      *
      * Parsing an ISO 8601 string with an offset (`2026-01-01T10:00:00+02:00`) is the common way to
-     * end up without one, since the resulting zone is named `+02:00`.
+     * end up with a zone that cannot be named, since the resulting zone is named `+02:00`.
      */
     public function hasResolvableTimezones(): bool
     {
-        return self::isResolvableTimezone($this->fromTimezone) && self::isResolvableTimezone($this->toTimezone);
+        return self::isResolvableTimezone($this->fromTimezone)
+            && (! $this->hasDistinctTimezones() || self::isResolvableTimezone($this->toTimezone));
     }
 
     /**
