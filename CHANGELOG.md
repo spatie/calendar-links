@@ -2,6 +2,21 @@
 
 All notable changes to `calendar-links` will be documented in this file
 
+## 2.1.0 - 2026-08-20
+
+### Added
+- Add first-class guests (attendees) via `Link::guest()` and `Link::guests()`, with required and optional roles. Guests are rendered as `add` for Google, `inv_list` for Yahoo, `to` and `cc` for Outlook, and `ATTENDEE` properties in ICS (#229)
+- Support separate start and end timezones (useful for flights): new `Link::$fromTimezone`, `Link::$toTimezone` and `Link::hasDistinctTimezones()`. Google links use `stz` and `etz`, ICS files write each endpoint with its own `TZID` (#233)
+- ICS: support `TRANSP`, `CLASS`, `RRULE` and `X-MICROSOFT-CDO-BUSYSTATUS` via the options array (#230)
+- Support repeated URL parameters in URL generators: an array value in `$urlParameters` is rendered as a repeated query parameter (#228)
+
+### Fixed
+- Yahoo: align deep link parameters with the service parser. The base URL drops the stale `view=d&type=20` pair, timed events send wall clock `ST` and `ET` values instead of UTC, single day all-day events send `DUR=allday`, and multi day all-day events send an exclusive `ET` end date (#232)
+- ICS: correct attendee escaping (a `CAL-ADDRESS` is a URI, not TEXT) and reject guest email addresses that no calendar service can carry (#229)
+
+### Docs
+- Rework the README examples and fix the stale Google output (#231)
+
 ## 2.0.0 - 2026-02-10
 
 ### Breaking Changes
