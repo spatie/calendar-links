@@ -122,11 +122,14 @@ class Ics implements Generator
             $url[] = 'URL;VALUE=URI:'.$this->options['URL'];
         }
 
+        $url = [...$url, ...$this->additionalEventProperties($link)];
+
+        // The VALARM component must come last: RFC 5545 requires all VEVENT properties to precede
+        // any nested component.
+        // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.1
         if (is_array($this->options['REMINDER'] ?? null)) {
             $url = [...$url, ...$this->generateAlertComponent($link)];
         }
-
-        $url = [...$url, ...$this->additionalEventProperties($link)];
 
         $url[] = 'END:VEVENT';
         $url[] = 'END:VCALENDAR';
@@ -209,9 +212,11 @@ class Ics implements Generator
     }
 
     /**
-     * Extension point: extra properties for the VEVENT component, emitted before END:VEVENT
-     * (e.g. CATEGORIES, STATUS, ORGANIZER or any X- property). One full content line per entry,
-     * already escaped: TEXT values should go through escapeString().
+     * Extension point: extra properties for the VEVENT component, emitted after the built in
+     * properties and before any VALARM component (e.g. CATEGORIES, STATUS, ORGANIZER or any
+     * X- property). One full content line per entry, already escaped: TEXT values should go
+     * through escapeString(). Returning a nested component here breaks the ordering that
+     * RFC 5545 requires, so keep it to properties.
      *
      * @return list<string>
      */
