@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Spatie\CalendarLinks\Tests;
 
 use DateTime;
+use DateTimeZone;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
+use Spatie\CalendarLinks\Generators\Ics;
 use Spatie\CalendarLinks\Link;
 
 final class LinkTest extends TestCase
@@ -111,6 +113,49 @@ Bring a dog, bring a frog';
     }
 
     #[Test]
+    public function it_keeps_the_inclusive_end_date_of_a_cross_timezone_all_day_event(): void
+    {
+        // New Year's Day and the day after, written by a caller whose two dates carry different zones.
+        $link = new Link(
+            'New Year break',
+            new DateTime('2026-01-01', new DateTimeZone('America/New_York')),
+            new DateTime('2026-01-02', new DateTimeZone('Europe/London')),
+            true,
+        );
+
+        $this->assertStringContainsString('dates=20260101/20260103', $link->google());
+        $this->assertStringContainsString('DURATION:P2D', $link->ics([], ['format' => Ics::FORMAT_FILE]));
+    }
+
+    #[Test]
+    public function it_leaves_a_single_timezone_all_day_event_alone(): void
+    {
+        // The control for the test above: same dates, one zone, so nothing is reinterpreted.
+        $link = new Link(
+            'New Year break',
+            new DateTime('2026-01-01', new DateTimeZone('America/New_York')),
+            new DateTime('2026-01-02', new DateTimeZone('America/New_York')),
+            true,
+        );
+
+        $this->assertStringContainsString('dates=20260101/20260103', $link->google());
+        $this->assertStringContainsString('DURATION:P2D', $link->ics([], ['format' => Ics::FORMAT_FILE]));
+    }
+
+    #[Test]
+    public function it_still_rejects_a_negative_range_across_timezones_when_all_day(): void
+    {
+        $this->expectException(InvalidLink::class);
+
+        new Link(
+            'New Year break',
+            new DateTime('2026-01-02', new DateTimeZone('America/New_York')),
+            new DateTime('2026-01-01', new DateTimeZone('Europe/London')),
+            true,
+        );
+    }
+
+    #[Test]
     public function it_can_have_required_and_optional_guests(): void
     {
         $link = $this->createShortEventLink()
@@ -132,6 +177,56 @@ Bring a dog, bring a frog';
         $this->assertSame([
             ['email' => 'santa@example.com', 'optional' => true],
             ['email' => 'krampus@example.com', 'optional' => true],
+        ], $link->guests);
+    }
+
+    #[Test]
+    public function it_ignores_a_guest_that_is_already_on_the_list(): void
+    {
+        $link = $this->createShortEventLink()
+            ->guest('santa@example.com')
+            ->guest('santa@example.com');
+
+        $this->assertSame([
+            ['email' => 'santa@example.com', 'optional' => false],
+        ], $link->guests);
+    }
+
+    #[Test]
+    public function it_ignores_a_guest_whose_address_differs_only_in_case(): void
+    {
+        $link = $this->createShortEventLink()
+            ->guest('santa@example.com')
+            ->guest('Santa@Example.COM');
+
+        // The first spelling is the one that survives.
+        $this->assertSame([
+            ['email' => 'santa@example.com', 'optional' => false],
+        ], $link->guests);
+    }
+
+    #[Test]
+    public function it_keeps_the_role_a_duplicated_guest_was_first_added_with(): void
+    {
+        $link = $this->createShortEventLink()
+            ->guest('santa@example.com')
+            ->guest('santa@example.com', optional: true);
+
+        $this->assertSame([
+            ['email' => 'santa@example.com', 'optional' => false],
+        ], $link->guests);
+    }
+
+    #[Test]
+    public function it_ignores_a_duplicate_inside_a_bulk_of_guests(): void
+    {
+        $link = $this->createShortEventLink()
+            ->guest('santa@example.com')
+            ->guests(['krampus@example.com', 'KRAMPUS@example.com', 'santa@example.com']);
+
+        $this->assertSame([
+            ['email' => 'santa@example.com', 'optional' => false],
+            ['email' => 'krampus@example.com', 'optional' => false],
         ], $link->guests);
     }
 

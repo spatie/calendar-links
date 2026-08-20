@@ -58,7 +58,9 @@ class Link
 
         // Ensures timezones match.
         if ($this->fromTimezone->getName() !== $this->toTimezone->getName()) {
-            $immutableTo = $immutableTo->setTimezone($this->fromTimezone);
+            $immutableTo = $allDay
+                ? self::reinterpretIn($immutableTo, $this->fromTimezone)
+                : $immutableTo->setTimezone($this->fromTimezone);
         }
 
         // Ensures from date is earlier than to date.
@@ -69,6 +71,17 @@ class Link
         // All-day events: convert inclusive end date to exclusive end date,
         // as calendar services expect the end date to be the day after the last event day.
         $this->to = $allDay ? $immutableTo->modify('+1 day') : $immutableTo;
+    }
+
+    /**
+     * An all-day event has no clock time, so each endpoint is a calendar date rather than an instant.
+     * Reading the date the caller wrote in another zone keeps that date, where converting the instant
+     * would move it to whichever date the same moment falls on in the start's zone, gaining or losing
+     * a day. The format holds no offset, so the zone passed alongside it is the one that applies.
+     */
+    private static function reinterpretIn(\DateTimeImmutable $date, \DateTimeZone $timezone): \DateTimeImmutable
+    {
+        return new \DateTimeImmutable($date->format('Y-m-d H:i:s'), $timezone);
     }
 
     /**
@@ -110,19 +123,27 @@ class Link
     /**
      * Add a guest (attendee) to the Event.
      *
+     * An address already on the list is ignored, so the first spelling and role of a guest are the
+     * ones that are kept.
+     *
      * @param string $email A plain email address. Display names are not supported, because Yahoo cannot represent them.
      * @param bool $optional Whether attendance is optional. Yahoo has no optional role, so optional guests are invited as required there.
      * @throws \Spatie\CalendarLinks\Exceptions\InvalidLink When the email address is invalid.
      */
     public function guest(string $email, bool $optional = false): static
     {
-        $this->guests[] = ['email' => self::validateGuestEmail($email), 'optional' => $optional];
+        $email = self::validateGuestEmail($email);
+
+        if (! $this->hasGuest($email)) {
+            $this->guests[] = ['email' => $email, 'optional' => $optional];
+        }
 
         return $this;
     }
 
     /**
-     * Add several guests (attendees) to the Event at once.
+     * Add several guests (attendees) to the Event at once. Duplicates are ignored, both within the
+     * batch and against guests already added.
      *
      * @param list<string> $emails Plain email addresses.
      * @param bool $optional Whether attendance is optional for all of them.
@@ -140,6 +161,23 @@ class Link
         }
 
         return $this;
+    }
+
+    /**
+     * The whole address is compared case-insensitively. A local part is technically case-sensitive
+     * per RFC 5321, but no calendar service treats it as such, so two spellings of one address would
+     * invite the same person twice. FILTER_VALIDATE_EMAIL has already rejected anything non-ASCII,
+     * so a byte-wise fold is enough.
+     */
+    private function hasGuest(string $email): bool
+    {
+        foreach ($this->guests as $guest) {
+            if (strcasecmp($guest['email'], $email) === 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

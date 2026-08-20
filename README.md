@@ -149,6 +149,8 @@ $link->guest('freek@example.com')
     ->guest('willem@example.com', optional: true);
 ```
 
+An address that is already on the list is ignored (compared without regard to case), so the first spelling and role you gave a guest are the ones that are kept.
+
 Each service spells the same thing differently:
 
 | Generator | Required | Optional |

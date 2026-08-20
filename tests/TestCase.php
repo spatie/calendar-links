@@ -86,7 +86,9 @@ Bring a dog, bring a frog';
 
     protected function createEventMultipleDaysViaStartEndWithDiffTimezoneLink(): Link
     {
-        // This should result in 7 days duration (2024-01-25 00:00 to 2024-01-31 00:00 Pacific/Wake).
+        // The end date is read as the calendar date the caller wrote, so the last day is 2024-01-30
+        // and the event runs for 6 days. Converting the instant instead would land on 2024-01-31
+        // Pacific/Wake and add a seventh day the caller never asked for.
         return (new Link(
             'All day bugs',
             DateTime::createFromFormat('Y-m-d', '2024-01-25', new DateTimeZone('Pacific/Wake'))->setTime(0, 0),
