@@ -34,6 +34,12 @@ class InvalidLink extends InvalidArgumentException
         return new self("The `{$option}` option must be a string, an integer or a Stringable, `".get_debug_type($given).'` given.');
     }
 
+    /** @param mixed $given The value the caller passed, used only to name its type in the message. */
+    public static function invalidArrayOption(string $option, mixed $given): self
+    {
+        return new self("The `{$option}` option must be an array, `".get_debug_type($given).'` given.');
+    }
+
     /**
      * The value is deliberately left out of the message: it contains a line break, which would spread
      * the exception message over several lines of a log just as it would over several lines of a calendar.
@@ -41,6 +47,15 @@ class InvalidLink extends InvalidArgumentException
     public static function lineBreakInIcsProperty(string $property): self
     {
         return new self("ICS property (`{$property}`) must not contain a CR or an LF character. Its value is written to the calendar as is, so a line break would inject additional properties into it.");
+    }
+
+    /**
+     * The value is left out of the message for the same reason lineBreakInIcsProperty() leaves its own
+     * out: a control character in a log line is at best unreadable and at worst a terminal escape.
+     */
+    public static function controlCharacterInIcsProperty(string $property): self
+    {
+        return new self("ICS property (`{$property}`) must not contain a control character. Its value is written to the calendar as is, and neither a URI nor a recurrence rule admits one.");
     }
 
     /**

@@ -14,9 +14,18 @@ All notable changes to `calendar-links` will be documented in this file
 
 ### Changed
 - Generators are easier to extend: `Ics::generateAlertComponent()`, `Yahoo::sanitizeText()`, `Yahoo::sanitizeAddressList()` and `BaseOutlook::sanitizeString()` are now `protected`, and `Google`/`Yahoo` read `BASE_URL` late statically so a subclass can redefine it
+- ICS: a recurring event in a timezone that moves its clocks is now written as a local time named by a `TZID`, with a matching `VTIMEZONE`, where it used to be written as a UTC instant. An `RRULE` repeats the local time of its `DTSTART`, so a start pinned to UTC put every occurrence past a daylight saving change an hour away from the time the event was booked for. A recurring event in UTC, in a zone that keeps one offset the year round, or in a zone that names no place is unaffected, and so is any event without an `RRULE`
+- ICS: `REMINDER` now has to be an array, its `TIME` a `DateTimeInterface` and its `DESCRIPTION` a string. A value of another type used to be dropped for the default alarm without a word, which handed back a reminder nobody asked for
+- ICS: the presentation `format` now has to be `html` or `file`. Anything else used to fall through to the data URI, so `['format' => 'FILE']` silently returned a link rather than the file it asked for
+- URL generators render a `false` parameter value as a bare flag (`&key`) rather than as an empty assignment (`&key=`)
 
 ### Fixed
 - `Link::guest()` and `Link::guests()` now ignore an address that is already on the guest list, compared without regard to case, so nobody is invited twice
+- ICS: an `ATTENDEE` address can no longer inject calendar properties. `guest()` rejects a control character, but `Link::$guests` is a public property that can be assigned around it, and a CR or an LF in an address ended the `ATTENDEE` property and started another. Control characters are now percent encoded into the `mailto` URI
+- ICS: `URL` and `RRULE` now reject every control character rather than only CR and LF. Neither a URI nor a recurrence rule admits one, and writing it out produced a file no parser accepts
+- ICS: the `VTIMEZONE` components now carry a yearly recurrence rule on the last change of each kind, whenever the zone repeats that change on a fixed weekday of a fixed month. Without one the component stopped at the year it described, and a recurring event past that resolved against the wrong offset for part of every later year on a client that does not resolve bare IANA names
+- A description or address of `'0'` is no longer dropped from the output as if it were empty
+- The exception for a negative date range no longer claims TO must be *greater than* FROM, since equal instants are accepted, and it now prints each time with its timezone
 - All-day events whose start and end dates carry different timezones no longer gain or lose a day. The end date is now read as the calendar date it was written as, instead of being converted as an instant
 - Timezones that name no place (an offset such as `+02:00`, an abbreviation such as `CEST`, the POSIX rule sets, and the whole `Etc/` tree) are written in UTC instead of being named. Google silently ignores a `ctz` it cannot resolve, which left the event at the wrong instant for every viewer outside that offset, and an offset in an ICS `TZID` cut the property value in half at its colon. Parsing an ISO 8601 string with an offset is the everyday way to reach this (#248)
 - ICS: values passed through the options array can no longer inject calendar properties. `UID` and `PRODID` are escaped as the TEXT values they are, `URL` and `RRULE` reject a carriage return or line feed, the enumerated properties are checked against their allowed tokens, and a custom `REMINDER.DESCRIPTION` is escaped like the default one (#245)
@@ -27,6 +36,13 @@ All notable changes to `calendar-links` will be documented in this file
 ### Docs
 - Rework the README examples and fix the stale Google output (#231)
 - Document that Yahoo composes a multi day all-day event as a timed one running from midnight to midnight, since `DUR=allday` and an `ET` end date cannot be sent together (#243)
+
+### Notes for subclasses
+The public API is unchanged, but two of the changes above are visible to a class extending a generator, and either can stop it loading:
+
+- `Ics::$presentationOptions` is now declared `array`, where 2.0.x left it untyped. A subclass that redeclares the property without a type raises `Type of Sub::$presentationOptions must be array`. Drop the redeclaration, or type it `array` to match
+- `Ics::generateAlertComponent()`, `Yahoo::sanitizeText()`, `Yahoo::sanitizeAddressList()` and `BaseOutlook::sanitizeString()` went from `private` to `protected`. A subclass that happens to declare a `private` method of the same name raises `Access level to Sub::sanitizeText() must be protected or weaker`. Widen it to `protected`, which is what it now overrides
+- `Yahoo::BASE_URL` no longer carries the stale `view=d&type=20` pair. A subclass that built its own URL from the constant gets the shorter value
 
 ## 2.0.0 - 2026-02-10
 

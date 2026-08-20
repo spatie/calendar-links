@@ -37,6 +37,19 @@ class Ics implements Generator
     private const int MAX_CONTENT_LINE_OCTETS = 75;
 
     /**
+     * How far past the observance window the zone is read for a repeating pattern, and how many
+     * onsets have to agree before one is written as a rule. Six years of a twice yearly zone offer
+     * six onsets of each kind, so three is a pattern rather than a coincidence while still leaving
+     * room for a zone that changes its rules partway through.
+     */
+    private const int RULE_PROBE_YEARS = 6;
+
+    private const int MIN_ONSETS_TO_CONFIRM_A_RULE = 3;
+
+    /** Long enough that RULE_PROBE_YEARS spans the whole years it names, leap years included. */
+    private const int SECONDS_PER_YEAR = 366 * 24 * 60 * 60;
+
+    /**
      * Values here have been through the constructor's guards, so the four properties written verbatim
      * carry no line break and the enumerated ones carry a known token. That invariant only covers what
      * the constructor was given: a subclass that assigns to this property afterwards is responsible for
@@ -48,6 +61,18 @@ class Ics implements Generator
 
     /** @psalm-var IcsPresentationOptions */
     protected array $presentationOptions = [];
+
+    /**
+     * Whether a zone was found to move its clocks, keyed by the zone and the window it was asked about.
+     *
+     * generate() reaches observesAChange() three times over one link, through shouldNameTimezones():
+     * once to choose how to write the endpoints, and twice more through referencedTimezones(). The
+     * answer depends on the zone and the event's two instants and nothing else, so it is worked out
+     * once. Reading a zone's transition table is the most expensive thing this class does.
+     *
+     * @var array<string, bool>
+     */
+    private array $observedChanges = [];
 
     /**
      * Option values are validated here rather than in generate(), so that a value the calendar cannot
@@ -70,9 +95,66 @@ class Ics implements Generator
 
         $options = $this->guardAgainstUnwritableValues($options);
         $options = $this->guardAgainstUnsupportedTokens($options);
+        $options = $this->guardAgainstUnusableReminder($options);
+
+        $this->guardAgainstUnsupportedFormat($presentationOptions);
 
         $this->options = $options;
         $this->presentationOptions = $presentationOptions;
+    }
+
+    /**
+     * The alarm reads its two values back at generation time and falls back to the default alarm for
+     * anything it cannot use, which would hand a caller who misspelled a type the reminder they did
+     * not ask for, fifteen minutes before the event, with nothing said about it. The same mistake is
+     * caught here instead, for the same reason DTSTAMP is.
+     *
+     * @param IcsOptions $options
+     * @return IcsOptions The options, with a checked DESCRIPTION replaced by the string that was checked.
+     * @throws InvalidLink
+     */
+    private function guardAgainstUnusableReminder(array $options): array
+    {
+        if (! isset($options['REMINDER'])) {
+            return $options;
+        }
+
+        /** @psalm-suppress DocblockTypeContradiction The docblock type binds static analysis and nothing else. */
+        if (! is_array($options['REMINDER'])) {
+            throw InvalidLink::invalidArrayOption('REMINDER', $options['REMINDER']);
+        }
+
+        if (isset($options['REMINDER']['TIME']) && ! $options['REMINDER']['TIME'] instanceof \DateTimeInterface) {
+            throw InvalidLink::invalidDateTimeOption('REMINDER.TIME', $options['REMINDER']['TIME']);
+        }
+
+        if (isset($options['REMINDER']['DESCRIPTION'])) {
+            // A VALARM DESCRIPTION is a TEXT value, so escapeString() handles a line break in it and
+            // only the faithfulness of the string form is in question here.
+            $options['REMINDER']['DESCRIPTION'] = $this->asWritten('REMINDER.DESCRIPTION', $options['REMINDER']['DESCRIPTION']);
+        }
+
+        return $options;
+    }
+
+    /**
+     * An unknown format used to fall through to the data URI, so a caller who asked for `FILE` in the
+     * wrong case was handed a link and had to work out from the output that they had not got a file.
+     *
+     * @param array<string, mixed> $presentationOptions
+     * @throws InvalidLink
+     */
+    private function guardAgainstUnsupportedFormat(array $presentationOptions): void
+    {
+        if (! isset($presentationOptions['format'])) {
+            return;
+        }
+
+        $format = $this->asWritten('format', $presentationOptions['format']);
+
+        if (! in_array($format, [self::FORMAT_HTML, self::FORMAT_FILE], true)) {
+            throw InvalidLink::unsupportedIcsPropertyValue('format', $format, [self::FORMAT_HTML, self::FORMAT_FILE]);
+        }
     }
 
     /**
@@ -80,6 +162,8 @@ class Ics implements Generator
      * escapeString(): they are written to the calendar as they are given. A line break in one would end
      * the property and start another, letting a caller-supplied value inject arbitrary content into the
      * file, and a lenient parser accepts a bare LF as a line ending, so CR and LF are both rejected.
+     * Neither value type admits any other control character either, and escapeString() is not there to
+     * drop them, so those are turned down rather than written out to make an unparsable file.
      *
      * UID and PRODID are TEXT values, which generate() escapes like any other, so a line break in them
      * becomes the \n escape and cannot start a line. They are only stringified here.
@@ -98,8 +182,14 @@ class Ics implements Generator
 
             $value = $this->asWritten($property, $options[$property]);
 
-            if (in_array($property, ['URL', 'RRULE'], true) && strpbrk($value, "\r\n") !== false) {
-                throw InvalidLink::lineBreakInIcsProperty($property);
+            if (in_array($property, ['URL', 'RRULE'], true)) {
+                if (strpbrk($value, "\r\n") !== false) {
+                    throw InvalidLink::lineBreakInIcsProperty($property);
+                }
+
+                if (preg_match('/[\x00-\x1F\x7F]/', $value) === 1) {
+                    throw InvalidLink::controlCharacterInIcsProperty($property);
+                }
             }
 
             $options[$property] = $value;
@@ -233,16 +323,14 @@ class Ics implements Generator
         if ($link->allDay) {
             $url[] = 'DTSTART;VALUE=DATE:'.$link->from->format($this->dateFormat);
             $url[] = 'DURATION:P'.(max(1, (int) $link->from->diff($link->to)->days)).'D';
-        } elseif ($link->hasDistinctTimezones() && $link->hasResolvableTimezones()) {
+        } elseif ($this->shouldNameTimezones($link)) {
             // Both endpoints are written as local times, each named by its own TZID, so the file shows
-            // the event's own zones rather than flattening them to UTC. A TZID may only name a zone the
-            // client can look up, and a param-value carries no unquoted `:`, so a zone that is only an
-            // offset (`+02:00`) would fail to resolve and cut the property value in half. Those events
-            // take the UTC branch below instead.
-            // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.1
+            // the event's own zones rather than flattening them to UTC.
             // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.19
+            $endTimezone = $this->endTimezone($link);
+
             $url[] = 'DTSTART;TZID='.$link->fromTimezone->getName().':'.$link->from->format(self::LOCAL_DATETIME_FORMAT);
-            $url[] = 'DTEND;TZID='.$link->toTimezone->getName().':'.$link->to->setTimezone($link->toTimezone)->format(self::LOCAL_DATETIME_FORMAT);
+            $url[] = 'DTEND;TZID='.$endTimezone->getName().':'.$link->to->setTimezone($endTimezone)->format(self::LOCAL_DATETIME_FORMAT);
         } else {
             $url[] = 'DTSTART:'.gmdate($this->dateTimeFormat, $link->from->getTimestamp());
             $url[] = 'DTEND:'.gmdate($this->dateTimeFormat, $link->to->getTimestamp());
@@ -301,10 +389,11 @@ class Ics implements Generator
         $url[] = 'END:VEVENT';
         $url[] = 'END:VCALENDAR';
 
+        // The constructor has already turned down anything that is not one of the two formats.
         $format = $this->presentationOptions['format'] ?? self::FORMAT_HTML;
 
         return match ($format) {
-            'file' => $this->buildFile($url),
+            self::FORMAT_FILE => $this->buildFile($url),
             default => $this->buildLink($url),
         };
     }
@@ -402,16 +491,27 @@ class Ics implements Generator
      * of escapeString() does not apply to it. Characters that are legal in an email address but would
      * change the meaning of the mailto URI are percent encoded instead.
      *
+     * A control character is percent encoded along with them. guest() rejects one long before it gets
+     * here, but $guests is a public property, so an address can also be assigned straight to it without
+     * passing that check. A CR or an LF in one would end the ATTENDEE property and start another,
+     * letting the address inject arbitrary content into the file.
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.3
      * @see https://datatracker.ietf.org/doc/html/rfc6068#section-2
      */
     protected function escapeCalendarAddress(string $email): string
     {
-        return str_replace(
+        $escaped = str_replace(
             ['%', '&', '?', '=', '/', '#'],
             ['%25', '%26', '%3F', '%3D', '%2F', '%23'],
             $email
         );
+
+        return preg_replace_callback(
+            '/[\x00-\x1F\x7F]/',
+            static fn (array $match): string => sprintf('%%%02X', ord($match[0])),
+            $escaped
+        ) ?? $escaped;
     }
 
     /** @see https://tools.ietf.org/html/rfc5545#section-3.8.4.7 */
@@ -453,22 +553,84 @@ class Ics implements Generator
     }
 
     /**
+     * Whether the endpoints are written as local times named by a TZID, rather than as UTC instants.
+     *
+     * A UTC instant is unambiguous, so it is the better answer for an event that happens once: it
+     * needs no VTIMEZONE and no zone database on the reading side. A recurrence is the case it cannot
+     * serve. An RRULE repeats the local time of its DTSTART, so a start pinned to UTC repeats in UTC,
+     * and every occurrence on the far side of a daylight saving change lands an hour away from the
+     * time the event was booked for. Naming the zone is what keeps a weekly 09:00 at 09:00.
+     *
+     * A recurrence in a zone that never moves its clocks has nothing to drift against, so UTC instants
+     * still say the same thing there and are left alone: naming UTC, or a zone that keeps one offset
+     * the year round, would only add a VTIMEZONE describing a zone that never changes.
+     *
+     * An event whose two ends genuinely name different zones is written this way whether it recurs or
+     * not, since UTC instants would flatten the pair and lose what the two zones were for.
+     *
+     * A TZID may only name a zone the client can look up, and a param-value carries no unquoted `:`,
+     * so a zone that is only an offset (`+02:00`) would fail to resolve and cut the property value in
+     * half. Those events keep the UTC instants. An all-day event has no clock time to place in a zone.
+     *
+     * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.1
+     * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5.3
+     */
+    protected function shouldNameTimezones(Link $link): bool
+    {
+        if ($link->allDay || ! $link->hasResolvableTimezones()) {
+            return false;
+        }
+
+        return $link->hasDistinctTimezones()
+            || (isset($this->options['RRULE']) && $this->observesAChange($link->fromTimezone, $link));
+    }
+
+    /**
+     * Whether the zone moves its clocks anywhere near the event, over the same stretch the VTIMEZONE
+     * would describe. A zone that does not is one offset from end to end, which a UTC instant already
+     * carries.
+     *
+     * @see self::$observedChanges The answer is worked out once per zone and window, and kept.
+     */
+    private function observesAChange(\DateTimeZone $timezone, Link $link): bool
+    {
+        $windowStart = $link->from->modify('-1 year')->getTimestamp();
+        $windowEnd = $link->to->modify('+1 year')->getTimestamp() + self::RULE_PROBE_YEARS * self::SECONDS_PER_YEAR;
+
+        $key = $timezone->getName()."\0".$windowStart."\0".$windowEnd;
+
+        if (! isset($this->observedChanges[$key])) {
+            $transitions = $timezone->getTransitions($windowStart, $windowEnd);
+
+            // The first entry is the offset already in force when the stretch opens, not a change.
+            $this->observedChanges[$key] = is_array($transitions) && count($transitions) > 1;
+        }
+
+        return $this->observedChanges[$key];
+    }
+
+    /**
+     * The zone DTEND is named with. When the two zones collapse into one, the end zone is a second
+     * spelling that generate() has already folded into the start's, so the start's is what the file
+     * names: hasResolvableTimezones() never checked the other spelling and it may not resolve at all.
+     */
+    private function endTimezone(Link $link): \DateTimeZone
+    {
+        return $link->hasDistinctTimezones() ? $link->toTimezone : $link->fromTimezone;
+    }
+
+    /**
      * Whether the file needs VTIMEZONE components at all.
      *
-     * This must stay in step with the condition in generate() that decides whether the endpoints are
-     * written with a TZID parameter, because a VTIMEZONE is only meaningful when a property in the
-     * file references it. Narrowing that condition has to narrow this one with it, or the file ends
-     * up carrying an orphan component that defines a zone nothing names.
-     *
-     * A zone the client cannot look up is the case in point: the endpoints fall back to UTC instants
-     * carrying no TZID, so there is nothing left to define, and defining it anyway would write the
-     * offset style name into a TZID that cannot hold it.
+     * A VTIMEZONE is only meaningful when a property in the file references it, so this answers the
+     * same question referencedTimezones() does, and an override that narrows one narrows the other
+     * with it rather than leaving the file with an orphan component defining a zone nothing names.
      *
      * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.5
      */
     protected function shouldDefineTimezones(Link $link): bool
     {
-        return $link->hasDistinctTimezones() && $link->hasResolvableTimezones();
+        return $this->referencedTimezones($link) !== [];
     }
 
     /**
@@ -480,7 +642,11 @@ class Ics implements Generator
      */
     protected function referencedTimezones(Link $link): array
     {
-        return [$link->fromTimezone, $link->toTimezone];
+        if (! $this->shouldNameTimezones($link)) {
+            return [];
+        }
+
+        return [$link->fromTimezone, $this->endTimezone($link)];
     }
 
     /**
@@ -548,9 +714,11 @@ class Ics implements Generator
      * resolved against while keeping the component to a handful of observances. It is measured from
      * the event rather than from today, so the same Link always produces the same file.
      *
-     * These observances carry no recurrence rule, so they describe the window and nothing outside
-     * it. An event that recurs beyond the window is resolved by a client against the last observance
-     * in the file, which is the wrong offset for half of every later year.
+     * The window alone would end the component where it ends, and an event that recurs past it would
+     * be resolved against the last observance written, which is the wrong offset for part of every
+     * later year. So the last observance of each kind carries a yearly recurrence rule when the zone
+     * repeats that change on a fixed weekday of a fixed month, which is what annualRecurrenceRules()
+     * confirms before writing one.
      *
      * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.5
      * @return list<list<string>>
@@ -558,7 +726,8 @@ class Ics implements Generator
     private function generateTimezoneObservances(\DateTimeZone $timezone, Link $link): array
     {
         $windowStart = $link->from->modify('-1 year')->getTimestamp();
-        $transitions = $timezone->getTransitions($windowStart, $link->to->modify('+1 year')->getTimestamp());
+        $windowEnd = $link->to->modify('+1 year')->getTimestamp();
+        $transitions = $timezone->getTransitions($windowStart, $windowEnd);
 
         // A zone named by a bare abbreviation or a fixed offset (EST, CET, +05:30) has no transition
         // table for PHP to return. RFC 5545 still wants at least one subcomponent, so the one offset
@@ -573,28 +742,199 @@ class Ics implements Generator
             ]];
         }
 
+        // The entry at index 0 is the offset already in force when the window opened rather than a
+        // change the zone makes, so a table holding nothing else has no change for a rule to repeat
+        // and no reason to read the years beyond the window looking for one.
+        $recurrenceRules = count($transitions) > 1
+            ? $this->annualRecurrenceRules($timezone, $transitions, $windowEnd)
+            : [];
+
         $observances = [];
         $previousOffset = null;
 
-        foreach ($transitions as $transition) {
+        foreach ($transitions as $index => $transition) {
             // There is no earlier offset to move away from on the first entry.
             $offsetFrom = $previousOffset ?? $transition['offset'];
             $previousOffset = $transition['offset'];
             $type = $transition['isdst'] ? 'DAYLIGHT' : 'STANDARD';
 
-            $observances[] = [
+            $observance = [
                 'BEGIN:'.$type,
                 // An onset is a local time read against the offset being left behind.
                 // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.4
                 'DTSTART:'.gmdate(self::LOCAL_DATETIME_FORMAT, $transition['ts'] + $offsetFrom),
                 'TZOFFSETFROM:'.$this->formatUtcOffset($offsetFrom),
                 'TZOFFSETTO:'.$this->formatUtcOffset($transition['offset']),
-                'TZNAME:'.$this->escapeString($transition['abbr']),
-                'END:'.$type,
             ];
+
+            if (isset($recurrenceRules[$index])) {
+                $observance[] = $recurrenceRules[$index];
+            }
+
+            $observance[] = 'TZNAME:'.$this->escapeString($transition['abbr']);
+            $observance[] = 'END:'.$type;
+
+            $observances[] = $observance;
         }
 
         return $observances;
+    }
+
+    /**
+     * A yearly RRULE for the last observance of each kind, so the component keeps describing the zone
+     * after the window it was built from runs out.
+     *
+     * A rule is only written for a change the zone demonstrably repeats: the onsets past the window
+     * are read as well, and all of them, together with the observance the rule would be attached to,
+     * have to fall on the same weekday of the same week of the same month at the same local time.
+     * Anything else is left without a rule rather than guessed at. A zone that abolished its daylight
+     * saving has no later onset to confirm and correctly keeps a last observance that simply stands,
+     * and Africa/Casablanca, which suspends its summer time for Ramadan and restores it weeks later,
+     * moves both of its yearly changes and so matches nothing.
+     *
+     * @param non-empty-list<array{ts: int, offset: int, isdst: bool, ...}> $transitions
+     * @return array<int, string> The rule to write, keyed by its observance's index in $transitions.
+     * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5.3
+     */
+    private function annualRecurrenceRules(\DateTimeZone $timezone, array $transitions, int $windowEnd): array
+    {
+        $laterOnsets = $this->onsetsAfter($timezone, $windowEnd);
+
+        $rules = [];
+
+        foreach ($this->lastOnsetOfEachKind($transitions) as $isDaylight => $lastOnset) {
+            $onsets = [$lastOnset];
+
+            foreach ($laterOnsets as $onset) {
+                if ($onset['isdst'] === (bool) $isDaylight) {
+                    $onsets[] = $onset;
+                }
+            }
+
+            if (count($onsets) < self::MIN_ONSETS_TO_CONFIRM_A_RULE) {
+                continue;
+            }
+
+            $rule = $this->annualRuleFor($onsets);
+
+            if ($rule !== null) {
+                $rules[$lastOnset['index']] = $rule;
+            }
+        }
+
+        return $rules;
+    }
+
+    /**
+     * The last change of each kind the window holds, keyed by whether it starts daylight saving, with
+     * the offset it moves away from and the index of the observance it belongs to.
+     *
+     * The entry at index 0 is the offset already in force when the window opened rather than a change
+     * the zone makes, so it is skipped: a yearly rule has nothing to repeat there.
+     *
+     * @param non-empty-list<array{ts: int, offset: int, isdst: bool, ...}> $transitions
+     * @return array<int, array{ts: int, offsetFrom: int, index: int}>
+     */
+    private function lastOnsetOfEachKind(array $transitions): array
+    {
+        $lastOnsets = [];
+
+        foreach ($transitions as $index => $transition) {
+            if ($index === 0) {
+                continue;
+            }
+
+            $lastOnsets[(int) $transition['isdst']] = [
+                'ts' => $transition['ts'],
+                'offsetFrom' => $transitions[$index - 1]['offset'],
+                'index' => $index,
+            ];
+        }
+
+        return $lastOnsets;
+    }
+
+    /**
+     * The zone's changes over the years that follow the window, each paired with the offset it moves
+     * away from, which is what its onset is a local time in.
+     *
+     * @return list<array{ts: int, offsetFrom: int, isdst: bool}>
+     */
+    private function onsetsAfter(\DateTimeZone $timezone, int $from): array
+    {
+        $transitions = $timezone->getTransitions($from, $from + self::RULE_PROBE_YEARS * self::SECONDS_PER_YEAR);
+
+        if ($transitions === false || $transitions === []) {
+            return [];
+        }
+
+        $onsets = [];
+        $previousOffset = null;
+
+        foreach ($transitions as $transition) {
+            // As in the window itself, the first entry is the state at the start rather than a change.
+            if ($previousOffset !== null) {
+                $onsets[] = ['ts' => $transition['ts'], 'offsetFrom' => $previousOffset, 'isdst' => $transition['isdst']];
+            }
+
+            $previousOffset = $transition['offset'];
+        }
+
+        return $onsets;
+    }
+
+    /**
+     * The rule these onsets all follow, or null when they follow none. `BYDAY=-1SU` is preferred over
+     * `BYDAY=5SU` whenever every onset is the last of its weekday in the month, since a month with
+     * only four of that weekday has no fifth one for the rule to land on.
+     *
+     * @param non-empty-list<array{ts: int, offsetFrom: int, ...}> $onsets
+     */
+    private function annualRuleFor(array $onsets): ?string
+    {
+        $weekdays = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+
+        $months = [];
+        $weekdayNumbers = [];
+        $localTimes = [];
+        $weeksOfMonth = [];
+        $isAlwaysLastOfMonth = true;
+
+        foreach ($onsets as $onset) {
+            $local = $onset['ts'] + $onset['offsetFrom'];
+            $dayOfMonth = (int) gmdate('j', $local);
+
+            $months[] = (int) gmdate('n', $local);
+            $weekdayNumbers[] = (int) gmdate('w', $local);
+            $localTimes[] = gmdate('His', $local);
+            $weeksOfMonth[] = intdiv($dayOfMonth - 1, 7) + 1;
+
+            $isAlwaysLastOfMonth = $isAlwaysLastOfMonth && $dayOfMonth + 7 > (int) gmdate('t', $local);
+        }
+
+        // A yearly rule states one month, one weekday and one time, so onsets that disagree on any of
+        // the three follow no rule this can write.
+        if (! self::allTheSame($months) || ! self::allTheSame($weekdayNumbers) || ! self::allTheSame($localTimes)) {
+            return null;
+        }
+
+        $weekOfMonth = match (true) {
+            $isAlwaysLastOfMonth => -1,
+            self::allTheSame($weeksOfMonth) => $weeksOfMonth[0],
+            default => null,
+        };
+
+        if ($weekOfMonth === null) {
+            return null;
+        }
+
+        return 'RRULE:FREQ=YEARLY;BYMONTH='.$months[0].';BYDAY='.$weekOfMonth.$weekdays[$weekdayNumbers[0]];
+    }
+
+    /** @param non-empty-list<int|string> $values */
+    private static function allTheSame(array $values): bool
+    {
+        return count(array_unique($values)) === 1;
     }
 
     /**
@@ -629,6 +969,9 @@ class Ics implements Generator
             ? $this->escapeString($description)
             : 'Reminder: '.$this->escapeString($link->title);
 
+        // A reminder with no TIME is a relative one, which is the point of the default: fifteen
+        // minutes before the event, wherever the event ends up. A TIME of the wrong type does not
+        // reach this, since the constructor rejects it.
         $trigger = 'TRIGGER:-PT15M';
         if (($reminderTime = $this->options['REMINDER']['TIME'] ?? null) instanceof \DateTimeInterface) {
             $trigger = 'TRIGGER;VALUE=DATE-TIME:'.gmdate($this->dateTimeFormat, $reminderTime->getTimestamp());

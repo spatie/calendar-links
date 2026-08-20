@@ -916,6 +916,162 @@ final class IcsGeneratorTest extends TestCase
         }
     }
 
+    #[Test]
+    public function it_percent_encodes_a_control_character_an_attendee_address_was_assigned_directly(): void
+    {
+        // guest() rejects this address, but $guests is public, so it can also be assigned around it.
+        $link = $this->eventWithTitle('Birthday');
+        $link->guests[] = ['email' => "guest@example.com\r\nORGANIZER:mailto:forged@example.com", 'optional' => false];
+
+        $output = $this->unfold($this->generator()->generate($link));
+
+        $this->assertStringContainsString('mailto:guest@example.com%0D%0AORGANIZER:mailto:forged@example.com', $output);
+        $this->assertStringNotContainsString("\r\nORGANIZER:", $output);
+    }
+
+    #[Test]
+    public function it_names_the_timezone_of_a_recurring_event_that_would_otherwise_drift(): void
+    {
+        // A UTC instant repeats in UTC, so a weekly 09:00 in Warsaw would land at 10:00 from the day
+        // the zone moves its clocks, which is a week after this event starts.
+        $link = Link::create(
+            'Standup',
+            new DateTime('2026-03-23 09:00', new DateTimeZone('Europe/Warsaw')),
+            new DateTime('2026-03-23 09:30', new DateTimeZone('Europe/Warsaw')),
+        );
+
+        $output = $this->generator(['RRULE' => 'FREQ=WEEKLY'])->generate($link);
+
+        $this->assertStringContainsString("DTSTART;TZID=Europe/Warsaw:20260323T090000\r\n", $output);
+        $this->assertStringContainsString("DTEND;TZID=Europe/Warsaw:20260323T093000\r\n", $output);
+        $this->assertStringContainsString("BEGIN:VTIMEZONE\r\nTZID:Europe/Warsaw\r\n", $output);
+    }
+
+    #[Test]
+    public function it_keeps_utc_endpoints_for_a_recurring_event_in_a_zone_that_never_changes(): void
+    {
+        // Tokyo keeps one offset the year round, so there is nothing for the recurrence to drift
+        // against and a VTIMEZONE would describe a zone that never moves.
+        $link = Link::create(
+            'Standup',
+            new DateTime('2026-03-23 09:00', new DateTimeZone('Asia/Tokyo')),
+            new DateTime('2026-03-23 09:30', new DateTimeZone('Asia/Tokyo')),
+        );
+
+        $output = $this->generator(['RRULE' => 'FREQ=WEEKLY'])->generate($link);
+
+        $this->assertStringContainsString("DTSTART:20260323T000000Z\r\n", $output);
+        $this->assertStringNotContainsString('BEGIN:VTIMEZONE', $output);
+    }
+
+    #[Test]
+    public function it_keeps_utc_endpoints_for_a_recurring_event_in_an_unresolvable_zone(): void
+    {
+        $link = Link::create(
+            'Standup',
+            new DateTime('2026-03-23T09:00:00+01:00'),
+            new DateTime('2026-03-23T09:30:00+01:00'),
+        );
+
+        $output = $this->generator(['RRULE' => 'FREQ=WEEKLY'])->generate($link);
+
+        $this->assertStringContainsString("DTSTART:20260323T080000Z\r\n", $output);
+        $this->assertStringNotContainsString('TZID', $output);
+    }
+
+    #[Test]
+    public function it_carries_the_last_observance_of_each_kind_past_the_window_with_a_yearly_rule(): void
+    {
+        // Without a rule the component stops at the last change it lists, and every occurrence of a
+        // recurring event after that resolves against the wrong offset for part of each later year.
+        // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.5
+        $output = $this->generator()->generate($this->createFlightWithDistinctTimezonesLink());
+
+        // Los Angeles moves on the second Sunday of March and the first Sunday of November.
+        $this->assertStringContainsString("RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU\r\n", $output);
+        $this->assertStringContainsString("RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU\r\n", $output);
+
+        // Tokyo never moves, so its component has nothing to repeat.
+        $this->assertSame(2, substr_count($output, 'RRULE:FREQ=YEARLY'));
+    }
+
+    #[Test]
+    public function it_writes_no_yearly_rule_for_a_zone_whose_changes_do_not_repeat(): void
+    {
+        // Casablanca suspends its summer time for Ramadan and restores it weeks later, so neither of
+        // its yearly changes falls on the same weekday of the same month twice running.
+        $link = Link::create(
+            'Standup',
+            new DateTime('2026-06-01 09:00', new DateTimeZone('Africa/Casablanca')),
+            new DateTime('2026-06-01 09:30', new DateTimeZone('Africa/Casablanca')),
+        );
+
+        $output = $this->generator(['RRULE' => 'FREQ=WEEKLY'])->generate($link);
+
+        $this->assertStringContainsString('BEGIN:VTIMEZONE', $output);
+        $this->assertStringNotContainsString('RRULE:FREQ=YEARLY', $output);
+    }
+
+    #[Test]
+    public function it_rejects_a_reminder_that_is_not_an_array(): void
+    {
+        $this->expectException(InvalidLink::class);
+        $this->expectExceptionMessage('The `REMINDER` option must be an array, `string` given.');
+
+        /** @psalm-suppress InvalidArgument We are deliberately passing a value the type forbids. */
+        $this->generator(['REMINDER' => 'in 15 minutes']);
+    }
+
+    #[Test]
+    public function it_rejects_a_reminder_time_that_is_not_a_date_time(): void
+    {
+        $this->expectException(InvalidLink::class);
+        $this->expectExceptionMessage('The `REMINDER.TIME` option must be a DateTimeInterface, `string` given.');
+
+        /** @psalm-suppress InvalidArgument We are deliberately passing a value the type forbids. */
+        $this->generator(['REMINDER' => ['TIME' => '2018-02-01 08:45']]);
+    }
+
+    #[Test]
+    public function it_rejects_a_reminder_description_it_cannot_faithfully_write(): void
+    {
+        $this->expectException(InvalidLink::class);
+        $this->expectExceptionMessage('The `REMINDER.DESCRIPTION` option must be a string, an integer or a Stringable, `array` given.');
+
+        /** @psalm-suppress InvalidArgument We are deliberately passing a value the type forbids. */
+        $this->generator(['REMINDER' => ['DESCRIPTION' => ['Wake up']]]);
+    }
+
+    #[Test]
+    public function it_rejects_a_presentation_format_it_does_not_know(): void
+    {
+        $this->expectException(InvalidLink::class);
+        $this->expectExceptionMessage('ICS property (`format`) value (`FILE`) is invalid. Pass one of `html`, `file`.');
+
+        /** @psalm-suppress InvalidArgument We are deliberately passing a value the type forbids. */
+        new Ics([], ['format' => 'FILE']);
+    }
+
+    /**
+     * @return \Generator<string, array{string, string}>
+     */
+    public static function controlCharacterProvider(): \Generator
+    {
+        yield 'URL' => ['URL', "https://example.com/\x00"];
+        yield 'RRULE' => ['RRULE', "FREQ=WEEKLY\x07"];
+    }
+
+    #[Test]
+    #[DataProvider('controlCharacterProvider')]
+    public function it_rejects_a_control_character_in_a_property_it_cannot_escape(string $property, string $value): void
+    {
+        $this->expectException(InvalidLink::class);
+        $this->expectExceptionMessage("ICS property (`{$property}`) must not contain a control character.");
+
+        /** @psalm-suppress ArgumentTypeCoercion We are deliberately passing a value the type forbids. */
+        $this->generator([$property => $value]);
+    }
+
     private function eventWithTitle(string $title): Link
     {
         return Link::create(
