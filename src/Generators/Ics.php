@@ -83,9 +83,66 @@ class Ics implements Generator
 
         $options = $this->guardAgainstUnwritableValues($options);
         $options = $this->guardAgainstUnsupportedTokens($options);
+        $options = $this->guardAgainstUnusableReminder($options);
+
+        $this->guardAgainstUnsupportedFormat($presentationOptions);
 
         $this->options = $options;
         $this->presentationOptions = $presentationOptions;
+    }
+
+    /**
+     * The alarm reads its two values back at generation time and falls back to the default alarm for
+     * anything it cannot use, which would hand a caller who misspelled a type the reminder they did
+     * not ask for, fifteen minutes before the event, with nothing said about it. The same mistake is
+     * caught here instead, for the same reason DTSTAMP is.
+     *
+     * @param IcsOptions $options
+     * @return IcsOptions The options, with a checked DESCRIPTION replaced by the string that was checked.
+     * @throws InvalidLink
+     */
+    private function guardAgainstUnusableReminder(array $options): array
+    {
+        if (! isset($options['REMINDER'])) {
+            return $options;
+        }
+
+        /** @psalm-suppress DocblockTypeContradiction The docblock type binds static analysis and nothing else. */
+        if (! is_array($options['REMINDER'])) {
+            throw InvalidLink::invalidArrayOption('REMINDER', $options['REMINDER']);
+        }
+
+        if (isset($options['REMINDER']['TIME']) && ! $options['REMINDER']['TIME'] instanceof \DateTimeInterface) {
+            throw InvalidLink::invalidDateTimeOption('REMINDER.TIME', $options['REMINDER']['TIME']);
+        }
+
+        if (isset($options['REMINDER']['DESCRIPTION'])) {
+            // A VALARM DESCRIPTION is a TEXT value, so escapeString() handles a line break in it and
+            // only the faithfulness of the string form is in question here.
+            $options['REMINDER']['DESCRIPTION'] = $this->asWritten('REMINDER.DESCRIPTION', $options['REMINDER']['DESCRIPTION']);
+        }
+
+        return $options;
+    }
+
+    /**
+     * An unknown format used to fall through to the data URI, so a caller who asked for `FILE` in the
+     * wrong case was handed a link and had to work out from the output that they had not got a file.
+     *
+     * @param array<string, mixed> $presentationOptions
+     * @throws InvalidLink
+     */
+    private function guardAgainstUnsupportedFormat(array $presentationOptions): void
+    {
+        if (! isset($presentationOptions['format'])) {
+            return;
+        }
+
+        $format = $this->asWritten('format', $presentationOptions['format']);
+
+        if (! in_array($format, [self::FORMAT_HTML, self::FORMAT_FILE], true)) {
+            throw InvalidLink::unsupportedIcsPropertyValue('format', $format, [self::FORMAT_HTML, self::FORMAT_FILE]);
+        }
     }
 
     /**
@@ -320,10 +377,11 @@ class Ics implements Generator
         $url[] = 'END:VEVENT';
         $url[] = 'END:VCALENDAR';
 
+        // The constructor has already turned down anything that is not one of the two formats.
         $format = $this->presentationOptions['format'] ?? self::FORMAT_HTML;
 
         return match ($format) {
-            'file' => $this->buildFile($url),
+            self::FORMAT_FILE => $this->buildFile($url),
             default => $this->buildLink($url),
         };
     }
@@ -872,6 +930,9 @@ class Ics implements Generator
             ? $this->escapeString($description)
             : 'Reminder: '.$this->escapeString($link->title);
 
+        // A reminder with no TIME is a relative one, which is the point of the default: fifteen
+        // minutes before the event, wherever the event ends up. A TIME of the wrong type does not
+        // reach this, since the constructor rejects it.
         $trigger = 'TRIGGER:-PT15M';
         if (($reminderTime = $this->options['REMINDER']['TIME'] ?? null) instanceof \DateTimeInterface) {
             $trigger = 'TRIGGER;VALUE=DATE-TIME:'.gmdate($this->dateTimeFormat, $reminderTime->getTimestamp());

@@ -34,6 +34,12 @@ class InvalidLink extends InvalidArgumentException
         return new self("The `{$option}` option must be a string, an integer or a Stringable, `".get_debug_type($given).'` given.');
     }
 
+    /** @param mixed $given The value the caller passed, used only to name its type in the message. */
+    public static function invalidArrayOption(string $option, mixed $given): self
+    {
+        return new self("The `{$option}` option must be an array, `".get_debug_type($given).'` given.');
+    }
+
     /**
      * The value is deliberately left out of the message: it contains a line break, which would spread
      * the exception message over several lines of a log just as it would over several lines of a calendar.

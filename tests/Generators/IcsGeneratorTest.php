@@ -929,26 +929,6 @@ final class IcsGeneratorTest extends TestCase
         $this->assertStringNotContainsString("\r\nORGANIZER:", $output);
     }
 
-    /**
-     * @return \Generator<string, array{string, string}>
-     */
-    public static function controlCharacterProvider(): \Generator
-    {
-        yield 'URL' => ['URL', "https://example.com/\x00"];
-        yield 'RRULE' => ['RRULE', "FREQ=WEEKLY\x07"];
-    }
-
-    #[Test]
-    #[DataProvider('controlCharacterProvider')]
-    public function it_rejects_a_control_character_in_a_property_it_cannot_escape(string $property, string $value): void
-    {
-        $this->expectException(InvalidLink::class);
-        $this->expectExceptionMessage("ICS property (`{$property}`) must not contain a control character.");
-
-        /** @psalm-suppress ArgumentTypeCoercion We are deliberately passing a value the type forbids. */
-        $this->generator([$property => $value]);
-    }
-
     #[Test]
     public function it_names_the_timezone_of_a_recurring_event_that_would_otherwise_drift(): void
     {
@@ -1030,6 +1010,66 @@ final class IcsGeneratorTest extends TestCase
 
         $this->assertStringContainsString('BEGIN:VTIMEZONE', $output);
         $this->assertStringNotContainsString('RRULE:FREQ=YEARLY', $output);
+    }
+
+    #[Test]
+    public function it_rejects_a_reminder_that_is_not_an_array(): void
+    {
+        $this->expectException(InvalidLink::class);
+        $this->expectExceptionMessage('The `REMINDER` option must be an array, `string` given.');
+
+        /** @psalm-suppress InvalidArgument We are deliberately passing a value the type forbids. */
+        $this->generator(['REMINDER' => 'in 15 minutes']);
+    }
+
+    #[Test]
+    public function it_rejects_a_reminder_time_that_is_not_a_date_time(): void
+    {
+        $this->expectException(InvalidLink::class);
+        $this->expectExceptionMessage('The `REMINDER.TIME` option must be a DateTimeInterface, `string` given.');
+
+        /** @psalm-suppress InvalidArgument We are deliberately passing a value the type forbids. */
+        $this->generator(['REMINDER' => ['TIME' => '2018-02-01 08:45']]);
+    }
+
+    #[Test]
+    public function it_rejects_a_reminder_description_it_cannot_faithfully_write(): void
+    {
+        $this->expectException(InvalidLink::class);
+        $this->expectExceptionMessage('The `REMINDER.DESCRIPTION` option must be a string, an integer or a Stringable, `array` given.');
+
+        /** @psalm-suppress InvalidArgument We are deliberately passing a value the type forbids. */
+        $this->generator(['REMINDER' => ['DESCRIPTION' => ['Wake up']]]);
+    }
+
+    #[Test]
+    public function it_rejects_a_presentation_format_it_does_not_know(): void
+    {
+        $this->expectException(InvalidLink::class);
+        $this->expectExceptionMessage('ICS property (`format`) value (`FILE`) is invalid. Pass one of `html`, `file`.');
+
+        /** @psalm-suppress InvalidArgument We are deliberately passing a value the type forbids. */
+        new Ics([], ['format' => 'FILE']);
+    }
+
+    /**
+     * @return \Generator<string, array{string, string}>
+     */
+    public static function controlCharacterProvider(): \Generator
+    {
+        yield 'URL' => ['URL', "https://example.com/\x00"];
+        yield 'RRULE' => ['RRULE', "FREQ=WEEKLY\x07"];
+    }
+
+    #[Test]
+    #[DataProvider('controlCharacterProvider')]
+    public function it_rejects_a_control_character_in_a_property_it_cannot_escape(string $property, string $value): void
+    {
+        $this->expectException(InvalidLink::class);
+        $this->expectExceptionMessage("ICS property (`{$property}`) must not contain a control character.");
+
+        /** @psalm-suppress ArgumentTypeCoercion We are deliberately passing a value the type forbids. */
+        $this->generator([$property => $value]);
     }
 
     private function eventWithTitle(string $title): Link
