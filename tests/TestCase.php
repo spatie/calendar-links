@@ -107,6 +107,47 @@ Bring a dog, bring a frog';
         );
     }
 
+    protected function createEventAcrossUtcAliasesLink(): Link
+    {
+        // Two spellings of one zone, so the event never leaves UTC.
+        return Link::create(
+            'Meeting',
+            new DateTime('2026-01-01 10:00', new DateTimeZone('UTC')),
+            new DateTime('2026-01-01 11:00', new DateTimeZone('Etc/UTC')),
+        );
+    }
+
+    protected function createEventWithZSuffixedStartLink(): Link
+    {
+        // PHP names the zone of a Z suffixed ISO string literally `Z`, which no calendar service accepts.
+        return Link::create(
+            'Meeting',
+            new DateTime('2026-01-01T10:00:00Z'),
+            new DateTime('2026-01-01 11:00', new DateTimeZone('UTC')),
+        );
+    }
+
+    protected function createFlightBetweenPlacesSharingAnOffsetLink(): Link
+    {
+        // London and Lisbon are both on +00:00 in January, yet they are two places worth naming.
+        return Link::create(
+            'BA 500 London to Lisbon',
+            new DateTime('2026-01-15 09:00', new DateTimeZone('Europe/London')),
+            new DateTime('2026-01-15 11:45', new DateTimeZone('Europe/Lisbon')),
+        );
+    }
+
+    protected function createFlightBookedWithALegacyZoneAliasLink(): Link
+    {
+        // `Japan` is an IANA backward alias for Asia/Tokyo. Both ends sit on +09:00 all year, so
+        // only the two zone names tell Tokyo from Seoul.
+        return Link::create(
+            'NH 867 Tokyo to Seoul',
+            new DateTime('2026-01-15 09:00', new DateTimeZone('Japan')),
+            new DateTime('2026-01-15 11:45', new DateTimeZone('Asia/Seoul')),
+        );
+    }
+
     protected function createEventWithGuestsLink(): Link
     {
         return Link::create(

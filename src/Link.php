@@ -56,7 +56,12 @@ class Link
 
         $immutableTo = \DateTimeImmutable::createFromInterface($to);
 
-        // Ensures timezones match.
+        // Ensures timezones match. This asks a narrower question than hasDistinctTimezones(): not
+        // whether the two zones are worth naming separately, but whether $to needs moving at all.
+        // Equal names mean there is nothing to move, and for every other pair the conversion is
+        // either meaningful or a no-op, so the cheap comparison is the right one here. It leaves
+        // $to always carried in $fromTimezone, which the generators rely on when they render both
+        // endpoints under a single zone.
         if ($this->fromTimezone->getName() !== $this->toTimezone->getName()) {
             $immutableTo = $allDay
                 ? self::reinterpretIn($immutableTo, $this->fromTimezone)
@@ -199,10 +204,67 @@ class Link
     /**
      * Whether the event genuinely starts and ends in different timezones, so a generator that can
      * express both should. An all-day event has no clock time to place in a zone, so it never does.
+     *
+     * Two spellings of one zone do not count. `UTC`, `Etc/UTC` and the bare `Z` that PHP leaves on a
+     * Z suffixed ISO string all describe the same zone, and emitting them as a pair hands the
+     * services identifiers they reject for an event that never crossed a zone at all.
+     *
+     * Equal offsets alone are not the test though. Europe/London and Europe/Lisbon share an offset
+     * the whole year, as do Europe/Berlin and Africa/Lagos in winter, yet each pair is two places a
+     * flight may legitimately want to name. So the zones collapse into one only when their offsets
+     * agree and at least one of them names no place: a bare offset, an abbreviation, and every
+     * member of the UTC family are all just an offset wearing a label, with no location to lose.
      */
     public function hasDistinctTimezones(): bool
     {
-        return ! $this->allDay && $this->fromTimezone->getName() !== $this->toTimezone->getName();
+        if ($this->allDay || $this->fromTimezone->getName() === $this->toTimezone->getName()) {
+            return false;
+        }
+
+        // Each zone is read at the instant that belongs to it, so an event running across a DST
+        // change still sees the two offsets it actually spans.
+        if ($this->fromTimezone->getOffset($this->from) !== $this->toTimezone->getOffset($this->to)) {
+            return true;
+        }
+
+        return self::namesAPlace($this->fromTimezone) && self::namesAPlace($this->toTimezone);
+    }
+
+    /**
+     * Spellings of UTC that the timezone database lists as identifiers in their own right. The
+     * `Etc/` tree is matched by prefix instead, since every zone in it is a fixed offset. PHP hands
+     * back whatever case the caller wrote, so these are compared lowercased.
+     */
+    private const array UTC_ZONE_NAMES = ['utc', 'zulu', 'universal', 'greenwich', 'gmt0'];
+
+    /**
+     * Whether a zone stands for a place rather than a plain offset.
+     *
+     * `getLocation()` returns false for the zones the database holds no location row for at all: a
+     * bare offset (`+01:00`), the abbreviation PHP leaves on a Z suffixed ISO string, and the
+     * standalone abbreviations (`GMT`, `UCT`, `CET`, `EST`, `MST`, `HST`, `MET`, `WET`, `EET`).
+     *
+     * The country code deliberately plays no part in the decision. Every IANA backward alias reports
+     * the same `??` placeholder as the UTC family does, so reading `??` as "no place" would quietly
+     * classify `Japan`, `Singapore`, `US/Eastern`, `GB` and `Asia/Calcutta` as offsets, and a Tokyo
+     * to Seoul flight booked with `new DateTimeZone('Japan')` would lose its destination. The rest of
+     * the offset family is therefore named outright rather than inferred.
+     *
+     * `EST5EDT`, `CST6CDT`, `MST7MDT`, `PST8PDT` and `Factory` are left out of that set on purpose.
+     * They name no place either, but they carry daylight saving rules rather than one fixed offset,
+     * so they are more than a label on an offset. Counting them as places costs at most a second
+     * TZID that every service still resolves, where counting them as placeless would drop the real
+     * zone they are paired with, which is the failure this guards against.
+     */
+    private static function namesAPlace(\DateTimeZone $timezone): bool
+    {
+        if ($timezone->getLocation() === false) {
+            return false;
+        }
+
+        $name = strtolower($timezone->getName());
+
+        return ! in_array($name, self::UTC_ZONE_NAMES, true) && ! str_starts_with($name, 'etc/');
     }
 
     public function formatWith(Generator $generator): string

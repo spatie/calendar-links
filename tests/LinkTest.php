@@ -113,6 +113,140 @@ Bring a dog, bring a frog';
     }
 
     #[Test]
+    public function it_does_not_report_distinct_timezones_for_two_spellings_of_utc(): void
+    {
+        $this->assertFalse($this->createEventAcrossUtcAliasesLink()->hasDistinctTimezones());
+    }
+
+    #[Test]
+    public function it_does_not_report_distinct_timezones_for_a_z_suffixed_start(): void
+    {
+        $link = $this->createEventWithZSuffixedStartLink();
+
+        $this->assertSame('Z', $link->fromTimezone->getName());
+        $this->assertFalse($link->hasDistinctTimezones());
+    }
+
+    #[Test]
+    public function it_does_not_report_distinct_timezones_for_an_offset_matching_the_start_zone(): void
+    {
+        // A bare offset names no place, so it adds nothing to the zone it is paired with.
+        $link = Link::create(
+            'Meeting',
+            new DateTime('2026-01-01 10:00', new DateTimeZone('UTC')),
+            new DateTime('2026-01-01T11:00:00+00:00'),
+        );
+
+        $this->assertFalse($link->hasDistinctTimezones());
+    }
+
+    #[Test]
+    public function it_reports_distinct_timezones_for_two_places_sharing_an_offset(): void
+    {
+        // Equal offsets are not enough to merge two real places: the destination is still worth naming.
+        $flight = $this->createFlightBetweenPlacesSharingAnOffsetLink();
+
+        $this->assertSame(0, $flight->fromTimezone->getOffset($flight->from));
+        $this->assertSame(0, $flight->toTimezone->getOffset($flight->to));
+        $this->assertTrue($flight->hasDistinctTimezones());
+    }
+
+    #[Test]
+    public function it_reports_distinct_timezones_for_a_legacy_alias_naming_a_place(): void
+    {
+        $flight = $this->createFlightBookedWithALegacyZoneAliasLink();
+
+        $this->assertSame(32400, $flight->fromTimezone->getOffset($flight->from));
+        $this->assertSame(32400, $flight->toTimezone->getOffset($flight->to));
+        $this->assertTrue($flight->hasDistinctTimezones());
+    }
+
+    #[Test]
+    public function it_reports_distinct_timezones_for_every_legacy_alias_sharing_an_offset(): void
+    {
+        // The IANA backward names are ordinary places wearing an old label, and the timezone
+        // database gives them the same `??` country as the UTC family, so they need naming outright.
+        $pairs = [
+            ['Singapore', 'Asia/Kuala_Lumpur'],
+            ['Poland', 'Europe/Berlin'],
+            ['Hongkong', 'Asia/Shanghai'],
+            ['US/Eastern', 'America/Toronto'],
+            ['GB', 'Europe/Lisbon'],
+        ];
+
+        foreach ($pairs as [$from, $to]) {
+            $link = Link::create(
+                'Flight',
+                new DateTime('2026-01-15 09:00', new DateTimeZone($from)),
+                new DateTime('2026-01-15 11:45', new DateTimeZone($to)),
+            );
+
+            $this->assertSame(
+                $link->fromTimezone->getOffset($link->from),
+                $link->toTimezone->getOffset($link->to),
+                "$from and $to should share an offset, otherwise this proves nothing",
+            );
+            $this->assertTrue($link->hasDistinctTimezones(), "$from to $to should keep both zones");
+        }
+    }
+
+    #[Test]
+    public function it_reports_distinct_timezones_for_a_posix_rule_zone(): void
+    {
+        // EST5EDT names no place, but it carries daylight saving rules rather than one fixed offset,
+        // so it counts as a zone of its own. Folding it away would drop America/New_York instead.
+        $link = Link::create(
+            'Meeting',
+            new DateTime('2026-01-15 09:00', new DateTimeZone('EST5EDT')),
+            new DateTime('2026-01-15 11:00', new DateTimeZone('America/New_York')),
+        );
+
+        $this->assertTrue($link->hasDistinctTimezones());
+    }
+
+    #[Test]
+    public function it_does_not_report_distinct_timezones_when_only_one_side_names_a_place(): void
+    {
+        // Etc/GMT+5 is a fixed offset with no place of its own, so at a matching offset it adds
+        // nothing to the zone opposite it.
+        $link = Link::create(
+            'Meeting',
+            new DateTime('2026-01-15 09:00', new DateTimeZone('America/New_York')),
+            new DateTime('2026-01-15 11:00', new DateTimeZone('Etc/GMT+5')),
+        );
+
+        $this->assertFalse($link->hasDistinctTimezones());
+    }
+
+    #[Test]
+    public function it_does_not_report_distinct_timezones_across_a_daylight_saving_change_in_one_zone(): void
+    {
+        // Both endpoints are named `Europe/London`, so the zones match even though the offsets do not.
+        $link = Link::create(
+            'Clocks going forward',
+            new DateTime('2026-03-29 00:30', new DateTimeZone('Europe/London')),
+            new DateTime('2026-03-29 02:30', new DateTimeZone('Europe/London')),
+        );
+
+        $this->assertNotSame($link->fromTimezone->getOffset($link->from), $link->toTimezone->getOffset($link->to));
+        $this->assertFalse($link->hasDistinctTimezones());
+    }
+
+    #[Test]
+    public function it_does_not_report_distinct_timezones_for_an_all_day_event_across_utc_spellings(): void
+    {
+        $link = new Link(
+            'New Year break',
+            new DateTime('2026-01-01', new DateTimeZone('UTC')),
+            new DateTime('2026-01-02', new DateTimeZone('Etc/UTC')),
+            true,
+        );
+
+        $this->assertFalse($link->hasDistinctTimezones());
+        $this->assertStringContainsString('dates=20260101/20260103', $link->google());
+    }
+
+    #[Test]
     public function it_keeps_the_inclusive_end_date_of_a_cross_timezone_all_day_event(): void
     {
         // New Year's Day and the day after, written by a caller whose two dates carry different zones.

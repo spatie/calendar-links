@@ -38,6 +38,35 @@ final class GoogleGeneratorTest extends TestCase
     }
 
     #[Test]
+    public function it_emits_a_single_timezone_for_two_spellings_of_utc(): void
+    {
+        $url = $this->generator()->generate($this->createEventAcrossUtcAliasesLink());
+
+        $this->assertStringContainsString('&ctz=UTC', $url);
+        $this->assertStringNotContainsString('stz=', $url);
+        $this->assertStringNotContainsString('etz=', $url);
+    }
+
+    #[Test]
+    public function it_emits_a_single_timezone_for_a_z_suffixed_start(): void
+    {
+        $url = $this->generator()->generate($this->createEventWithZSuffixedStartLink());
+
+        // `Z` is still not an identifier Google accepts, but the event is at least no longer
+        // described as crossing a zone. Naming it properly is the subject of #234.
+        $this->assertStringNotContainsString('stz=', $url);
+        $this->assertStringNotContainsString('etz=', $url);
+    }
+
+    #[Test]
+    public function it_still_names_both_zones_when_two_places_share_an_offset(): void
+    {
+        $url = $this->generator()->generate($this->createFlightBetweenPlacesSharingAnOffsetLink());
+
+        $this->assertStringContainsString('&stz=Europe/London&etz=Europe/Lisbon', $url);
+    }
+
+    #[Test]
     public function it_can_generate_an_url_with_custom_parameters(): void
     {
         $link = $this->createShortEventLink();
