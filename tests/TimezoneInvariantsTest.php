@@ -46,11 +46,13 @@ final class TimezoneInvariantsTest extends TestCase
 
     /**
      * The local time every swept event starts at. Any real date does, since everything compared
-     * against it is derived from DateTimeZone rather than written down. It does need to be a time no
-     * zone changes its clocks at, though: a local time inside a daylight saving overlap names two
-     * instants, and the file could then resolve it to the other one and still be right. A tzdata
-     * release that puts a transition at 09:00 on this date somewhere would show up as a resolution
-     * failure for that zone, and moving this is the fix.
+     * against it is derived from DateTimeZone rather than written down. It does need to be a date no
+     * zone changes its clocks on, though, and that is asked of two times rather than one: a local
+     * time inside a daylight saving overlap names two instants, so the file could resolve it to the
+     * other one and still be right, and a local time inside a gap names none at all, which is what
+     * the all-day shape below would meet in a zone that springs forward at midnight. A tzdata release
+     * that moves a transition onto this date somewhere would show up as a resolution failure for that
+     * zone, and moving this is the fix.
      */
     private const string EVENT_START = '2026-05-15 09:00';
 
@@ -89,10 +91,12 @@ final class TimezoneInvariantsTest extends TestCase
     }
 
     /**
-     * The event shapes one zone is swept with, keyed by a name the failure messages can carry. They
-     * are three because each reaches a branch the others do not: only the flight writes a zone into
-     * the output as a TZID, and only the all-day event names a zone without a clock time to place in
-     * it.
+     * The event shapes one zone is swept with, keyed by a name the failure messages can carry. Each
+     * reaches a branch the others do not: the flight is the shape that writes two zones into the
+     * output as TZIDs, the arrival asks the same of a zone the event ends in rather than starts in,
+     * which hasResolvableTimezones() judges by a different rule, the recurring event is the shape a
+     * zone can be named for on its own, and the all-day event names a zone with no clock time to
+     * place in it.
      *
      * @param non-empty-string $timezoneName
      * @return array<string, Link>
@@ -106,26 +110,66 @@ final class TimezoneInvariantsTest extends TestCase
             ? self::ALTERNATE_PARTNER_TIMEZONE_NAME
             : self::PARTNER_TIMEZONE_NAME);
 
+        $departure = new DateTimeImmutable(self::EVENT_START, $partner);
+
         return [
             'timed' => Link::create('Standup', $start, $start->modify('+2 hours')),
-            // The arrival is derived from the departure instant rather than written as a local time,
-            // so the range stays positive whichever offset the partner zone happens to be on.
+            'recurring' => Link::create('Standup', $start, $start->modify('+2 hours')),
+            // Each arrival is derived from its departure instant rather than written as a local time,
+            // so the range stays positive whichever offsets the two zones happen to be on.
             'flight' => Link::create('Flight', $start, $start->setTimezone($partner)->modify('+11 hours')),
+            'arrival' => Link::create('Flight', $departure, $departure->setTimezone($timezone)->modify('+11 hours')),
             'all-day' => Link::createAllDay('Holiday', $start->setTime(0, 0), 3),
         ];
     }
 
     /**
+     * The ICS options a shape is generated with. Only the recurring one needs any, and it needs them
+     * because a recurrence is not a property of the Link: an RRULE repeats the local time of the
+     * DTSTART it sits with, so whether one is present can decide whether the endpoints are written as
+     * local times named by a TZID at all. A shape that never passes one would leave that path unswept.
+     *
+     * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5.3
+     * @return array{RRULE?: string}
+     */
+    private static function icsOptionsFor(string $shape): array
+    {
+        return $shape === 'recurring' ? ['RRULE' => 'FREQ=WEEKLY;COUNT=10'] : [];
+    }
+
+    /**
+     * The zone a written endpoint names, and the instant that endpoint stands for.
+     *
+     * The end is only named by its own zone where the event genuinely crosses one. Where the two
+     * collapse into a single zone, the end is a second spelling already folded into the start's, and
+     * the generators name the start's zone on both endpoints, so that is what the file should say.
+     *
+     * @return array{\DateTimeImmutable, \DateTimeZone}
+     */
+    private static function endpointOf(Link $link, string $property): array
+    {
+        if ($property === 'DTSTART') {
+            return [$link->from, $link->fromTimezone];
+        }
+
+        // The end is carried in the start's zone, so it is read back into its own only when its own
+        // is the one being named.
+        return $link->hasDistinctTimezones()
+            ? [$link->to->setTimezone($link->toTimezone), $link->toTimezone]
+            : [$link->to, $link->fromTimezone];
+    }
+
+    /**
      * Every generator's output for one link. The ICS is asked for as a file rather than a data URI,
-     * so the assertions can read it.
+     * so the assertions can read it, and with whatever options the shape calls for.
      *
      * @return array<string, string>
      */
-    private function generatedFor(Link $link): array
+    private function generatedFor(Link $link, string $shape): array
     {
         return [
             'google' => $link->google(),
-            'ics' => $link->ics([], ['format' => Ics::FORMAT_FILE]),
+            'ics' => $link->ics(self::icsOptionsFor($shape), ['format' => Ics::FORMAT_FILE]),
             'yahoo' => $link->yahoo(),
             'webOutlook' => $link->webOutlook(),
             'webOffice' => $link->webOffice(),
@@ -177,9 +221,9 @@ final class TimezoneInvariantsTest extends TestCase
      *
      * @return array<string, string>
      */
-    private function outputsOf(Link $link): array
+    private function outputsOf(Link $link, string $shape): array
     {
-        return $this->withDiagnosticsIgnored(fn (): array => $this->generatedFor($link));
+        return $this->withDiagnosticsIgnored(fn (): array => $this->generatedFor($link, $shape));
     }
 
     /**
@@ -338,12 +382,10 @@ final class TimezoneInvariantsTest extends TestCase
 
         foreach (self::timezoneNames() as $timezoneName) {
             foreach (self::linksIn($timezoneName) as $shape => $link) {
-                $ics = self::unfold($this->outputsOf($link)['ics']);
+                $ics = self::unfold($this->outputsOf($link, $shape)['ics']);
 
                 foreach (self::namedEndpointsOf($ics) as [$property, $tzid, $remainder]) {
-                    $expected = $property === 'DTSTART'
-                        ? $link->fromTimezone->getName()
-                        : $link->toTimezone->getName();
+                    $expected = self::endpointOf($link, $property)[1]->getName();
 
                     if ($tzid !== $expected) {
                         $violations[] = "$timezoneName ($shape): $property names `$tzid`, expected `$expected`";
@@ -372,7 +414,7 @@ final class TimezoneInvariantsTest extends TestCase
             $files = ['forced' => $this->forcedComponentQuietlyFor($timezoneName)];
 
             foreach (self::linksIn($timezoneName) as $shape => $link) {
-                $files[$shape] = $this->outputsOf($link)['ics'];
+                $files[$shape] = $this->outputsOf($link, $shape)['ics'];
             }
 
             foreach ($files as $shape => $ics) {
@@ -399,7 +441,7 @@ final class TimezoneInvariantsTest extends TestCase
 
         foreach (self::timezoneNames() as $timezoneName) {
             foreach (self::linksIn($timezoneName) as $shape => $link) {
-                $ics = self::unfold($this->outputsOf($link)['ics']);
+                $ics = self::unfold($this->outputsOf($link, $shape)['ics']);
                 $components = self::timezoneComponentsOf($ics);
 
                 foreach (self::namedEndpointsOf($ics) as [$property, $tzid, $localDateTime]) {
@@ -409,11 +451,7 @@ final class TimezoneInvariantsTest extends TestCase
                         continue;
                     }
 
-                    // The end is carried in the start's zone, so it is read back in its own before the
-                    // offset it belongs to is asked for.
-                    [$moment, $timezone] = $property === 'DTSTART'
-                        ? [$link->from, $link->fromTimezone]
-                        : [$link->to->setTimezone($link->toTimezone), $link->toTimezone];
+                    [$moment, $timezone] = self::endpointOf($link, $property);
 
                     $resolved = self::offsetResolvedBy($components[$tzid], $localDateTime);
                     $expected = $timezone->getOffset($moment);
@@ -442,11 +480,15 @@ final class TimezoneInvariantsTest extends TestCase
         // instant for everyone else. This proves the generator obeys the library's own rule about
         // which names are worth emitting. Whether that rule matches what Google actually resolves is
         // a separate question, and one no offline test can answer.
+        //
+        // It reads only the parameters that were written, so it guards one direction: a name that
+        // should not have been emitted. Dropping an emission the file should have carried leaves
+        // nothing here to judge, and is caught by the snapshots and the targeted tests instead.
         $violations = [];
 
         foreach (self::timezoneNames() as $timezoneName) {
             foreach (self::linksIn($timezoneName) as $shape => $link) {
-                $url = $this->outputsOf($link)['google'];
+                $url = $this->outputsOf($link, $shape)['google'];
                 preg_match_all('/&(ctz|stz|etz)=([^&]*)/', $url, $parameters, PREG_SET_ORDER);
 
                 foreach ($parameters as [, $parameter, $name]) {
@@ -490,7 +532,7 @@ final class TimezoneInvariantsTest extends TestCase
             $sweeps = ['forced' => fn (): array => ['ics' => $this->forcedComponentFor($timezoneName)]];
 
             foreach (self::linksIn($timezoneName) as $shape => $link) {
-                $sweeps[$shape] = fn (): array => $this->generatedFor($link);
+                $sweeps[$shape] = fn (): array => $this->generatedFor($link, $shape);
             }
 
             foreach ($sweeps as $shape => $sweep) {
