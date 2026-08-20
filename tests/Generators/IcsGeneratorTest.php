@@ -949,6 +949,89 @@ final class IcsGeneratorTest extends TestCase
         $this->generator([$property => $value]);
     }
 
+    #[Test]
+    public function it_names_the_timezone_of_a_recurring_event_that_would_otherwise_drift(): void
+    {
+        // A UTC instant repeats in UTC, so a weekly 09:00 in Warsaw would land at 10:00 from the day
+        // the zone moves its clocks, which is a week after this event starts.
+        $link = Link::create(
+            'Standup',
+            new DateTime('2026-03-23 09:00', new DateTimeZone('Europe/Warsaw')),
+            new DateTime('2026-03-23 09:30', new DateTimeZone('Europe/Warsaw')),
+        );
+
+        $output = $this->generator(['RRULE' => 'FREQ=WEEKLY'])->generate($link);
+
+        $this->assertStringContainsString("DTSTART;TZID=Europe/Warsaw:20260323T090000\r\n", $output);
+        $this->assertStringContainsString("DTEND;TZID=Europe/Warsaw:20260323T093000\r\n", $output);
+        $this->assertStringContainsString("BEGIN:VTIMEZONE\r\nTZID:Europe/Warsaw\r\n", $output);
+    }
+
+    #[Test]
+    public function it_keeps_utc_endpoints_for_a_recurring_event_in_a_zone_that_never_changes(): void
+    {
+        // Tokyo keeps one offset the year round, so there is nothing for the recurrence to drift
+        // against and a VTIMEZONE would describe a zone that never moves.
+        $link = Link::create(
+            'Standup',
+            new DateTime('2026-03-23 09:00', new DateTimeZone('Asia/Tokyo')),
+            new DateTime('2026-03-23 09:30', new DateTimeZone('Asia/Tokyo')),
+        );
+
+        $output = $this->generator(['RRULE' => 'FREQ=WEEKLY'])->generate($link);
+
+        $this->assertStringContainsString("DTSTART:20260323T000000Z\r\n", $output);
+        $this->assertStringNotContainsString('BEGIN:VTIMEZONE', $output);
+    }
+
+    #[Test]
+    public function it_keeps_utc_endpoints_for_a_recurring_event_in_an_unresolvable_zone(): void
+    {
+        $link = Link::create(
+            'Standup',
+            new DateTime('2026-03-23T09:00:00+01:00'),
+            new DateTime('2026-03-23T09:30:00+01:00'),
+        );
+
+        $output = $this->generator(['RRULE' => 'FREQ=WEEKLY'])->generate($link);
+
+        $this->assertStringContainsString("DTSTART:20260323T080000Z\r\n", $output);
+        $this->assertStringNotContainsString('TZID', $output);
+    }
+
+    #[Test]
+    public function it_carries_the_last_observance_of_each_kind_past_the_window_with_a_yearly_rule(): void
+    {
+        // Without a rule the component stops at the last change it lists, and every occurrence of a
+        // recurring event after that resolves against the wrong offset for part of each later year.
+        // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.5
+        $output = $this->generator()->generate($this->createFlightWithDistinctTimezonesLink());
+
+        // Los Angeles moves on the second Sunday of March and the first Sunday of November.
+        $this->assertStringContainsString("RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU\r\n", $output);
+        $this->assertStringContainsString("RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU\r\n", $output);
+
+        // Tokyo never moves, so its component has nothing to repeat.
+        $this->assertSame(2, substr_count($output, 'RRULE:FREQ=YEARLY'));
+    }
+
+    #[Test]
+    public function it_writes_no_yearly_rule_for_a_zone_whose_changes_do_not_repeat(): void
+    {
+        // Casablanca suspends its summer time for Ramadan and restores it weeks later, so neither of
+        // its yearly changes falls on the same weekday of the same month twice running.
+        $link = Link::create(
+            'Standup',
+            new DateTime('2026-06-01 09:00', new DateTimeZone('Africa/Casablanca')),
+            new DateTime('2026-06-01 09:30', new DateTimeZone('Africa/Casablanca')),
+        );
+
+        $output = $this->generator(['RRULE' => 'FREQ=WEEKLY'])->generate($link);
+
+        $this->assertStringContainsString('BEGIN:VTIMEZONE', $output);
+        $this->assertStringNotContainsString('RRULE:FREQ=YEARLY', $output);
+    }
+
     private function eventWithTitle(string $title): Link
     {
         return Link::create(
