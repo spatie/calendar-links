@@ -916,6 +916,39 @@ final class IcsGeneratorTest extends TestCase
         }
     }
 
+    #[Test]
+    public function it_percent_encodes_a_control_character_an_attendee_address_was_assigned_directly(): void
+    {
+        // guest() rejects this address, but $guests is public, so it can also be assigned around it.
+        $link = $this->eventWithTitle('Birthday');
+        $link->guests[] = ['email' => "guest@example.com\r\nORGANIZER:mailto:forged@example.com", 'optional' => false];
+
+        $output = $this->unfold($this->generator()->generate($link));
+
+        $this->assertStringContainsString('mailto:guest@example.com%0D%0AORGANIZER:mailto:forged@example.com', $output);
+        $this->assertStringNotContainsString("\r\nORGANIZER:", $output);
+    }
+
+    /**
+     * @return \Generator<string, array{string, string}>
+     */
+    public static function controlCharacterProvider(): \Generator
+    {
+        yield 'URL' => ['URL', "https://example.com/\x00"];
+        yield 'RRULE' => ['RRULE', "FREQ=WEEKLY\x07"];
+    }
+
+    #[Test]
+    #[DataProvider('controlCharacterProvider')]
+    public function it_rejects_a_control_character_in_a_property_it_cannot_escape(string $property, string $value): void
+    {
+        $this->expectException(InvalidLink::class);
+        $this->expectExceptionMessage("ICS property (`{$property}`) must not contain a control character.");
+
+        /** @psalm-suppress ArgumentTypeCoercion We are deliberately passing a value the type forbids. */
+        $this->generator([$property => $value]);
+    }
+
     private function eventWithTitle(string $title): Link
     {
         return Link::create(

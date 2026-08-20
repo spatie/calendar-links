@@ -44,6 +44,15 @@ class InvalidLink extends InvalidArgumentException
     }
 
     /**
+     * The value is left out of the message for the same reason lineBreakInIcsProperty() leaves its own
+     * out: a control character in a log line is at best unreadable and at worst a terminal escape.
+     */
+    public static function controlCharacterInIcsProperty(string $property): self
+    {
+        return new self("ICS property (`{$property}`) must not contain a control character. Its value is written to the calendar as is, and neither a URI nor a recurrence rule admits one.");
+    }
+
+    /**
      * CR and LF are dropped from the reported value for the same reason lineBreakInIcsProperty() leaves
      * its value out: it would spread a forged line over several lines of a log.
      *

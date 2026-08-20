@@ -80,6 +80,8 @@ class Ics implements Generator
      * escapeString(): they are written to the calendar as they are given. A line break in one would end
      * the property and start another, letting a caller-supplied value inject arbitrary content into the
      * file, and a lenient parser accepts a bare LF as a line ending, so CR and LF are both rejected.
+     * Neither value type admits any other control character either, and escapeString() is not there to
+     * drop them, so those are turned down rather than written out to make an unparsable file.
      *
      * UID and PRODID are TEXT values, which generate() escapes like any other, so a line break in them
      * becomes the \n escape and cannot start a line. They are only stringified here.
@@ -98,8 +100,14 @@ class Ics implements Generator
 
             $value = $this->asWritten($property, $options[$property]);
 
-            if (in_array($property, ['URL', 'RRULE'], true) && strpbrk($value, "\r\n") !== false) {
-                throw InvalidLink::lineBreakInIcsProperty($property);
+            if (in_array($property, ['URL', 'RRULE'], true)) {
+                if (strpbrk($value, "\r\n") !== false) {
+                    throw InvalidLink::lineBreakInIcsProperty($property);
+                }
+
+                if (preg_match('/[\x00-\x1F\x7F]/', $value) === 1) {
+                    throw InvalidLink::controlCharacterInIcsProperty($property);
+                }
             }
 
             $options[$property] = $value;
@@ -402,16 +410,27 @@ class Ics implements Generator
      * of escapeString() does not apply to it. Characters that are legal in an email address but would
      * change the meaning of the mailto URI are percent encoded instead.
      *
+     * A control character is percent encoded along with them. guest() rejects one long before it gets
+     * here, but $guests is a public property, so an address can also be assigned straight to it without
+     * passing that check. A CR or an LF in one would end the ATTENDEE property and start another,
+     * letting the address inject arbitrary content into the file.
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.3
      * @see https://datatracker.ietf.org/doc/html/rfc6068#section-2
      */
     protected function escapeCalendarAddress(string $email): string
     {
-        return str_replace(
+        $escaped = str_replace(
             ['%', '&', '?', '=', '/', '#'],
             ['%25', '%26', '%3F', '%3D', '%2F', '%23'],
             $email
         );
+
+        return preg_replace_callback(
+            '/[\x00-\x1F\x7F]/',
+            static fn (array $match): string => sprintf('%%%02X', ord($match[0])),
+            $escaped
+        ) ?? $escaped;
     }
 
     /** @see https://tools.ietf.org/html/rfc5545#section-3.8.4.7 */
