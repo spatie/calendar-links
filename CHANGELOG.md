@@ -6,10 +6,11 @@ All notable changes to `calendar-links` will be documented in this file
 
 ### Added
 - Add first-class guests (attendees) via `Link::guest()` and `Link::guests()`, with required and optional roles. Guests are rendered as `add` for Google, `inv_list` for Yahoo, `to` and `cc` for Outlook, and `ATTENDEE` properties in ICS (#229)
-- Support separate start and end timezones (useful for flights): new `Link::$fromTimezone`, `Link::$toTimezone` and `Link::hasDistinctTimezones()`. Google links use `stz` and `etz`, ICS files write each endpoint with its own `TZID` (#233)
+- Support separate start and end timezones (useful for flights): new `Link::$fromTimezone`, `Link::$toTimezone` and `Link::hasDistinctTimezones()`. Google links use `stz` and `etz`, ICS files write each endpoint with its own `TZID` alongside a matching `VTIMEZONE` component, as RFC 5545 requires. Two spellings of one zone (`UTC` and `Etc/UTC`, or the bare `Z` that PHP leaves on a `Z` suffixed ISO string) count as a single zone, so only an event that genuinely crosses zones takes this path (#233, #246, #249)
 - ICS: support `TRANSP`, `CLASS`, `RRULE` and `X-MICROSOFT-CDO-BUSYSTATUS` via the options array (#230)
+- ICS: support a custom `DTSTAMP` via the options array. It defaults to the event start, which keeps the same `Link` producing the same bytes, so pass your own value when you need it read as a revision signal (#244)
 - Support repeated URL parameters in URL generators: an array value in `$urlParameters` is rendered as a repeated query parameter (#228)
-- ICS: subclasses can append extra properties through the new `additionalCalendarProperties()` and `additionalEventProperties()` extension points
+- ICS: subclasses can append extra properties through the new `additionalCalendarProperties()` and `additionalEventProperties()` extension points, emitted before the nested `VALARM` component so the output stays valid (#242, #247)
 
 ### Changed
 - Generators are easier to extend: `Ics::generateAlertComponent()`, `Yahoo::sanitizeText()`, `Yahoo::sanitizeAddressList()` and `BaseOutlook::sanitizeString()` are now `protected`, and `Google`/`Yahoo` read `BASE_URL` late statically so a subclass can redefine it
@@ -17,11 +18,15 @@ All notable changes to `calendar-links` will be documented in this file
 ### Fixed
 - `Link::guest()` and `Link::guests()` now ignore an address that is already on the guest list, compared without regard to case, so nobody is invited twice
 - All-day events whose start and end dates carry different timezones no longer gain or lose a day. The end date is now read as the calendar date it was written as, instead of being converted as an instant
+- Timezones that name no place (an offset such as `+02:00`, an abbreviation such as `CEST`, the POSIX rule sets, and the whole `Etc/` tree) are written in UTC instead of being named. Google silently ignores a `ctz` it cannot resolve, which left the event at the wrong instant for every viewer outside that offset, and an offset in an ICS `TZID` cut the property value in half at its colon. Parsing an ISO 8601 string with an offset is the everyday way to reach this (#248)
+- ICS: values passed through the options array can no longer inject calendar properties. `UID` and `PRODID` are escaped as the TEXT values they are, `URL` and `RRULE` reject a carriage return or line feed, the enumerated properties are checked against their allowed tokens, and a custom `REMINDER.DESCRIPTION` is escaped like the default one (#245)
+- ICS: close several RFC 5545 gaps. Content lines longer than 75 octets are folded (without splitting a multibyte character), the file ends with a CRLF, the data URI declares `charset=utf-8` rather than the unregistered `utf8`, and control characters invalid in a TEXT value are dropped (#250)
 - Yahoo: align deep link parameters with the service parser. The base URL drops the stale `view=d&type=20` pair, timed events send wall clock `ST` and `ET` values instead of UTC, single day all-day events send `DUR=allday`, and multi day all-day events send an exclusive `ET` end date (#232)
 - ICS: correct attendee escaping (a `CAL-ADDRESS` is a URI, not TEXT) and reject guest email addresses that no calendar service can carry (#229)
 
 ### Docs
 - Rework the README examples and fix the stale Google output (#231)
+- Document that Yahoo composes a multi day all-day event as a timed one running from midnight to midnight, since `DUR=allday` and an `ET` end date cannot be sent together (#243)
 
 ## 2.0.0 - 2026-02-10
 
