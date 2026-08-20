@@ -11,6 +11,7 @@ All notable changes to `calendar-links` will be documented in this file
 - Support repeated URL parameters in URL generators: an array value in `$urlParameters` is rendered as a repeated query parameter (#228)
 
 ### Fixed
+- All-day events whose start and end dates carry different timezones no longer gain or lose a day. The end date is now read as the calendar date it was written as, instead of being converted as an instant
 - Yahoo: align deep link parameters with the service parser. The base URL drops the stale `view=d&type=20` pair, timed events send wall clock `ST` and `ET` values instead of UTC, single day all-day events send `DUR=allday`, and multi day all-day events send an exclusive `ET` end date (#232)
 - ICS: correct attendee escaping (a `CAL-ADDRESS` is a URI, not TEXT) and reject guest email addresses that no calendar service can carry (#229)
 

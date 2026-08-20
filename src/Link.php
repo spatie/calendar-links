@@ -58,7 +58,9 @@ class Link
 
         // Ensures timezones match.
         if ($this->fromTimezone->getName() !== $this->toTimezone->getName()) {
-            $immutableTo = $immutableTo->setTimezone($this->fromTimezone);
+            $immutableTo = $allDay
+                ? self::reinterpretIn($immutableTo, $this->fromTimezone)
+                : $immutableTo->setTimezone($this->fromTimezone);
         }
 
         // Ensures from date is earlier than to date.
@@ -69,6 +71,17 @@ class Link
         // All-day events: convert inclusive end date to exclusive end date,
         // as calendar services expect the end date to be the day after the last event day.
         $this->to = $allDay ? $immutableTo->modify('+1 day') : $immutableTo;
+    }
+
+    /**
+     * An all-day event has no clock time, so each endpoint is a calendar date rather than an instant.
+     * Reading the date the caller wrote in another zone keeps that date, where converting the instant
+     * would move it to whichever date the same moment falls on in the start's zone, gaining or losing
+     * a day. The format holds no offset, so the zone passed alongside it is the one that applies.
+     */
+    private static function reinterpretIn(\DateTimeImmutable $date, \DateTimeZone $timezone): \DateTimeImmutable
+    {
+        return new \DateTimeImmutable($date->format('Y-m-d H:i:s'), $timezone);
     }
 
     /**

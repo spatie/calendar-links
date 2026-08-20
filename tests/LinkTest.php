@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Spatie\CalendarLinks\Tests;
 
 use DateTime;
+use DateTimeZone;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
+use Spatie\CalendarLinks\Generators\Ics;
 use Spatie\CalendarLinks\Link;
 
 final class LinkTest extends TestCase
@@ -108,6 +110,49 @@ Bring a dog, bring a frog';
     {
         // An all-day event has no clock time to place in a zone, whatever it was given.
         $this->assertFalse($this->createEventMultipleDaysViaStartEndWithDiffTimezoneLink()->hasDistinctTimezones());
+    }
+
+    #[Test]
+    public function it_keeps_the_inclusive_end_date_of_a_cross_timezone_all_day_event(): void
+    {
+        // New Year's Day and the day after, written by a caller whose two dates carry different zones.
+        $link = new Link(
+            'New Year break',
+            new DateTime('2026-01-01', new DateTimeZone('America/New_York')),
+            new DateTime('2026-01-02', new DateTimeZone('Europe/London')),
+            true,
+        );
+
+        $this->assertStringContainsString('dates=20260101/20260103', $link->google());
+        $this->assertStringContainsString('DURATION:P2D', $link->ics([], ['format' => Ics::FORMAT_FILE]));
+    }
+
+    #[Test]
+    public function it_leaves_a_single_timezone_all_day_event_alone(): void
+    {
+        // The control for the test above: same dates, one zone, so nothing is reinterpreted.
+        $link = new Link(
+            'New Year break',
+            new DateTime('2026-01-01', new DateTimeZone('America/New_York')),
+            new DateTime('2026-01-02', new DateTimeZone('America/New_York')),
+            true,
+        );
+
+        $this->assertStringContainsString('dates=20260101/20260103', $link->google());
+        $this->assertStringContainsString('DURATION:P2D', $link->ics([], ['format' => Ics::FORMAT_FILE]));
+    }
+
+    #[Test]
+    public function it_still_rejects_a_negative_range_across_timezones_when_all_day(): void
+    {
+        $this->expectException(InvalidLink::class);
+
+        new Link(
+            'New Year break',
+            new DateTime('2026-01-02', new DateTimeZone('America/New_York')),
+            new DateTime('2026-01-01', new DateTimeZone('Europe/London')),
+            true,
+        );
     }
 
     #[Test]
