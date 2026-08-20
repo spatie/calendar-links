@@ -220,6 +220,7 @@ class Link
      * @psalm-param IcsOptions $options ICS specific properties and components
      * @psalm-param IcsPresentationOptions $presentationOptions
      * @return string
+     * @throws \Spatie\CalendarLinks\Exceptions\InvalidLink When an option value cannot be written to the calendar.
      */
     public function ics(array $options = [], array $presentationOptions = []): string
     {

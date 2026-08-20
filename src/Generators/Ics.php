@@ -36,16 +36,27 @@ class Ics implements Generator
      */
     private const int MAX_CONTENT_LINE_OCTETS = 75;
 
-    /** @psalm-var IcsOptions */
+    /**
+     * Values here have been through the constructor's guards, so the four properties written verbatim
+     * carry no line break and the enumerated ones carry a known token. That invariant only covers what
+     * the constructor was given: a subclass that assigns to this property afterwards is responsible for
+     * whatever it puts in, since nothing revalidates it before generate() writes it to the file.
+     *
+     * @psalm-var IcsOptions
+     */
     protected array $options = [];
 
     /** @psalm-var IcsPresentationOptions */
     protected array $presentationOptions = [];
 
     /**
+     * Option values are validated here rather than in generate(), so that a value the calendar cannot
+     * represent is rejected where it enters the library and the stack trace points at the caller that
+     * supplied it, instead of at whatever renders the link later on.
+     *
      * @param IcsOptions $options Optional ICS properties and components
      * @param IcsPresentationOptions $presentationOptions
-     * @throws InvalidLink
+     * @throws InvalidLink When an option value cannot be written to the calendar.
      */
     public function __construct(array $options = [], array $presentationOptions = [])
     {
@@ -57,8 +68,129 @@ class Ics implements Generator
             throw InvalidLink::invalidDateTimeOption('DTSTAMP', $options['DTSTAMP']);
         }
 
+        $options = $this->guardAgainstUnwritableValues($options);
+        $options = $this->guardAgainstUnsupportedTokens($options);
+
         $this->options = $options;
         $this->presentationOptions = $presentationOptions;
+    }
+
+    /**
+     * A URL is a URI and a RRULE is a RECUR, so neither can go through the TEXT escaping of
+     * escapeString(): they are written to the calendar as they are given. A line break in one would end
+     * the property and start another, letting a caller-supplied value inject arbitrary content into the
+     * file, and a lenient parser accepts a bare LF as a line ending, so CR and LF are both rejected.
+     *
+     * UID and PRODID are TEXT values, which generate() escapes like any other, so a line break in them
+     * becomes the \n escape and cannot start a line. They are only stringified here.
+     *
+     * @param IcsOptions $options
+     * @return IcsOptions The options, with each checked value replaced by the string that was checked.
+     * @throws InvalidLink
+     * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.1
+     */
+    private function guardAgainstUnwritableValues(array $options): array
+    {
+        foreach (['UID', 'PRODID', 'URL', 'RRULE'] as $property) {
+            if (! isset($options[$property])) {
+                continue;
+            }
+
+            $value = $this->asWritten($property, $options[$property]);
+
+            if (in_array($property, ['URL', 'RRULE'], true) && strpbrk($value, "\r\n") !== false) {
+                throw InvalidLink::lineBreakInIcsProperty($property);
+            }
+
+            $options[$property] = $value;
+        }
+
+        return $options;
+    }
+
+    /**
+     * TRANSP, CLASS and the Microsoft busy status take an enumerated token rather than TEXT, and the
+     * token is written to the calendar as is. The Psalm types document the allowed tokens, but nothing
+     * enforces them once the value comes from outside a static analyser's reach.
+     *
+     * @param IcsOptions $options
+     * @return IcsOptions The options, with each checked value replaced by the token that was checked.
+     * @throws InvalidLink
+     */
+    private function guardAgainstUnsupportedTokens(array $options): array
+    {
+        // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.7
+        if (isset($options['TRANSP'])) {
+            $options['TRANSP'] = $this->allowedToken('TRANSP', $options['TRANSP'], ['OPAQUE', 'TRANSPARENT']);
+        }
+
+        // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.3
+        if (isset($options['CLASS'])) {
+            $options['CLASS'] = $this->allowedToken('CLASS', $options['CLASS'], ['PUBLIC', 'PRIVATE', 'CONFIDENTIAL']);
+        }
+
+        // @see https://learn.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxcical/
+        if (isset($options['X-MICROSOFT-CDO-BUSYSTATUS'])) {
+            $options['X-MICROSOFT-CDO-BUSYSTATUS'] = $this->allowedToken(
+                'X-MICROSOFT-CDO-BUSYSTATUS',
+                $options['X-MICROSOFT-CDO-BUSYSTATUS'],
+                ['FREE', 'TENTATIVE', 'BUSY', 'OOF']
+            );
+        }
+
+        return $options;
+    }
+
+    /**
+     * @template TToken of string
+     * @param mixed $value
+     * @param non-empty-list<TToken> $allowedTokens
+     * @return TToken
+     * @throws InvalidLink
+     */
+    private function allowedToken(string $property, mixed $value, array $allowedTokens): string
+    {
+        $token = $this->asWritten($property, $value);
+
+        // An enumerated property value is case-insensitive, so a lowercase token is as valid as any.
+        // The upper-cased spelling is the one written to the file, whatever the caller passed.
+        // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.1
+        $normalized = strtoupper($token);
+
+        foreach ($allowedTokens as $allowedToken) {
+            if ($normalized === $allowedToken) {
+                return $allowedToken;
+            }
+        }
+
+        throw InvalidLink::unsupportedIcsPropertyValue($property, $token, $allowedTokens);
+    }
+
+    /**
+     * The string the file will actually receive. generate() builds its content lines by concatenation,
+     * which stringifies whatever it is given: an integer, or an object with a __toString(). Checking
+     * the value as it was passed would therefore miss a Stringable that hands over a line break or an
+     * unknown token, so the guards check this instead, and keep the result. Calling __toString() once
+     * and storing what it returned also stops a mutable object from answering differently the second
+     * time, when generate() would otherwise call it again.
+     *
+     * A value with no faithful string form is refused rather than cast, so that the same mistake fails
+     * the same way whatever was passed. Casting an array yields the word `Array` and a PHP warning, and
+     * casting an object without a __toString() raises a raw PHP Error, neither of which tells the caller
+     * what this library expected. Floats and bools are left out on purpose as well: a float's string
+     * form follows the `precision` ini setting and INF and NAN come out as words, while `false` casts to
+     * an empty string.
+     *
+     * @param mixed $value
+     * @throws InvalidLink
+     */
+    private function asWritten(string $property, mixed $value): string
+    {
+        if (is_string($value) || is_int($value) || $value instanceof \Stringable) {
+            return (string) $value;
+        }
+
+        throw InvalidLink::invalidStringOption($property, $value);
     }
 
     /** @inheritDoc */
@@ -68,10 +200,13 @@ class Ics implements Generator
         $url = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0', // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.7.4
-            'PRODID:'.($this->options['PRODID'] ?? 'Spatie calendar-links'), // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.7.3
+            // PRODID and UID are both TEXT values, so they are escaped like SUMMARY and DESCRIPTION.
+            // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.7.3
+            'PRODID:'.$this->escapeString($this->options['PRODID'] ?? 'Spatie calendar-links'),
             ...$this->additionalCalendarProperties($link),
             'BEGIN:VEVENT',
-            'UID:'.($this->options['UID'] ?? $this->generateEventUid($link)),
+            // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.7
+            'UID:'.$this->escapeString($this->options['UID'] ?? $this->generateEventUid($link)),
             'SUMMARY:'.$this->escapeString($link->title),
         ];
 
@@ -118,7 +253,7 @@ class Ics implements Generator
         }
 
         // TRANSP, CLASS and the Microsoft busy status all take an enumerated token rather than TEXT,
-        // so they are emitted verbatim as well.
+        // so they are emitted verbatim. The constructor has already checked them against their token lists.
         // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.7
         if (isset($this->options['TRANSP'])) {
             $url[] = 'TRANSP:'.$this->options['TRANSP'];
@@ -308,10 +443,12 @@ class Ics implements Generator
      */
     protected function generateAlertComponent(Link $link): array
     {
+        // A VALARM DESCRIPTION is a TEXT value, so a custom one needs the same escaping as the default.
+        // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.6
         $description = $this->options['REMINDER']['DESCRIPTION'] ?? null;
-        if (! is_string($description)) {
-            $description = 'Reminder: '.$this->escapeString($link->title);
-        }
+        $description = is_string($description)
+            ? $this->escapeString($description)
+            : 'Reminder: '.$this->escapeString($link->title);
 
         $trigger = 'TRIGGER:-PT15M';
         if (($reminderTime = $this->options['REMINDER']['TIME'] ?? null) instanceof \DateTimeInterface) {
