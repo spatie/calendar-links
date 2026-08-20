@@ -10,7 +10,7 @@ use Spatie\CalendarLinks\Link;
 /**
  * @api
  * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/main/services/google.md
- * @psalm-type GoogleUrlParameters = array<string, scalar|null>
+ * @psalm-type GoogleUrlParameters = array<string, scalar|null|list<scalar|null>>
  */
 class Google implements Generator
 {
@@ -53,7 +53,10 @@ class Google implements Generator
         }
 
         foreach ($this->urlParameters as $key => $value) {
-            $url .= '&'.urlencode($key).(in_array($value, [null, ''], true) ? '' : '='.urlencode((string) $value));
+            // A list of values is flattened into a repeated parameter (e.g. Google's sprop).
+            foreach (is_array($value) ? $value : [$value] as $singleValue) {
+                $url .= '&'.urlencode($key).(in_array($singleValue, [null, ''], true) ? '' : '='.urlencode((string) $singleValue));
+            }
         }
 
         return $url;
