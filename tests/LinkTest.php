@@ -181,6 +181,56 @@ Bring a dog, bring a frog';
     }
 
     #[Test]
+    public function it_ignores_a_guest_that_is_already_on_the_list(): void
+    {
+        $link = $this->createShortEventLink()
+            ->guest('santa@example.com')
+            ->guest('santa@example.com');
+
+        $this->assertSame([
+            ['email' => 'santa@example.com', 'optional' => false],
+        ], $link->guests);
+    }
+
+    #[Test]
+    public function it_ignores_a_guest_whose_address_differs_only_in_case(): void
+    {
+        $link = $this->createShortEventLink()
+            ->guest('santa@example.com')
+            ->guest('Santa@Example.COM');
+
+        // The first spelling is the one that survives.
+        $this->assertSame([
+            ['email' => 'santa@example.com', 'optional' => false],
+        ], $link->guests);
+    }
+
+    #[Test]
+    public function it_keeps_the_role_a_duplicated_guest_was_first_added_with(): void
+    {
+        $link = $this->createShortEventLink()
+            ->guest('santa@example.com')
+            ->guest('santa@example.com', optional: true);
+
+        $this->assertSame([
+            ['email' => 'santa@example.com', 'optional' => false],
+        ], $link->guests);
+    }
+
+    #[Test]
+    public function it_ignores_a_duplicate_inside_a_bulk_of_guests(): void
+    {
+        $link = $this->createShortEventLink()
+            ->guest('santa@example.com')
+            ->guests(['krampus@example.com', 'KRAMPUS@example.com', 'santa@example.com']);
+
+        $this->assertSame([
+            ['email' => 'santa@example.com', 'optional' => false],
+            ['email' => 'krampus@example.com', 'optional' => false],
+        ], $link->guests);
+    }
+
+    #[Test]
     public function it_will_throw_an_exception_for_an_invalid_guest_email(): void
     {
         $this->expectException(InvalidLink::class);
