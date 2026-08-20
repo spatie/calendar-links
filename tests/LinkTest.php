@@ -105,8 +105,11 @@ Bring a dog, bring a frog';
     #[TestWith(['UTC'])]
     #[TestWith(['Asia/Tokyo'])]
     #[TestWith(['Europe/Brussels'])]
+    // A backward name is an alias of a region, whether or not it is spelled with a slash.
     #[TestWith(['US/Pacific'])]
-    public function it_reports_a_region_name_as_resolvable(string $timezone): void
+    #[TestWith(['Japan'])]
+    #[TestWith(['GB'])]
+    public function it_reports_a_name_that_stands_for_a_place_as_resolvable(string $timezone): void
     {
         $this->assertTrue($this->createEventLinkInTimezone($timezone)->hasResolvableTimezones());
     }
@@ -116,17 +119,21 @@ Bring a dog, bring a frog';
     #[TestWith(['+02:00'])]
     #[TestWith(['-05:00'])]
     #[TestWith(['CEST'])]
-    #[TestWith(['GMT'])]
+    // The TZDB entries that stand for no place: a POSIX rule set, a spelling of UTC, the placeholder.
     #[TestWith(['EST'])]
+    #[TestWith(['MST7MDT'])]
+    #[TestWith(['GMT'])]
+    #[TestWith(['Universal'])]
     #[TestWith(['Etc/GMT+5'])]
     #[TestWith(['Etc/UTC'])]
-    public function it_does_not_report_an_offset_or_abbreviation_as_resolvable(string $timezone): void
+    #[TestWith(['Factory'])]
+    public function it_does_not_report_a_placeless_name_as_resolvable(string $timezone): void
     {
         $this->assertFalse($this->createEventLinkInTimezone($timezone)->hasResolvableTimezones());
     }
 
     #[Test]
-    public function it_does_not_report_resolvable_timezones_when_only_one_end_names_a_region(): void
+    public function it_does_not_report_resolvable_timezones_when_only_one_end_names_a_place(): void
     {
         // Naming one end and not the other would leave the pair inconsistent, so both go to UTC.
         $this->assertFalse($this->createFlightWithUnresolvableEndTimezoneLink()->hasResolvableTimezones());

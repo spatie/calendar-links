@@ -45,9 +45,9 @@ class Google implements Generator
         $url = static::BASE_URL;
 
         // The branches below write the two endpoints and, where they can, name the zone those times
-        // belong to. A zone name goes in unencoded: every name that gets this far is a TZDB region
-        // name, whose only character outside the unreserved set is the `/`, and RFC 3986 lets that
-        // one stand as itself in a query.
+        // belong to. A zone name goes in unencoded: every name that gets this far is a TZDB name,
+        // spelled with unreserved characters and at most a `/`, and RFC 3986 lets that one stand as
+        // itself in a query.
         // @see https://datatracker.ietf.org/doc/html/rfc3986#section-3.4
         if ($link->allDay) {
             // An all-day event is a pair of calendar dates rather than instants, so there is no clock

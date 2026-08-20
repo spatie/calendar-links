@@ -44,6 +44,25 @@ class Link
     public array $guests = [];
 
     /**
+     * The TZDB entries that stand for no place, so no calendar can hold an event in one. They fall
+     * into three groups: the POSIX rule sets kept for compatibility with older systems (`EST`,
+     * `MST7MDT`), the spellings of UTC under its other names (`GMT`, `Greenwich`, `Zulu`, and the
+     * whole `Etc/` tree, whose `Etc/GMT±N` members run their sign the opposite way from the offset
+     * they name), and `Factory`, the placeholder that ships to make an unconfigured system complain
+     * rather than quietly guess.
+     *
+     * `UTC` is deliberately absent: it is the one placeless name every service resolves, and it is
+     * what the generators fall back to in any case.
+     *
+     * @see https://data.iana.org/time-zones/tzdb/etcetera
+     * @see https://data.iana.org/time-zones/tzdb/factory
+     */
+    private const array PLACELESS_TIMEZONE_NAMES = [
+        'CET', 'CST6CDT', 'EET', 'EST', 'EST5EDT', 'Factory', 'GMT', 'GMT+0', 'GMT-0', 'GMT0',
+        'Greenwich', 'HST', 'MET', 'MST', 'MST7MDT', 'PST8PDT', 'UCT', 'Universal', 'WET', 'Zulu',
+    ];
+
+    /**
      * Every TZDB name, keyed for lookup. The list is fixed for the lifetime of the process, so it is
      * built once instead of on every generated link.
      * @psalm-var array<string, true>|null
@@ -288,17 +307,15 @@ class Link
     }
 
     /**
-     * A TZDB region name (`Europe/Amsterdam`) is the only spelling every calendar service resolves,
-     * with `UTC` as the one region-less identifier they all accept too. Everything else DateTimeZone
-     * accepts is rejected here:
+     * A calendar service can only hold an event in a zone that stands for a place. Every name the
+     * TZDB ships for one qualifies, the backward names (`US/Pacific`, `Japan`, `GB`) included: they
+     * are aliases of a region and resolve exactly like the region they point at. `UTC` is accepted
+     * alongside them as the one placeless name every service understands.
      *
-     * - an offset (`+02:00`) or an abbreviation (`CEST`) names no region and carries no DST rules,
-     *   so there is nothing for a service to look up;
-     * - `Etc/GMT±N` is a real TZDB identifier, but its sign is inverted from the offset it names and
-     *   Google rejects it outright, raw and percent encoded alike;
-     * - the region-less legacy names (`EST`, `MST7MDT`) are POSIX rules rather than places.
-     *
-     * @see https://data.iana.org/time-zones/tzdb/etcetera
+     * Two kinds of name are turned down. The placeless TZDB entries above are one. The other is
+     * anything DateTimeZone accepts that the TZDB does not ship at all, which is to say an offset
+     * (`+02:00`) or an abbreviation (`CEST`): neither names a place or carries daylight saving
+     * rules, so a service has nothing to look up.
      */
     private static function isResolvableTimezone(\DateTimeZone $timezone): bool
     {
@@ -308,12 +325,13 @@ class Link
             return true;
         }
 
-        if (! str_contains($name, '/') || str_starts_with($name, 'Etc/')) {
+        if (str_starts_with($name, 'Etc/') || in_array($name, self::PLACELESS_TIMEZONE_NAMES, true)) {
             return false;
         }
 
-        // The backward names (`US/Pacific`, `Europe/Kiev`) are shipped by IANA and resolve like any
-        // other region, so the deprecated list is included rather than DateTimeZone::ALL alone.
+        // Whatever is left still has to be a name the TZDB ships, which rules out the offsets and the
+        // abbreviations. The deprecated list is included so that a backward name is judged on the
+        // region it points at rather than on being deprecated.
         self::$timezoneIdentifiers ??= array_fill_keys(\DateTimeZone::listIdentifiers(\DateTimeZone::ALL_WITH_BC), true);
 
         return isset(self::$timezoneIdentifiers[$name]);

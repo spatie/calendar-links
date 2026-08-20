@@ -47,6 +47,8 @@ final class GoogleGeneratorTest extends TestCase
     #[TestWith(['-05:00', '20260101T150000Z/20260101T160000Z'])]
     #[TestWith(['Etc/GMT+5', '20260101T150000Z/20260101T160000Z'])]
     #[TestWith(['CEST', '20260101T080000Z/20260101T090000Z'])]
+    #[TestWith(['EST', '20260101T150000Z/20260101T160000Z'])]
+    #[TestWith(['Factory', '20260101T100000Z/20260101T110000Z'])]
     public function it_falls_back_to_utc_for_a_timezone_google_cannot_resolve(string $timezone, string $expectedDates): void
     {
         // Google ignores a ctz it cannot resolve, so local times would be read in the viewer's zone.
@@ -54,6 +56,20 @@ final class GoogleGeneratorTest extends TestCase
 
         $this->assertStringContainsString('&dates='.$expectedDates, $url);
         $this->assertStringNotContainsString('ctz=', $url);
+    }
+
+    /** @param non-empty-string $timezone */
+    #[Test]
+    #[TestWith(['Japan'])]
+    #[TestWith(['GB'])]
+    #[TestWith(['US/Pacific'])]
+    public function it_names_a_backward_timezone_the_same_as_any_other(string $timezone): void
+    {
+        // A backward name is an alias of a region, so Google resolves it and the times stay local.
+        $url = $this->generator()->generate($this->createEventLinkInTimezone($timezone));
+
+        $this->assertStringContainsString('&dates=20260101T100000/20260101T110000', $url);
+        $this->assertStringContainsString('&ctz='.$timezone, $url);
     }
 
     #[Test]
