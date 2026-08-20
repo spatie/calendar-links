@@ -188,6 +188,45 @@ final class IcsGeneratorTest extends TestCase
     }
 
     #[Test]
+    public function it_emits_plain_utc_endpoints_for_two_spellings_of_utc(): void
+    {
+        $output = $this->generator()->generate($this->createEventAcrossUtcAliasesLink());
+
+        $this->assertStringContainsString('DTSTART:20260101T100000Z', $output);
+        $this->assertStringContainsString('DTEND:20260101T110000Z', $output);
+        $this->assertStringNotContainsString('TZID=', $output);
+    }
+
+    #[Test]
+    public function it_emits_plain_utc_endpoints_for_a_z_suffixed_start(): void
+    {
+        // `Z` is not a TZID any calendar can resolve, so it must never reach the output.
+        $output = $this->generator()->generate($this->createEventWithZSuffixedStartLink());
+
+        $this->assertStringContainsString('DTSTART:20260101T100000Z', $output);
+        $this->assertStringContainsString('DTEND:20260101T110000Z', $output);
+        $this->assertStringNotContainsString('TZID=', $output);
+    }
+
+    #[Test]
+    public function it_still_names_both_zones_when_two_places_share_an_offset(): void
+    {
+        $output = $this->generator()->generate($this->createFlightBetweenPlacesSharingAnOffsetLink());
+
+        $this->assertStringContainsString('DTSTART;TZID=Europe/London:20260115T090000', $output);
+        $this->assertStringContainsString('DTEND;TZID=Europe/Lisbon:20260115T114500', $output);
+    }
+
+    #[Test]
+    public function it_still_names_both_zones_when_the_start_uses_a_legacy_alias(): void
+    {
+        $output = $this->generator()->generate($this->createFlightBookedWithALegacyZoneAliasLink());
+
+        $this->assertStringContainsString('DTSTART;TZID=Japan:20260115T090000', $output);
+        $this->assertStringContainsString('DTEND;TZID=Asia/Seoul:20260115T114500', $output);
+    }
+
+    #[Test]
     public function it_can_generate_a_recurring_event(): void
     {
         $this->assertMatchesSnapshot(
