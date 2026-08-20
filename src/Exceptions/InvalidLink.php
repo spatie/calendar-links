@@ -21,4 +21,10 @@ class InvalidLink extends InvalidArgumentException
     {
         return new self("Guest email address (`{$email}`) is invalid. Pass a plain email address, without a display name or a quoted local part.");
     }
+
+    /** @param mixed $given The value the caller passed, used only to name its type in the message. */
+    public static function invalidDateTimeOption(string $option, mixed $given): self
+    {
+        return new self("The `{$option}` option must be a DateTimeInterface, `".get_debug_type($given).'` given.');
+    }
 }

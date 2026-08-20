@@ -7,6 +7,7 @@ namespace Spatie\CalendarLinks\Tests\Generators;
 use DateTime;
 use DateTimeZone;
 use PHPUnit\Framework\Attributes\Test;
+use Spatie\CalendarLinks\Exceptions\InvalidLink;
 use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Generators\Ics;
 use Spatie\CalendarLinks\Link;
@@ -110,6 +111,79 @@ final class IcsGeneratorTest extends TestCase
         $this->assertStringContainsString('DTSTAMP:20270315T000000Z', $output);
         $this->assertStringContainsString('DTSTART;TZID=Asia/Tokyo:20270315T090000', $output);
         $this->assertStringContainsString('DTEND;TZID=America/Los_Angeles:20270315T093000', $output);
+    }
+
+    #[Test]
+    public function it_stamps_a_timed_event_with_its_start_by_default(): void
+    {
+        // The default DTSTAMP is the event start, so the same Link always produces the same file.
+        $output = $this->generator()->generate($this->createShortEventLink());
+
+        $this->assertStringContainsString('DTSTAMP:20180201T090000Z', $output);
+    }
+
+    #[Test]
+    public function it_stamps_an_all_day_event_with_a_date_time_rather_than_a_date(): void
+    {
+        // DTSTART drops to a bare DATE for an all-day event, but DTSTAMP may never do the same.
+        $output = $this->generator()->generate($this->createSingleDayAllDayEventLink());
+
+        $this->assertStringContainsString('DTSTAMP:20180201T000000Z', $output);
+        $this->assertStringContainsString('DTSTART;VALUE=DATE:20180201', $output);
+    }
+
+    #[Test]
+    public function it_can_generate_an_event_with_a_custom_dtstamp(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator([
+                'DTSTAMP' => new \DateTimeImmutable('2018-01-15 11:30', new DateTimeZone('UTC')),
+            ])->generate($this->createShortEventLink())
+        );
+    }
+
+    #[Test]
+    public function it_converts_a_custom_dtstamp_to_utc(): void
+    {
+        // A DTSTAMP given in any zone is written as the same instant in UTC: 11:30 in Tokyo is 02:30 UTC.
+        $output = $this->generator([
+            'DTSTAMP' => new \DateTimeImmutable('2018-01-15 11:30', new DateTimeZone('Asia/Tokyo')),
+        ])->generate($this->createShortEventLink());
+
+        $this->assertStringContainsString('DTSTAMP:20180115T023000Z', $output);
+    }
+
+    #[Test]
+    public function it_stamps_an_all_day_event_with_a_custom_dtstamp_as_a_date_time(): void
+    {
+        $output = $this->generator([
+            'DTSTAMP' => new \DateTimeImmutable('2018-01-15 11:30', new DateTimeZone('UTC')),
+        ])->generate($this->createSingleDayAllDayEventLink());
+
+        $this->assertStringContainsString('DTSTAMP:20180115T113000Z', $output);
+    }
+
+    #[Test]
+    public function it_rejects_a_dtstamp_that_is_not_a_date_time(): void
+    {
+        // Falling back to the default would hand the caller a file that looks right and carries the
+        // wrong stamp, so a wrong type is refused outright, and refused before any output is built.
+        $this->expectException(InvalidLink::class);
+        $this->expectExceptionMessage('The `DTSTAMP` option must be a DateTimeInterface, `string` given.');
+
+        /** @psalm-suppress InvalidArgument */
+        $this->generator(['DTSTAMP' => '2026-01-01']);
+    }
+
+    #[Test]
+    public function it_rejects_a_dtstamp_that_is_not_a_date_time_through_the_link(): void
+    {
+        $link = $this->createShortEventLink();
+
+        $this->expectException(InvalidLink::class);
+
+        /** @psalm-suppress InvalidArgument */
+        $link->ics(['DTSTAMP' => '2026-01-01'], ['format' => Ics::FORMAT_FILE]);
     }
 
     #[Test]
