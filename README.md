@@ -183,6 +183,8 @@ echo $link->yahoo(['TYPE' => 7]);
 
 Yahoo has no timezone parameter, so a timed event is sent as floating local time: an event created at 09:00 is composed as 09:00, whatever the reader's timezone.
 
+A multi-day all-day event is composed as a timed event that runs from midnight on the first day to midnight on the last one. The dates and the duration are right, only the all-day banner is missing. `DUR=allday` is the parameter that flips the all-day toggle, but Yahoo ignores `DUR` as soon as `ET` is present, and `DUR` has no multi-day all-day value, so a multi-day event has to send `ET` to keep its end date. Single day all-day events are unaffected, since they need no `ET` and are sent as `ST=<date>&DUR=allday`.
+
 ### ICS options
 
 `ics()` takes an array of properties that are written into the file as RFC 5545 values:
