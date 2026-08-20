@@ -55,19 +55,37 @@ final class TimezoneInvariantsTest extends TestCase
     private const string EVENT_START = '2026-05-15 09:00';
 
     /**
-     * Every name the database ships, deprecated ones included, followed by the spellings above.
+     * Every name the database ships, deprecated ones included, followed by the spellings above, and
+     * only the ones a DateTimeZone can actually be built from.
+     *
+     * That last filter is not redundant. A PHP linked against the system timezone database, which is
+     * how most distributions build it and how the CI runners get theirs, enumerates the files in its
+     * zoneinfo directory rather than a list of zones, and that directory holds more than zones:
+     * `leapseconds` is listed there and DateTimeZone refuses to construct one. Since a name that
+     * cannot become a DateTimeZone cannot reach this library either, it is out of scope rather than a
+     * defect, and it is recognised by asking rather than by naming it, because another build may well
+     * ship a different set of such files.
      *
      * @return list<non-empty-string>
      */
     private static function timezoneNames(): array
     {
-        /** @var list<non-empty-string> $names */
-        $names = array_values(array_unique([
-            ...DateTimeZone::listIdentifiers(DateTimeZone::ALL_WITH_BC),
-            ...self::UNLISTED_TIMEZONE_NAMES,
-        ]));
+        /** @var list<non-empty-string> $candidates */
+        $candidates = [...DateTimeZone::listIdentifiers(DateTimeZone::ALL_WITH_BC), ...self::UNLISTED_TIMEZONE_NAMES];
 
-        return $names;
+        $names = [];
+
+        foreach ($candidates as $name) {
+            try {
+                new DateTimeZone($name);
+            } catch (\DateInvalidTimeZoneException) {
+                continue;
+            }
+
+            $names[$name] = true;
+        }
+
+        return array_keys($names);
     }
 
     /**
