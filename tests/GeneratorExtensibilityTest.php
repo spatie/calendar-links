@@ -17,11 +17,13 @@ final class GeneratorExtensibilityTest extends TestCase
     public function ics_subclass_can_append_calendar_and_event_properties(): void
     {
         $generator = new class ([], ['format' => Ics::FORMAT_FILE]) extends Ics {
+            #[\Override]
             protected function additionalCalendarProperties(Link $link): array
             {
                 return ['X-WR-CALNAME:'.$this->escapeString('Spatie events')];
             }
 
+            #[\Override]
             protected function additionalEventProperties(Link $link): array
             {
                 return [
@@ -71,6 +73,7 @@ final class GeneratorExtensibilityTest extends TestCase
     public function yahoo_subclass_can_reuse_the_text_sanitizer(): void
     {
         $generator = new class () extends Yahoo {
+            #[\Override]
             public function generate(Link $link): string
             {
                 return parent::generate($link).'&REM1='.$this->sanitizeText('30 minutes before');
@@ -86,11 +89,13 @@ final class GeneratorExtensibilityTest extends TestCase
     public function outlook_subclass_can_reuse_the_string_sanitizer(): void
     {
         $generator = new class () extends BaseOutlook {
+            #[\Override]
             protected function baseUrl(): string
             {
                 return 'https://outlook.example/compose?rru=addevent';
             }
 
+            #[\Override]
             public function generate(Link $link): string
             {
                 return parent::generate($link).'&category='.$this->sanitizeString('Fun & Games');
