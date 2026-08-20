@@ -19,12 +19,6 @@ final class GoogleGeneratorTest extends TestCase
         return new Google();
     }
 
-    #[\Override]
-    protected function linkMethodName(): string
-    {
-        return 'google';
-    }
-
     #[Test]
     public function it_can_generate_an_url_with_separate_start_and_end_timezones(): void
     {

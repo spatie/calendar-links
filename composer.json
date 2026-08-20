@@ -21,6 +21,7 @@
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.93",
         "phpunit/phpunit": "^12.5 || ^13.0",
+        "psalm/plugin-phpunit": "^0.19.7",
         "spatie/phpunit-snapshot-assertions": "^5.3",
         "vimeo/psalm": "^6.15"
     },

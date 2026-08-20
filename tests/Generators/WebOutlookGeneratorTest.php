@@ -19,12 +19,6 @@ final class WebOutlookGeneratorTest extends TestCase
         return new WebOutlook();
     }
 
-    #[\Override]
-    protected function linkMethodName(): string
-    {
-        return 'webOutlook';
-    }
-
     #[Test]
     public function it_can_generate_an_url_with_custom_parameters(): void
     {

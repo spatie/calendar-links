@@ -19,12 +19,6 @@ final class WebOfficeGeneratorTest extends TestCase
         return new WebOffice();
     }
 
-    #[\Override]
-    protected function linkMethodName(): string
-    {
-        return 'webOffice';
-    }
-
     #[Test]
     public function it_can_generate_an_url_with_custom_parameters(): void
     {

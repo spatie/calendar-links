@@ -34,12 +34,6 @@ final class IcsGeneratorTest extends TestCase
         return new Ics($options, $presentationOptions);
     }
 
-    #[\Override]
-    protected function linkMethodName(): string
-    {
-        return 'ics';
-    }
-
     #[Test]
     public function it_correctly_generates_all_day_events_by_days(): void
     {

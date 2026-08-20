@@ -12,8 +12,6 @@ trait GeneratorTestContract
 {
     abstract protected function generator(): Generator;
 
-    abstract protected function linkMethodName(): string;
-
     #[Test]
     public function it_can_generate_a_short_event_link(): void
     {

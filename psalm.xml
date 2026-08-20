@@ -3,11 +3,8 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="https://getpsalm.org/schema/config"
     xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
-    errorLevel="2"
-    findUnusedBaselineEntry="true"
-    findUnusedCode="false"
+    errorLevel="1"
     findUnusedVariablesAndParams="true"
-    resolveFromConfigFile="true"
     useDocblockPropertyTypes="true"
 >
     <projectFiles>
@@ -18,6 +15,7 @@
         </ignoreFiles>
     </projectFiles>
 
-    <issueHandlers>
-    </issueHandlers>
+    <plugins>
+        <pluginClass class="Psalm\PhpUnitPlugin\Plugin"/>
+    </plugins>
 </psalm>
