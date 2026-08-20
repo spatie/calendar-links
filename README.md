@@ -135,7 +135,7 @@ DTSTART;TZID=Asia/Tokyo:20270315T090000
 DTEND;TZID=America/Los_Angeles:20270315T093000
 ```
 
-`DTSTAMP` stays in UTC, as RFC 5545 requires. Each zone named this way also gets its own `VTIMEZONE` component, placed before the event and holding the offsets in force around it, so the file stands on its own for a client that does not resolve bare IANA names (older Outlook desktop, for instance). The component covers the year either side of the event and carries no recurrence rule, so combining `RRULE` with two timezones leaves occurrences beyond that year resolving against the last change written, which is an hour out for part of each later year on a client that cannot resolve the zone name itself.
+`DTSTAMP` stays in UTC, as RFC 5545 requires. Each zone named this way also gets its own `VTIMEZONE` component, placed before the event and holding the offsets in force around it, so the file stands on its own for a client that does not resolve bare IANA names (older Outlook desktop, for instance). The component lists every change the zone makes in the year either side of the event, and the last change of each kind carries a yearly recurrence rule whenever the zone repeats it on a fixed weekday of a fixed month, so the component keeps describing the zone for occurrences far beyond that year. A zone that moves its clocks on dates that do not repeat that way (Africa/Casablanca suspends its summer time for Ramadan and restores it weeks later) is written without a rule rather than with a guessed one, and there the listed year is all a client has to go on.
 
 Nothing needs switching on. An event whose two ends share a zone is generated exactly as before, and so is an all-day event, which has no clock time to place in a zone. Yahoo has no timezone parameter and Outlook accepts only UTC or the viewer's own zone, so both keep their current output.
 
@@ -227,13 +227,27 @@ echo $link->ics([
 
 It has to be a `DateTimeInterface`, so a date string throws an `InvalidLink` rather than being quietly ignored. The value is written as a UTC date-time, for all-day events too, since RFC 5545 does not allow a bare date here.
 
-`URL` and `RRULE` are written into the file as they are given, so they must not contain a carriage return or a line feed. `TRANSP`, `CLASS` and `X-MICROSOFT-CDO-BUSYSTATUS` take one of the tokens listed above in any case, and are written upper-cased. `CLASS` deliberately accepts only those three, not the `x-name` and `iana-token` values RFC 5545 also permits, since validating that grammar costs more than it buys. A value that breaks either rule throws a `Spatie\CalendarLinks\Exceptions\InvalidLink`, so route user supplied data through the event's own fields (the title argument of `Link::create()` and `Link::createAllDay()`, `description()` and `address()`), which are escaped for you, rather than through these options.
+`URL` and `RRULE` are written into the file as they are given, so they must not contain a control character, a carriage return or a line feed included. `TRANSP`, `CLASS` and `X-MICROSOFT-CDO-BUSYSTATUS` take one of the tokens listed above in any case, and are written upper-cased. `REMINDER` has to be an array, its `TIME` a `DateTimeInterface` and its `DESCRIPTION` a string, so a misspelled type throws instead of handing you the default alarm without a word. `CLASS` deliberately accepts only those three, not the `x-name` and `iana-token` values RFC 5545 also permits, since validating that grammar costs more than it buys. A value that breaks either rule throws a `Spatie\CalendarLinks\Exceptions\InvalidLink`, so route user supplied data through the event's own fields (the title argument of `Link::create()` and `Link::createAllDay()`, `description()` and `address()`), which are escaped for you, rather than through these options.
 
 A second argument controls presentation rather than content:
 
 ```php
 echo $link->ics([], ['format' => 'file']); // the raw ics body, rather than a data URI
 ```
+
+`html` (the default) and `file` are the only two formats, and anything else throws rather than falling back to the data URI.
+
+### Recurring events and timezones
+
+A recurrence repeats the local time of its start, so the zone that time is read in decides where every later occurrence lands. An event written as a UTC instant repeats in UTC, which is an hour away from where it was booked for every occurrence on the far side of a daylight saving change. So an `RRULE` in a zone that moves its clocks is written with a `TZID` and a matching `VTIMEZONE`, where the same event without an `RRULE` would be written in UTC:
+
+```
+DTSTART;TZID=Europe/Warsaw:20260323T090000
+DTEND;TZID=Europe/Warsaw:20260323T093000
+RRULE:FREQ=WEEKLY
+```
+
+Nothing changes for a recurring event in UTC or in a zone that keeps one offset the year round (`Asia/Tokyo`), since there is nothing there for the occurrences to drift against, nor for a zone that names no place, which has nothing a `TZID` can point at.
 
 ### Extending a generator
 
