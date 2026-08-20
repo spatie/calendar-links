@@ -99,6 +99,20 @@ final class IcsGeneratorTest extends TestCase
         );
     }
 
+    #[Test]
+    public function it_percent_encodes_uri_significant_characters_in_attendee_addresses(): void
+    {
+        // `?`, `&`, `=`, `/` and `%` are all legal in an email address, and all significant in a mailto URI.
+        $link = $this->createShortEventLink()->guest('who?what&why=how/now%then@example.com');
+
+        $output = $this->generator()->generate($link);
+
+        $this->assertStringContainsString(
+            'ATTENDEE;ROLE=REQ-PARTICIPANT:mailto:who%3Fwhat%26why%3Dhow%2Fnow%25then@example.com',
+            $output
+        );
+    }
+
     /** @test */
     public function it_escapes_backslashes_in_text_fields(): void
     {

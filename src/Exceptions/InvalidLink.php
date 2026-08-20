@@ -19,6 +19,6 @@ class InvalidLink extends InvalidArgumentException
 
     public static function invalidGuestEmail(string $email): self
     {
-        return new self("Guest email address (`{$email}`) is invalid. Pass a plain email address, without a display name.");
+        return new self("Guest email address (`{$email}`) is invalid. Pass a plain email address, without a display name or a quoted local part.");
     }
 }

@@ -101,6 +101,8 @@ How each generator maps guests:
 | Yahoo | `inv_list=` | `inv_list=` (Yahoo has no optional role, so optional guests are invited as required ones) |
 | ICS | `ATTENDEE;ROLE=REQ-PARTICIPANT` | `ATTENDEE;ROLE=OPT-PARTICIPANT` |
 
+Guests are emitted in addition to any custom URL parameters. If you also pass `add`, `to`, `cc` or `inv_list` yourself, the parameter appears twice and the service decides which one wins, so pick one mechanism per event.
+
 ## Package principles
 
 1. it should produce a small output (to keep page-size small)

@@ -116,4 +116,27 @@ Bring a dog, bring a frog';
 
         $this->createShortEventLink()->guest('Santa <santa@example.com>');
     }
+
+    #[Test]
+    public function it_will_throw_an_exception_for_a_guest_email_with_a_quoted_local_part(): void
+    {
+        $this->expectException(InvalidLink::class);
+
+        // Passes FILTER_VALIDATE_EMAIL, but its comma would be read as an address separator by Google and Yahoo.
+        $this->createShortEventLink()->guest('"santa,claus"@example.com');
+    }
+
+    #[Test]
+    public function it_adds_no_guest_at_all_when_one_address_of_a_bulk_is_invalid(): void
+    {
+        $link = $this->createShortEventLink();
+
+        try {
+            $link->guests(['santa@example.com', 'not-an-email']);
+        } catch (InvalidLink) {
+            // Expected.
+        }
+
+        $this->assertSame([], $link->guests);
+    }
 }

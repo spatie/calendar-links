@@ -107,11 +107,7 @@ class Link
      */
     public function guest(string $email, bool $optional = false): static
     {
-        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            throw InvalidLink::invalidGuestEmail($email);
-        }
-
-        $this->guests[] = ['email' => $email, 'optional' => $optional];
+        $this->guests[] = ['email' => self::validateGuestEmail($email), 'optional' => $optional];
 
         return $this;
     }
@@ -125,11 +121,32 @@ class Link
      */
     public function guests(array $emails, bool $optional = false): static
     {
+        // Validate every address up front, so a rejected one leaves the guest list untouched.
+        foreach ($emails as $email) {
+            self::validateGuestEmail($email);
+        }
+
         foreach ($emails as $email) {
             $this->guest($email, $optional);
         }
 
         return $this;
+    }
+
+    /**
+     * A quoted local part (`"foo,bar"@example.com`) passes FILTER_VALIDATE_EMAIL, but none of the
+     * services can carry one: Google and Yahoo both use a comma as their address separator, and no
+     * calendar accepts a quoted address anyway. Rejecting it keeps every generator in agreement.
+     *
+     * @throws \Spatie\CalendarLinks\Exceptions\InvalidLink When the email address is invalid.
+     */
+    private static function validateGuestEmail(string $email): string
+    {
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL) || str_starts_with($email, '"')) {
+            throw InvalidLink::invalidGuestEmail($email);
+        }
+
+        return $email;
     }
 
     public function formatWith(Generator $generator): string
