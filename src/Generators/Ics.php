@@ -30,6 +30,12 @@ class Ics implements Generator
      */
     private const string LOCAL_DATETIME_FORMAT = 'Ymd\THis';
 
+    /**
+     * A content line SHOULD NOT be longer than 75 octets, the line break excluded.
+     * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.1
+     */
+    private const int MAX_CONTENT_LINE_OCTETS = 75;
+
     /** @psalm-var IcsOptions */
     protected array $options = [];
 
@@ -159,7 +165,7 @@ class Ics implements Generator
      */
     protected function buildLink(array $propertiesAndComponents): string
     {
-        return 'data:text/calendar;charset=utf8;base64,'.base64_encode(implode("\r\n", $propertiesAndComponents));
+        return 'data:text/calendar;charset=utf8;base64,'.base64_encode($this->serializeContentLines($propertiesAndComponents));
     }
 
     /**
@@ -168,7 +174,60 @@ class Ics implements Generator
      */
     protected function buildFile(array $propertiesAndComponents): string
     {
-        return implode("\r\n", $propertiesAndComponents);
+        return $this->serializeContentLines($propertiesAndComponents);
+    }
+
+    /**
+     * Every content line ends in CRLF, the last one included, and lines that exceed the octet
+     * limit are folded so that transports which wrap long lines (email above all, capped at
+     * 998 octets by RFC 5322) cannot corrupt a value.
+     *
+     * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.1
+     *
+     * @param non-empty-list<string> $propertiesAndComponents
+     * @return non-empty-string
+     */
+    protected function serializeContentLines(array $propertiesAndComponents): string
+    {
+        return implode("\r\n", array_map($this->foldContentLine(...), $propertiesAndComponents))."\r\n";
+    }
+
+    /**
+     * Splits an over long content line into a folded representation: CRLF followed by a single
+     * space, which an unfolding parser strips to rebuild the original value. The space belongs to
+     * the octet budget of the line it opens, and a multibyte UTF-8 sequence is never split, so a
+     * boundary landing inside one is moved back to the start of that character.
+     *
+     * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.1
+     * @see https://datatracker.ietf.org/doc/html/rfc3629#section-3
+     */
+    protected function foldContentLine(string $contentLine): string
+    {
+        $length = strlen($contentLine);
+
+        if ($length <= self::MAX_CONTENT_LINE_OCTETS) {
+            return $contentLine;
+        }
+
+        $offset = 0;
+        $budget = self::MAX_CONTENT_LINE_OCTETS;
+        $folded = [];
+
+        while ($offset < $length) {
+            $take = min($budget, $length - $offset);
+
+            // A UTF-8 continuation byte matches 10xxxxxx, so while the next line would start on one
+            // the boundary sits inside a character. Never drop below one octet, or nothing advances.
+            while ($take > 1 && $offset + $take < $length && (ord($contentLine[$offset + $take]) & 0xC0) === 0x80) {
+                $take--;
+            }
+
+            $folded[] = ($offset === 0 ? '' : ' ').substr($contentLine, $offset, $take);
+            $offset += $take;
+            $budget = self::MAX_CONTENT_LINE_OCTETS - 1; // the leading space of a folded line spends an octet
+        }
+
+        return implode("\r\n", $folded);
     }
 
     /** @see https://tools.ietf.org/html/rfc5545.html#section-3.3.11 */
