@@ -77,6 +77,40 @@ Bring a dog, bring a frog';
     }
 
     #[Test]
+    public function it_keeps_both_timezones_of_a_cross_timezone_event(): void
+    {
+        $flight = $this->createFlightWithDistinctTimezonesLink();
+
+        $this->assertSame('Asia/Tokyo', $flight->fromTimezone->getName());
+        $this->assertSame('America/Los_Angeles', $flight->toTimezone->getName());
+        $this->assertTrue($flight->hasDistinctTimezones());
+    }
+
+    #[Test]
+    public function it_still_normalises_the_end_date_into_the_start_timezone(): void
+    {
+        $flight = $this->createFlightWithDistinctTimezonesLink();
+
+        // Recording the zones must not change $from or $to themselves.
+        $this->assertSame('Asia/Tokyo', $flight->to->getTimezone()->getName());
+        $this->assertSame('2027-03-16T01:30:00+09:00', $flight->to->format('c'));
+        $this->assertSame('2027-03-15T09:30:00-07:00', $flight->to->setTimezone($flight->toTimezone)->format('c'));
+    }
+
+    #[Test]
+    public function it_does_not_report_distinct_timezones_for_a_single_zone_event(): void
+    {
+        $this->assertFalse($this->createShortEventLink()->hasDistinctTimezones());
+    }
+
+    #[Test]
+    public function it_does_not_report_distinct_timezones_for_an_all_day_event(): void
+    {
+        // An all-day event has no clock time to place in a zone, whatever it was given.
+        $this->assertFalse($this->createEventMultipleDaysViaStartEndWithDiffTimezoneLink()->hasDistinctTimezones());
+    }
+
+    #[Test]
     public function it_can_have_required_and_optional_guests(): void
     {
         $link = $this->createShortEventLink()

@@ -95,6 +95,16 @@ Bring a dog, bring a frog';
         ));
     }
 
+    protected function createFlightWithDistinctTimezonesLink(): Link
+    {
+        // Departs 09:00 in Tokyo and lands 09:30 the same calendar day in Los Angeles, 16.5 hours later.
+        return Link::create(
+            'NH 106 Tokyo to Los Angeles',
+            new DateTime('2027-03-15 09:00', new DateTimeZone('Asia/Tokyo')),
+            new DateTime('2027-03-15 09:30', new DateTimeZone('America/Los_Angeles')),
+        );
+    }
+
     protected function createEventWithGuestsLink(): Link
     {
         return Link::create(

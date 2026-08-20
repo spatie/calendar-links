@@ -100,6 +100,25 @@ final class IcsGeneratorTest extends TestCase
     }
 
     #[Test]
+    public function it_can_generate_an_event_with_separate_start_and_end_timezones(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator()->generate($this->createFlightWithDistinctTimezonesLink())
+        );
+    }
+
+    #[Test]
+    public function it_keeps_dtstamp_in_utc_next_to_zoned_endpoints(): void
+    {
+        // DTSTAMP must always be UTC, whatever the event's own zones are.
+        $output = $this->generator()->generate($this->createFlightWithDistinctTimezonesLink());
+
+        $this->assertStringContainsString('DTSTAMP:20270315T000000Z', $output);
+        $this->assertStringContainsString('DTSTART;TZID=Asia/Tokyo:20270315T090000', $output);
+        $this->assertStringContainsString('DTEND;TZID=America/Los_Angeles:20270315T093000', $output);
+    }
+
+    #[Test]
     public function it_can_generate_a_recurring_event(): void
     {
         $this->assertMatchesSnapshot(

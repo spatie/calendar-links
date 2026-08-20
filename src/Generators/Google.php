@@ -39,9 +39,19 @@ class Google implements Generator
         $url = self::BASE_URL;
 
         $dateTimeFormat = $link->allDay ? self::DATE_FORMAT : self::DATETIME_FORMAT;
-        $url .= '&dates='.$link->from->format($dateTimeFormat).'/'.$link->to->format($dateTimeFormat);
+
+        // Each endpoint is written as a local time in the zone that names it below.
+        $to = $link->hasDistinctTimezones() ? $link->to->setTimezone($link->toTimezone) : $link->to;
+        $url .= '&dates='.$link->from->format($dateTimeFormat).'/'.$to->format($dateTimeFormat);
+
         // Not URL-encoded intentionally: Google Calendar handles unencoded timezone names (e.g. Etc/GMT+5) correctly.
-        $url .= '&ctz=' . $link->from->getTimezone()->getName();
+        if ($link->hasDistinctTimezones()) {
+            // stz takes priority over ctz, so ctz is not emitted alongside the pair.
+            $url .= '&stz='.$link->fromTimezone->getName();
+            $url .= '&etz='.$link->toTimezone->getName();
+        } else {
+            $url .= '&ctz='.$link->from->getTimezone()->getName();
+        }
         $url .= '&text='.urlencode($link->title);
 
         if ($link->description) {

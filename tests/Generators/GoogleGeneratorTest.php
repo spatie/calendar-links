@@ -26,6 +26,24 @@ final class GoogleGeneratorTest extends TestCase
     }
 
     #[Test]
+    public function it_can_generate_an_url_with_separate_start_and_end_timezones(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator()->generate($this->createFlightWithDistinctTimezonesLink())
+        );
+    }
+
+    #[Test]
+    public function it_does_not_emit_ctz_alongside_stz_and_etz(): void
+    {
+        // stz takes priority over ctz, so emitting both would only invite confusion.
+        $url = $this->generator()->generate($this->createFlightWithDistinctTimezonesLink());
+
+        $this->assertStringContainsString('&stz=Asia/Tokyo&etz=America/Los_Angeles', $url);
+        $this->assertStringNotContainsString('ctz=', $url);
+    }
+
+    #[Test]
     public function it_can_generate_an_url_with_custom_parameters(): void
     {
         $link = $this->createShortEventLink();

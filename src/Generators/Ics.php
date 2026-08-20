@@ -23,6 +23,12 @@ class Ics implements Generator
 
     protected string $dateTimeFormat = 'Ymd\THis\Z';
 
+    /**
+     * A local time, without the Z suffix that marks a UTC value. Used when a TZID names the zone instead.
+     * @see https://www.php.net/manual/en/function.date.php
+     */
+    private const string LOCAL_DATETIME_FORMAT = 'Ymd\THis';
+
     /** @psalm-var IcsOptions */
     protected array $options = [];
 
@@ -61,8 +67,17 @@ class Ics implements Generator
             $url[] = 'DURATION:P'.(max(1, (int) $link->from->diff($link->to)->days)).'D';
         } else {
             $url[] = 'DTSTAMP:'.gmdate($dateTimeFormat, $link->from->getTimestamp());
-            $url[] = 'DTSTART:'.gmdate($dateTimeFormat, $link->from->getTimestamp());
-            $url[] = 'DTEND:'.gmdate($dateTimeFormat, $link->to->getTimestamp());
+
+            if ($link->hasDistinctTimezones()) {
+                // Both endpoints are written as local times, each named by its own TZID, so the file
+                // shows the event's own zones rather than flattening them to UTC.
+                // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.19
+                $url[] = 'DTSTART;TZID='.$link->fromTimezone->getName().':'.$link->from->format(self::LOCAL_DATETIME_FORMAT);
+                $url[] = 'DTEND;TZID='.$link->toTimezone->getName().':'.$link->to->setTimezone($link->toTimezone)->format(self::LOCAL_DATETIME_FORMAT);
+            } else {
+                $url[] = 'DTSTART:'.gmdate($dateTimeFormat, $link->from->getTimestamp());
+                $url[] = 'DTEND:'.gmdate($dateTimeFormat, $link->to->getTimestamp());
+            }
         }
 
         // A RECUR value is structured data, so its semicolons and commas are separators

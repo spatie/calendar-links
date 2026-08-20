@@ -107,6 +107,38 @@ END:VEVENT
 END:VCALENDAR
 ```
 
+### Separate start and end timezones
+
+Most events start and end in the same place. Some do not, and a flight is the obvious case. Pass a `DateTime` in each zone and the difference is kept:
+
+```php
+$flight = Link::create(
+    'NH 106 Tokyo to Los Angeles',
+    new DateTime('2027-03-15 09:00', new DateTimeZone('Asia/Tokyo')),
+    new DateTime('2027-03-15 09:30', new DateTimeZone('America/Los_Angeles')),
+);
+```
+
+Google names each end with `stz` and `etz`, which take priority over `ctz`, so `ctz` is left out:
+
+```
+https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20270315T090000/20270315T093000&stz=Asia/Tokyo&etz=America/Los_Angeles&text=NH+106+Tokyo+to+Los+Angeles
+```
+
+and the ics file names them with `TZID`, instead of flattening both ends to UTC:
+
+```
+DTSTAMP:20270315T000000Z
+DTSTART;TZID=Asia/Tokyo:20270315T090000
+DTEND;TZID=America/Los_Angeles:20270315T093000
+```
+
+`DTSTAMP` stays in UTC, as RFC 5545 requires.
+
+Nothing needs switching on. An event whose two ends share a zone is generated exactly as before, and so is an all-day event, which has no clock time to place in a zone. Yahoo has no timezone parameter and Outlook accepts only UTC or the viewer's own zone, so both keep their current output.
+
+`$link->from` and `$link->to` are unchanged too: `$to` is still normalised into `$from`'s zone, so the two are directly comparable. The zones are recorded separately, on `$link->fromTimezone` and `$link->toTimezone`.
+
 ### Guests
 
 Every generator can invite guests, with a required or optional role:
