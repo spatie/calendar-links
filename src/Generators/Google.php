@@ -36,7 +36,7 @@ class Google implements Generator
     #[\Override]
     public function generate(Link $link): string
     {
-        $url = self::BASE_URL;
+        $url = static::BASE_URL;
 
         $dateTimeFormat = $link->allDay ? self::DATE_FORMAT : self::DATETIME_FORMAT;
 

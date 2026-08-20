@@ -89,7 +89,7 @@ abstract class BaseOutlook implements Generator
         return $url;
     }
 
-    private function sanitizeString(string $input): string
+    protected function sanitizeString(string $input): string
     {
         return rawurlencode($input);
     }
