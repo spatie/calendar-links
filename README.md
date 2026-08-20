@@ -28,6 +28,8 @@ https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20270315T10000
 
 Give both dates an explicit timezone, as above. The `ctz` parameter is taken from the start date, so without one your links follow the `date.timezone` of whichever machine generated them.
 
+Name a region (`Europe/Brussels`) rather than an offset. Parsing an ISO 8601 string leaves you with a zone named `+01:00`, and an offset, an abbreviation (`CEST`) or a POSIX alias (`Etc/GMT+5`) is not something a calendar service can resolve. Those events are written in UTC instead (`dates=20270315T090000Z/20270315T160000Z`, with no `ctz`, and a UTC `DTSTART` in the ics file), so they land at the right instant everywhere, but the calendar has no zone to follow when the daylight saving rules of that place change.
+
 If you follow that link (and are authenticated with Google), you’ll see a screen to add the event to your calendar.
 
 The package can also generate ics files that you can open in several email and calendar programs, including Microsoft Outlook, Google Calendar, and Apple Calendar.
@@ -136,6 +138,8 @@ DTEND;TZID=America/Los_Angeles:20270315T093000
 `DTSTAMP` stays in UTC, as RFC 5545 requires.
 
 Nothing needs switching on. An event whose two ends share a zone is generated exactly as before, and so is an all-day event, which has no clock time to place in a zone. Yahoo has no timezone parameter and Outlook accepts only UTC or the viewer's own zone, so both keep their current output.
+
+Both ends have to name a region for this. If either one is an offset or an abbreviation, the pair is written in UTC together, since naming only one end would leave the other to be read in whichever zone the viewer sits in.
 
 `$link->from` and `$link->to` are unchanged too: `$to` is still normalised into `$from`'s zone, so the two are directly comparable. The zones are recorded separately, on `$link->fromTimezone` and `$link->toTimezone`.
 
