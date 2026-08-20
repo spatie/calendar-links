@@ -34,4 +34,16 @@ final class WebOutlookGeneratorTest extends TestCase
 
         $this->assertMatchesSnapshot($link->webOutlook(['to' => ['first@example.com', 'second@example.com'], 'online' => 1]));
     }
+
+    #[Test]
+    public function it_keeps_a_description_and_address_of_zero(): void
+    {
+        // '0' is falsy in PHP, so only an empty string may drop these fields.
+        $link = $this->createShortEventLink()->description('0')->address('0');
+
+        $url = $this->generator()->generate($link);
+
+        $this->assertStringContainsString('&body=0', $url);
+        $this->assertStringContainsString('&location=0', $url);
+    }
 }

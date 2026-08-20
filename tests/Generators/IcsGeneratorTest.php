@@ -183,4 +183,16 @@ final class IcsGeneratorTest extends TestCase
 
         $this->assertStringContainsString('DESCRIPTION:Line 1\\nLine 2\\nLine 3\\nLine 4', $output);
     }
+
+    #[Test]
+    public function it_keeps_a_description_and_address_of_zero(): void
+    {
+        // '0' is falsy in PHP, so only an empty string may drop these fields.
+        $link = $this->createShortEventLink()->description('0')->address('0');
+
+        $output = $this->generator()->generate($link);
+
+        $this->assertStringContainsString('DESCRIPTION:0', $output);
+        $this->assertStringContainsString('LOCATION:0', $output);
+    }
 }

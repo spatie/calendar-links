@@ -87,10 +87,10 @@ class Ics implements Generator
             $url[] = 'RRULE:'.$this->options['RRULE'];
         }
 
-        if ($link->description) {
+        if ($link->description !== '') {
             $url[] = 'DESCRIPTION:'.$this->escapeString(strip_tags($link->description));
         }
-        if ($link->address) {
+        if ($link->address !== '') {
             $url[] = 'LOCATION:'.$this->escapeString($link->address);
         }
 

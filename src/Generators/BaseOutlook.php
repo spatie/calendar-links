@@ -52,11 +52,11 @@ abstract class BaseOutlook implements Generator
 
         $url .= '&subject='.$this->sanitizeString($link->title);
 
-        if ($link->description) {
+        if ($link->description !== '') {
             $url .= '&body='.$this->sanitizeString($link->description);
         }
 
-        if ($link->address) {
+        if ($link->address !== '') {
             $url .= '&location='.$this->sanitizeString($link->address);
         }
 

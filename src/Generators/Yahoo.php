@@ -58,11 +58,11 @@ class Yahoo implements Generator
 
         $url .= '&TITLE='.$this->sanitizeText($link->title);
 
-        if ($link->description) {
+        if ($link->description !== '') {
             $url .= '&DESC='.$this->sanitizeText($link->description);
         }
 
-        if ($link->address) {
+        if ($link->address !== '') {
             $url .= '&in_loc='.$this->sanitizeText($link->address);
         }
 

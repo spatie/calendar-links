@@ -69,4 +69,16 @@ final class YahooGeneratorTest extends TestCase
 
         $this->assertMatchesSnapshot($link->yahoo(['inv_list' => 'santa@example.com,easter.bunny@example.com']));
     }
+
+    #[Test]
+    public function it_keeps_a_description_and_address_of_zero(): void
+    {
+        // '0' is falsy in PHP, so only an empty string may drop these fields.
+        $link = $this->createShortEventLink()->description('0')->address('0');
+
+        $url = $this->generator()->generate($link);
+
+        $this->assertStringContainsString('&DESC=0', $url);
+        $this->assertStringContainsString('&in_loc=0', $url);
+    }
 }

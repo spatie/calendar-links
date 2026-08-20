@@ -54,11 +54,11 @@ class Google implements Generator
         }
         $url .= '&text='.urlencode($link->title);
 
-        if ($link->description) {
+        if ($link->description !== '') {
             $url .= '&details='.urlencode($link->description);
         }
 
-        if ($link->address) {
+        if ($link->address !== '') {
             $url .= '&location='.urlencode($link->address);
         }
 
