@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Spatie\CalendarLinks\Generators;
 
-use DateTimeZone;
 use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Link;
 
@@ -19,10 +18,13 @@ class Yahoo implements Generator
     private const string DATE_FORMAT = 'Ymd';
 
     /** @see https://www.php.net/manual/en/function.date.php */
-    private const string DATETIME_FORMAT = 'Ymd\THis\Z';
+    private const string DATETIME_FORMAT = 'Ymd\THis';
+
+    /** Parameter holding a comma separated list of email addresses, which Yahoo splits before decoding. */
+    private const string ADDRESS_LIST_PARAMETER = 'inv_list';
 
     /** @var non-empty-string */
-    protected const string BASE_URL = 'https://calendar.yahoo.com/?v=60&view=d&type=20';
+    protected const string BASE_URL = 'https://calendar.yahoo.com/?v=60';
 
     /** @psalm-var YahooUrlParameters */
     protected array $urlParameters = [];
@@ -39,17 +41,19 @@ class Yahoo implements Generator
     {
         $url = self::BASE_URL;
 
-        $dateTimeFormat = $link->allDay ? self::DATE_FORMAT : self::DATETIME_FORMAT;
-
         if ($link->allDay) {
-            $url .= '&ST='.$link->from->format($dateTimeFormat);
-            $url .= '&DUR=allday';
-            $url .= '&ET='.$link->to->format($dateTimeFormat);
+            $url .= '&ST='.$link->from->format(self::DATE_FORMAT);
+
+            // Yahoo ignores `DUR` as soon as `ET` is present, so only one of them can be sent:
+            // the all-day marker for a single day, the exclusive end date for a longer event.
+            $url .= $this->isSingleDayEvent($link)
+                ? '&DUR=allday'
+                : '&ET='.$link->to->format(self::DATE_FORMAT);
         } else {
-            $utcStartDateTime = $link->from->setTimezone(new DateTimeZone('UTC'));
-            $utcEndDateTime = $link->to->setTimezone(new DateTimeZone('UTC'));
-            $url .= '&ST='.$utcStartDateTime->format($dateTimeFormat);
-            $url .= '&ET='.$utcEndDateTime->format($dateTimeFormat);
+            // Yahoo has no timezone parameter and renders `ST` and `ET` as local wall clock time,
+            // so both endpoints are sent in the event timezone, without converting them to UTC.
+            $url .= '&ST='.$link->from->format(self::DATETIME_FORMAT);
+            $url .= '&ET='.$link->to->format(self::DATETIME_FORMAT);
         }
 
         $url .= '&TITLE='.$this->sanitizeText($link->title);
@@ -63,25 +67,43 @@ class Yahoo implements Generator
         }
 
         if ($link->guests !== []) {
-            $guestList = [];
-            foreach ($link->guests as $guest) {
-                // Yahoo splits `inv_list` before decoding it, so every address is encoded on its own
-                // and the parts are joined with a literal comma.
-                $guestList[] = $this->sanitizeText($guest['email']);
-            }
-
             // Yahoo has no optional role, so optional guests are invited as required ones.
-            $url .= '&inv_list='.implode(',', $guestList);
+            $url .= '&'.self::ADDRESS_LIST_PARAMETER.'='.$this->sanitizeAddressList(
+                implode(',', array_column($link->guests, 'email'))
+            );
         }
 
         foreach ($this->urlParameters as $key => $value) {
             // A list of values is flattened into a repeated parameter.
             foreach (is_array($value) ? $value : [$value] as $singleValue) {
-                $url .= '&'.urlencode($key).(in_array($singleValue, [null, ''], true) ? '' : '='.$this->sanitizeText((string) $singleValue));
+                $url .= '&'.urlencode($key).(in_array($singleValue, [null, ''], true) ? '' : '='.$this->sanitizeParameterValue($key, (string) $singleValue));
             }
         }
 
         return $url;
+    }
+
+    /** All-day events carry an exclusive end date, so a single day event ends on the next day. */
+    private function isSingleDayEvent(Link $link): bool
+    {
+        return $link->from->modify('+1 day')->format(self::DATE_FORMAT) === $link->to->format(self::DATE_FORMAT);
+    }
+
+    private function sanitizeParameterValue(string $key, string $value): string
+    {
+        return $key === self::ADDRESS_LIST_PARAMETER
+            ? $this->sanitizeAddressList($value)
+            : $this->sanitizeText($value);
+    }
+
+    /**
+     * Prepare a comma separated list of email addresses.
+     * Yahoo splits the value before decoding it, so every address is encoded on its own
+     * and the parts are joined with a literal comma.
+     */
+    private function sanitizeAddressList(string $addressList): string
+    {
+        return implode(',', array_map($this->sanitizeText(...), explode(',', $addressList)));
     }
 
     /**
