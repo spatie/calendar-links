@@ -7,6 +7,7 @@ namespace Spatie\CalendarLinks\Tests;
 use DateTime;
 use DateTimeZone;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\TestWith;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
 use Spatie\CalendarLinks\Generators\Ics;
 use Spatie\CalendarLinks\Link;
@@ -97,6 +98,39 @@ Bring a dog, bring a frog';
         $this->assertSame('Asia/Tokyo', $flight->to->getTimezone()->getName());
         $this->assertSame('2027-03-16T01:30:00+09:00', $flight->to->format('c'));
         $this->assertSame('2027-03-15T09:30:00-07:00', $flight->to->setTimezone($flight->toTimezone)->format('c'));
+    }
+
+    /** @param non-empty-string $timezone */
+    #[Test]
+    #[TestWith(['UTC'])]
+    #[TestWith(['Asia/Tokyo'])]
+    #[TestWith(['Europe/Brussels'])]
+    #[TestWith(['US/Pacific'])]
+    public function it_reports_a_region_name_as_resolvable(string $timezone): void
+    {
+        $this->assertTrue($this->createEventLinkInTimezone($timezone)->hasResolvableTimezones());
+    }
+
+    /** @param non-empty-string $timezone */
+    #[Test]
+    #[TestWith(['+02:00'])]
+    #[TestWith(['-05:00'])]
+    #[TestWith(['CEST'])]
+    #[TestWith(['GMT'])]
+    #[TestWith(['EST'])]
+    #[TestWith(['Etc/GMT+5'])]
+    #[TestWith(['Etc/UTC'])]
+    public function it_does_not_report_an_offset_or_abbreviation_as_resolvable(string $timezone): void
+    {
+        $this->assertFalse($this->createEventLinkInTimezone($timezone)->hasResolvableTimezones());
+    }
+
+    #[Test]
+    public function it_does_not_report_resolvable_timezones_when_only_one_end_names_a_region(): void
+    {
+        // Naming one end and not the other would leave the pair inconsistent, so both go to UTC.
+        $this->assertFalse($this->createFlightWithUnresolvableEndTimezoneLink()->hasResolvableTimezones());
+        $this->assertTrue($this->createFlightWithDistinctTimezonesLink()->hasResolvableTimezones());
     }
 
     #[Test]

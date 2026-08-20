@@ -148,6 +148,35 @@ Bring a dog, bring a frog';
         );
     }
 
+    /**
+     * An hour long event whose two ends share the given zone. Parsing an ISO 8601 string with an
+     * offset is the everyday way to end up with a zone that names no region:
+     * `new DateTimeImmutable('2026-01-01T10:00:00+02:00')` carries a zone named `+02:00`.
+     *
+     * @param non-empty-string $timezone
+     */
+    protected function createEventLinkInTimezone(string $timezone): Link
+    {
+        return Link::create(
+            'Standup',
+            new DateTime('2026-01-01 10:00', new DateTimeZone($timezone)),
+            new DateTime('2026-01-01 11:00', new DateTimeZone($timezone)),
+        );
+    }
+
+    /**
+     * The same flight as above, landing in a zone that is only an offset. On that date Los Angeles is
+     * on -07:00, so the two links describe the very same pair of instants.
+     */
+    protected function createFlightWithUnresolvableEndTimezoneLink(): Link
+    {
+        return Link::create(
+            'NH 106 Tokyo to Los Angeles',
+            new DateTime('2027-03-15 09:00', new DateTimeZone('Asia/Tokyo')),
+            new DateTime('2027-03-15 09:30', new DateTimeZone('-07:00')),
+        );
+    }
+
     protected function createEventWithGuestsLink(): Link
     {
         return Link::create(
