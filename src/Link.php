@@ -37,10 +37,20 @@ class Link
     /** @psalm-var list<LinkGuest> */
     public array $guests = [];
 
+    /** The timezone the event starts in. */
+    public readonly \DateTimeZone $fromTimezone;
+
+    /** The timezone the event ends in, which is only distinct from $fromTimezone for something like a flight. */
+    public readonly \DateTimeZone $toTimezone;
+
     final public function __construct(string $title, \DateTimeInterface $from, \DateTimeInterface $to, bool $allDay = false)
     {
         $this->title = $title;
         $this->allDay = $allDay;
+
+        // Recorded before the normalisation below folds $to into $from's zone and the identity is lost.
+        $this->fromTimezone = $from->getTimezone();
+        $this->toTimezone = $to->getTimezone();
 
         // Ensures timezones match.
         if ($from->getTimezone()->getName() !== $to->getTimezone()->getName()) {
@@ -147,6 +157,15 @@ class Link
         }
 
         return $email;
+    }
+
+    /**
+     * Whether the event genuinely starts and ends in different timezones, so a generator that can
+     * express both should. An all-day event has no clock time to place in a zone, so it never does.
+     */
+    public function hasDistinctTimezones(): bool
+    {
+        return ! $this->allDay && $this->fromTimezone->getName() !== $this->toTimezone->getName();
     }
 
     public function formatWith(Generator $generator): string
