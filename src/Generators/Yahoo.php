@@ -39,7 +39,7 @@ class Yahoo implements Generator
     #[\Override]
     public function generate(Link $link): string
     {
-        $url = self::BASE_URL;
+        $url = static::BASE_URL;
 
         if ($link->allDay) {
             $url .= '&ST='.$link->from->format(self::DATE_FORMAT);
@@ -101,7 +101,7 @@ class Yahoo implements Generator
      * Yahoo splits the value before decoding it, so every address is encoded on its own
      * and the parts are joined with a literal comma.
      */
-    private function sanitizeAddressList(string $addressList): string
+    protected function sanitizeAddressList(string $addressList): string
     {
         return implode(',', array_map($this->sanitizeText(...), explode(',', $addressList)));
     }
@@ -111,7 +111,7 @@ class Yahoo implements Generator
      * @param string $text
      * @return string
      */
-    private function sanitizeText(string $text): string
+    protected function sanitizeText(string $text): string
     {
         return rawurlencode($text);
     }

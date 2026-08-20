@@ -53,6 +53,7 @@ class Ics implements Generator
             'BEGIN:VCALENDAR',
             'VERSION:2.0', // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.7.4
             'PRODID:'.($this->options['PRODID'] ?? 'Spatie calendar-links'), // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.7.3
+            ...$this->additionalCalendarProperties($link),
             'BEGIN:VEVENT',
             'UID:'.($this->options['UID'] ?? $this->generateEventUid($link)),
             'SUMMARY:'.$this->escapeString($link->title),
@@ -125,6 +126,8 @@ class Ics implements Generator
             $url = [...$url, ...$this->generateAlertComponent($link)];
         }
 
+        $url = [...$url, ...$this->additionalEventProperties($link)];
+
         $url[] = 'END:VEVENT';
         $url[] = 'END:VCALENDAR';
 
@@ -194,10 +197,34 @@ class Ics implements Generator
     }
 
     /**
+     * Extension point: extra properties for the VCALENDAR level, emitted before BEGIN:VEVENT
+     * (e.g. METHOD or X-WR-CALNAME). One full content line per entry, already escaped:
+     * TEXT values should go through escapeString().
+     *
+     * @return list<string>
+     */
+    protected function additionalCalendarProperties(Link $link): array
+    {
+        return [];
+    }
+
+    /**
+     * Extension point: extra properties for the VEVENT component, emitted before END:VEVENT
+     * (e.g. CATEGORIES, STATUS, ORGANIZER or any X- property). One full content line per entry,
+     * already escaped: TEXT values should go through escapeString().
+     *
+     * @return list<string>
+     */
+    protected function additionalEventProperties(Link $link): array
+    {
+        return [];
+    }
+
+    /**
      * @param \Spatie\CalendarLinks\Link $link
      * @return list<string>
      */
-    private function generateAlertComponent(Link $link): array
+    protected function generateAlertComponent(Link $link): array
     {
         $description = $this->options['REMINDER']['DESCRIPTION'] ?? null;
         if (! is_string($description)) {

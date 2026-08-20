@@ -215,6 +215,31 @@ A second argument controls presentation rather than content:
 echo $link->ics([], ['format' => 'file']); // the raw ics body, rather than a data URI
 ```
 
+### Extending a generator
+
+The generators cover the options that at least two services share. Everything else is deliberately left to subclassing: the generator classes are not final and the escaping helpers are `protected`, so a service specific property is a small subclass rather than a fork. The ICS generator has two hook methods for exactly that:
+
+```php
+use Spatie\CalendarLinks\Generators\Ics;
+use Spatie\CalendarLinks\Link;
+
+class MyIcs extends Ics
+{
+    /** @return list<string> */
+    protected function additionalEventProperties(Link $link): array
+    {
+        return [
+            'CATEGORIES:'.$this->escapeString('Workshops'),
+            'STATUS:CONFIRMED',
+        ];
+    }
+}
+
+echo $link->formatWith(new MyIcs());
+```
+
+`additionalCalendarProperties()` does the same at the `VCALENDAR` level (for example `X-WR-CALNAME`). The URL generators can be pointed at another endpoint by redefining their `BASE_URL` constant, and a completely custom generator only needs to implement the `Generator` interface, as shown in the usage section above.
+
 ## Package principles
 
 1. it should produce a small output (to keep page-size small)
