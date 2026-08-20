@@ -11,7 +11,7 @@ use Spatie\CalendarLinks\Link;
 /**
  * @api
  * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/main/services/yahoo.md
- * @psalm-type YahooUrlParameters = array<string, scalar|null>
+ * @psalm-type YahooUrlParameters = array<string, scalar|null|list<scalar|null>>
  */
 class Yahoo implements Generator
 {
@@ -63,7 +63,10 @@ class Yahoo implements Generator
         }
 
         foreach ($this->urlParameters as $key => $value) {
-            $url .= '&'.urlencode($key).(in_array($value, [null, ''], true) ? '' : '='.$this->sanitizeText((string) $value));
+            // A list of values is flattened into a repeated parameter.
+            foreach (is_array($value) ? $value : [$value] as $singleValue) {
+                $url .= '&'.urlencode($key).(in_array($singleValue, [null, ''], true) ? '' : '='.$this->sanitizeText((string) $singleValue));
+            }
         }
 
         return $url;

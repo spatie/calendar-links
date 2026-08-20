@@ -32,4 +32,12 @@ final class WebOutlookGeneratorTest extends TestCase
 
         $this->assertMatchesSnapshot($link->webOutlook(['online' => 1]));
     }
+
+    #[Test]
+    public function it_can_generate_an_url_with_repeated_parameters(): void
+    {
+        $link = $this->createShortEventLink();
+
+        $this->assertMatchesSnapshot($link->webOutlook(['to' => ['first@example.com', 'second@example.com'], 'online' => 1]));
+    }
 }

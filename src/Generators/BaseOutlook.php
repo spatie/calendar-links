@@ -10,7 +10,7 @@ use Spatie\CalendarLinks\Link;
 
 /**
  * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/main/services/outlook-web.md
- * @psalm-type OutlookUrlParameters = array<string, scalar|null>
+ * @psalm-type OutlookUrlParameters = array<string, scalar|null|list<scalar|null>>
  */
 abstract class BaseOutlook implements Generator
 {
@@ -61,7 +61,10 @@ abstract class BaseOutlook implements Generator
         }
 
         foreach ($this->urlParameters as $key => $value) {
-            $url .= '&'.urlencode($key).(in_array($value, [null, ''], true) ? '' : '='.$this->sanitizeString((string) $value));
+            // A list of values is flattened into a repeated parameter.
+            foreach (is_array($value) ? $value : [$value] as $singleValue) {
+                $url .= '&'.urlencode($key).(in_array($singleValue, [null, ''], true) ? '' : '='.$this->sanitizeString((string) $singleValue));
+            }
         }
 
         return $url;

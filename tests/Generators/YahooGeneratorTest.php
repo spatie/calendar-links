@@ -47,4 +47,12 @@ final class YahooGeneratorTest extends TestCase
 
         $this->assertMatchesSnapshot($link->yahoo(['uid' => '750e0c92aa33a7382460a280c2dfb8e6', 'msngr' => null]));
     }
+
+    #[Test]
+    public function it_can_generate_an_url_with_repeated_parameters(): void
+    {
+        $link = $this->createShortEventLink();
+
+        $this->assertMatchesSnapshot($link->yahoo(['tag' => ['first tag', 'second tag'], 'uid' => '750e0c92aa33a7382460a280c2dfb8e6']));
+    }
 }
