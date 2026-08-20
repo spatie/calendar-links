@@ -259,6 +259,21 @@ final class IcsGeneratorTest extends TestCase
     }
 
     #[Test]
+    public function it_strips_control_characters_that_are_invalid_in_a_text_value(): void
+    {
+        $link = $this->eventWithTitle("Bell\x07 and null\x00 and delete\x7F")
+            ->description("Vertical\x0Btab and unit\x1Fseparator")
+            ->address("Tab\tkept, comma; semicolon\\ backslash\nnewline");
+
+        $output = $this->generator()->generate($link);
+
+        $this->assertStringContainsString('SUMMARY:Bell and null and delete', $output);
+        $this->assertStringContainsString('DESCRIPTION:Verticaltab and unitseparator', $output);
+        // HTAB stays, and the existing TEXT escaping is untouched by the stripping.
+        $this->assertStringContainsString("LOCATION:Tab\tkept\\, comma\\; semicolon\\\\ backslash\\nnewline", $output);
+    }
+
+    #[Test]
     public function it_keeps_a_description_and_address_of_zero(): void
     {
         // '0' is falsy in PHP, so only an empty string may drop these fields.
@@ -268,5 +283,14 @@ final class IcsGeneratorTest extends TestCase
 
         $this->assertStringContainsString('DESCRIPTION:0', $output);
         $this->assertStringContainsString('LOCATION:0', $output);
+    }
+
+    private function eventWithTitle(string $title): Link
+    {
+        return Link::create(
+            $title,
+            DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00', new DateTimeZone('UTC')),
+            DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00', new DateTimeZone('UTC'))
+        );
     }
 }

@@ -174,11 +174,16 @@ class Ics implements Generator
     /** @see https://tools.ietf.org/html/rfc5545.html#section-3.3.11 */
     protected function escapeString(string $field): string
     {
-        return str_replace(
+        $escaped = str_replace(
             ['\\', ';', ',', "\r\n", "\r", "\n"],
             ['\\\\', '\\;', '\\,', '\\n', '\\n', '\\n'],
             $field
         );
+
+        // A TEXT value admits no control character other than HTAB, and the CR and LF that did occur
+        // have become the \n escape just above, so whatever is left in these ranges is dropped.
+        // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.11
+        return preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $escaped) ?? $escaped;
     }
 
     /**
