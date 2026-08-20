@@ -6,6 +6,7 @@ namespace Spatie\CalendarLinks\Tests\Generators;
 
 use DateTime;
 use DateTimeZone;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
 use Spatie\CalendarLinks\Generator;
@@ -359,6 +360,286 @@ final class IcsGeneratorTest extends TestCase
 
         $this->assertStringContainsString('DESCRIPTION:0', $output);
         $this->assertStringContainsString('LOCATION:0', $output);
+    }
+
+    /**
+     * @return \Generator<string, array{string, string}>
+     */
+    public static function lineBreakInjectionProvider(): \Generator
+    {
+        foreach (['URL', 'RRULE'] as $property) {
+            yield "{$property} with CRLF" => [$property, "x\r\nORGANIZER:mailto:attacker@example.com"];
+            yield "{$property} with a bare LF" => [$property, "x\nORGANIZER:mailto:attacker@example.com"];
+            yield "{$property} with a bare CR" => [$property, "x\rORGANIZER:mailto:attacker@example.com"];
+        }
+    }
+
+    #[Test]
+    #[DataProvider('lineBreakInjectionProvider')]
+    public function it_rejects_a_line_break_in_a_property_it_cannot_escape(string $property, string $value): void
+    {
+        $this->expectException(InvalidLink::class);
+        $this->expectExceptionMessage("ICS property (`{$property}`) must not contain a CR or an LF character.");
+
+        /** @psalm-suppress ArgumentTypeCoercion We are deliberately passing a value the type forbids. */
+        $this->generator([$property => $value]);
+    }
+
+    /**
+     * @return \Generator<string, array{string, string, string}>
+     */
+    public static function unsupportedTokenProvider(): \Generator
+    {
+        yield 'TRANSP' => ['TRANSP', 'BUSY', '`OPAQUE`, `TRANSPARENT`'];
+        yield 'CLASS' => ['CLASS', 'SECRET', '`PUBLIC`, `PRIVATE`, `CONFIDENTIAL`'];
+        yield 'X-MICROSOFT-CDO-BUSYSTATUS' => ['X-MICROSOFT-CDO-BUSYSTATUS', 'AWAY', '`FREE`, `TENTATIVE`, `BUSY`, `OOF`'];
+    }
+
+    #[Test]
+    #[DataProvider('unsupportedTokenProvider')]
+    public function it_rejects_a_token_outside_the_allowed_list(string $property, string $value, string $allowed): void
+    {
+        $this->expectException(InvalidLink::class);
+        $this->expectExceptionMessage("ICS property (`{$property}`) value (`{$value}`) is invalid. Pass one of {$allowed}.");
+
+        /** @psalm-suppress ArgumentTypeCoercion We are deliberately passing a value the type forbids. */
+        $this->generator([$property => $value]);
+    }
+
+    /**
+     * @return \Generator<string, array{string, string}>
+     */
+    public static function allowedTokenProvider(): \Generator
+    {
+        foreach (['OPAQUE', 'TRANSPARENT'] as $token) {
+            yield "TRANSP {$token}" => ['TRANSP', $token];
+        }
+        foreach (['PUBLIC', 'PRIVATE', 'CONFIDENTIAL'] as $token) {
+            yield "CLASS {$token}" => ['CLASS', $token];
+        }
+        foreach (['FREE', 'TENTATIVE', 'BUSY', 'OOF'] as $token) {
+            yield "X-MICROSOFT-CDO-BUSYSTATUS {$token}" => ['X-MICROSOFT-CDO-BUSYSTATUS', $token];
+        }
+    }
+
+    #[Test]
+    #[DataProvider('allowedTokenProvider')]
+    public function it_accepts_every_token_of_an_enumerated_property(string $property, string $token): void
+    {
+        /** @psalm-suppress ArgumentTypeCoercion The property and token pair is valid, but only known at runtime. */
+        $output = $this->generator([$property => $token])->generate($this->createShortEventLink());
+
+        $this->assertStringContainsString("{$property}:{$token}", $output);
+    }
+
+    #[Test]
+    public function it_keeps_accepting_a_uid_a_prodid_a_url_and_a_rrule_without_line_breaks(): void
+    {
+        $output = $this->generator([
+            'UID' => 'random-uid',
+            'PRODID' => 'My Product',
+            'URL' => 'https://example.com/event?id=1',
+            'RRULE' => 'FREQ=WEEKLY;BYDAY=MO,WE,FR',
+        ])->generate($this->createShortEventLink());
+
+        $this->assertStringContainsString('UID:random-uid', $output);
+        $this->assertStringContainsString('PRODID:My Product', $output);
+        $this->assertStringContainsString('URL;VALUE=URI:https://example.com/event?id=1', $output);
+        $this->assertStringContainsString('RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR', $output);
+    }
+
+    #[Test]
+    public function it_escapes_a_custom_reminder_description(): void
+    {
+        // A VALARM DESCRIPTION is TEXT, so its separators and line breaks need the same escaping as any other.
+        $output = $this->generator(['REMINDER' => [
+            'DESCRIPTION' => "Bring: cake, balloons; and a C:\\Users\\map\nSee you there",
+        ]])->generate($this->createShortEventLink());
+
+        $this->assertStringContainsString(
+            'DESCRIPTION:Bring: cake\, balloons\; and a C:\\\\Users\\\\map\\nSee you there',
+            $output
+        );
+        $this->assertStringNotContainsString("\r\nSee you there", $output);
+    }
+
+    #[Test]
+    public function it_rejects_a_line_break_carried_by_a_stringable_property(): void
+    {
+        // generate() builds its content lines by concatenation, so an object is stringified on the way
+        // into the file. Checking the value as passed rather than as written would miss this entirely.
+        $rrule = new class () {
+            public function __toString(): string
+            {
+                return "FREQ=WEEKLY\r\nORGANIZER:mailto:attacker@example.com";
+            }
+        };
+
+        $this->expectException(InvalidLink::class);
+        $this->expectExceptionMessage('ICS property (`RRULE`) must not contain a CR or an LF character.');
+
+        /** @psalm-suppress ImplicitToStringCast We are deliberately passing an object where the type says string. */
+        $this->generator(['RRULE' => $rrule]);
+    }
+
+    #[Test]
+    public function it_rejects_a_stringable_token_outside_the_allowed_list(): void
+    {
+        $transp = new class () {
+            public function __toString(): string
+            {
+                return 'bogus';
+            }
+        };
+
+        $this->expectException(InvalidLink::class);
+        $this->expectExceptionMessage('ICS property (`TRANSP`) value (`bogus`) is invalid. Pass one of `OPAQUE`, `TRANSPARENT`.');
+
+        /** @psalm-suppress ImplicitToStringCast We are deliberately passing an object where the type says string. */
+        $this->generator(['TRANSP' => $transp]);
+    }
+
+    #[Test]
+    public function it_writes_the_string_it_checked_rather_than_asking_a_stringable_twice(): void
+    {
+        // An object is free to answer differently on a second call, so checking one string and writing
+        // another would leave the same hole open. The checked string is the one that reaches the file.
+        $uid = new class () {
+            private int $calls = 0;
+
+            public function __toString(): string
+            {
+                return $this->calls++ === 0 ? 'first-answer' : "second\r\nORGANIZER:mailto:attacker@example.com";
+            }
+        };
+
+        /** @psalm-suppress ImplicitToStringCast We are deliberately passing an object where the type says string. */
+        $output = $this->generator(['UID' => $uid])->generate($this->createShortEventLink());
+
+        $this->assertStringContainsString('UID:first-answer', $output);
+        $this->assertStringNotContainsString('ORGANIZER', $output);
+    }
+
+    #[Test]
+    public function it_treats_a_null_option_as_absent_rather_than_invalid(): void
+    {
+        // generate() reads these with isset(), so null has always meant "fall back to the default".
+        /** @psalm-suppress InvalidArgument We are deliberately passing a value the type forbids. */
+        $output = $this->generator(['UID' => null, 'TRANSP' => null])->generate($this->createShortEventLink());
+
+        $this->assertMatchesRegularExpression('/^UID:[0-9a-f]{32}\r$/m', $output);
+        $this->assertStringNotContainsString('TRANSP:', $output);
+    }
+
+    /**
+     * @return \Generator<string, array{mixed, string}>
+     */
+    public static function unwritableValueProvider(): \Generator
+    {
+        // Casting any of these would put something in the file that the caller never meant to write,
+        // and an array or a plain object would raise a PHP warning or Error rather than ours.
+        yield 'an array' => [[], 'array'];
+        yield 'an object without __toString()' => [new \stdClass(), 'stdClass'];
+        yield 'a float, whose string form follows the precision setting' => [1.5, 'float'];
+        yield 'a bool, since false casts to an empty string' => [false, 'bool'];
+    }
+
+    #[Test]
+    #[DataProvider('unwritableValueProvider')]
+    public function it_rejects_a_value_it_cannot_faithfully_write(mixed $value, string $expectedType): void
+    {
+        $this->expectException(InvalidLink::class);
+        $this->expectExceptionMessage("The `UID` option must be a string, an integer or a Stringable, `{$expectedType}` given.");
+
+        /** @psalm-suppress MixedArgumentTypeCoercion We are deliberately passing a value the type forbids. */
+        $this->generator(['UID' => $value]);
+    }
+
+    #[Test]
+    public function it_rejects_a_value_it_cannot_faithfully_write_for_an_enumerated_property_too(): void
+    {
+        $this->expectException(InvalidLink::class);
+        $this->expectExceptionMessage('The `TRANSP` option must be a string, an integer or a Stringable, `array` given.');
+
+        /** @psalm-suppress InvalidArgument We are deliberately passing a value the type forbids. */
+        $this->generator(['TRANSP' => []]);
+    }
+
+    #[Test]
+    public function it_keeps_writing_an_integer_option(): void
+    {
+        // An integer has one unambiguous string form and cannot carry a line break, so it stays allowed.
+        /** @psalm-suppress InvalidArgument We are deliberately passing a value the type forbids. */
+        $output = $this->generator(['UID' => 123])->generate($this->createShortEventLink());
+
+        $this->assertStringContainsString('UID:123', $output);
+    }
+
+    #[Test]
+    public function it_escapes_a_custom_uid_and_product_id(): void
+    {
+        // Both are TEXT values, so their separators need escaping like any other TEXT field.
+        // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.7
+        // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.7.3
+        $output = $this->generator(['UID' => 'part;one,two\\three', 'PRODID' => 'ACME, Inc.'])
+            ->generate($this->createShortEventLink());
+
+        $this->assertStringContainsString('UID:part\;one\,two\\\\three', $output);
+        $this->assertStringContainsString('PRODID:ACME\, Inc.', $output);
+    }
+
+    #[Test]
+    public function it_escapes_a_line_break_in_a_uid_or_a_product_id_rather_than_rejecting_it(): void
+    {
+        // Escaping turns the line break into the \n escape, so it cannot start a content line and
+        // there is nothing left for the guard to reject.
+        $output = $this->generator([
+            'UID' => "x\r\nORGANIZER:mailto:attacker@example.com",
+            'PRODID' => "y\nORGANIZER:mailto:attacker@example.com",
+        ])->generate($this->createShortEventLink());
+
+        $this->assertStringContainsString('UID:x\nORGANIZER:mailto:attacker@example.com', $output);
+        $this->assertStringContainsString('PRODID:y\nORGANIZER:mailto:attacker@example.com', $output);
+        $this->assertStringNotContainsString("\r\nORGANIZER", $output);
+    }
+
+    /**
+     * @return \Generator<string, array{string, string, string}>
+     */
+    public static function lowercaseTokenProvider(): \Generator
+    {
+        yield 'TRANSP' => ['TRANSP', 'transparent', 'TRANSP:TRANSPARENT'];
+        yield 'CLASS' => ['CLASS', 'private', 'CLASS:PRIVATE'];
+        yield 'X-MICROSOFT-CDO-BUSYSTATUS' => ['X-MICROSOFT-CDO-BUSYSTATUS', 'oof', 'X-MICROSOFT-CDO-BUSYSTATUS:OOF'];
+        yield 'mixed case' => ['TRANSP', 'OpAqUe', 'TRANSP:OPAQUE'];
+    }
+
+    #[Test]
+    #[DataProvider('lowercaseTokenProvider')]
+    public function it_accepts_an_enumerated_token_in_any_case_and_writes_it_upper_cased(string $property, string $token, string $expected): void
+    {
+        // An enumerated property value is case-insensitive.
+        // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.1
+        /** @psalm-suppress ArgumentTypeCoercion The property and token pair is valid, but only known at runtime. */
+        $output = $this->generator([$property => $token])->generate($this->createShortEventLink());
+
+        $this->assertStringContainsString($expected, $output);
+    }
+
+    #[Test]
+    public function it_keeps_a_line_break_out_of_the_rejection_message(): void
+    {
+        // The value cannot reach the calendar, but the message reporting it reaches a log, and a
+        // forged line spread over several lines of one is the very thing this guard exists to stop.
+        try {
+            /** @psalm-suppress InvalidArgument We are deliberately passing a value the type forbids. */
+            $this->generator(['TRANSP' => "OPAQUE\r\nX-FORGED:yes"]);
+            $this->fail('Expected an InvalidLink to be thrown.');
+        } catch (InvalidLink $exception) {
+            $this->assertStringNotContainsString("\r", $exception->getMessage());
+            $this->assertStringNotContainsString("\n", $exception->getMessage());
+            $this->assertStringContainsString('OPAQUEX-FORGED:yes', $exception->getMessage());
+        }
     }
 
     private function eventWithTitle(string $title): Link

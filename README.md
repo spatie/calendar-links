@@ -223,6 +223,8 @@ echo $link->ics([
 
 It has to be a `DateTimeInterface`, so a date string throws an `InvalidLink` rather than being quietly ignored. The value is written as a UTC date-time, for all-day events too, since RFC 5545 does not allow a bare date here.
 
+`URL` and `RRULE` are written into the file as they are given, so they must not contain a carriage return or a line feed. `TRANSP`, `CLASS` and `X-MICROSOFT-CDO-BUSYSTATUS` take one of the tokens listed above in any case, and are written upper-cased. `CLASS` deliberately accepts only those three, not the `x-name` and `iana-token` values RFC 5545 also permits, since validating that grammar costs more than it buys. A value that breaks either rule throws a `Spatie\CalendarLinks\Exceptions\InvalidLink`, so route user supplied data through the event's own fields (the title argument of `Link::create()` and `Link::createAllDay()`, `description()` and `address()`), which are escaped for you, rather than through these options.
+
 A second argument controls presentation rather than content:
 
 ```php
