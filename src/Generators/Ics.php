@@ -10,7 +10,7 @@ use Spatie\CalendarLinks\Link;
 /**
  * @api
  * @see https://icalendar.org/RFC-Specifications/iCalendar-RFC-5545/
- * @psalm-type IcsOptions = array{UID?: string, URL?: string, PRODID?: string, REMINDER?: array{DESCRIPTION?: string, TIME?: \DateTimeInterface}}
+ * @psalm-type IcsOptions = array{UID?: string, URL?: string, PRODID?: string, REMINDER?: array{DESCRIPTION?: string, TIME?: \DateTimeInterface}, TRANSP?: 'OPAQUE'|'TRANSPARENT', CLASS?: 'PUBLIC'|'PRIVATE'|'CONFIDENTIAL', RRULE?: string, X-MICROSOFT-CDO-BUSYSTATUS?: 'FREE'|'TENTATIVE'|'BUSY'|'OOF'}
  * @psalm-type IcsPresentationOptions = array{format?: self::FORMAT_*}
  */
 class Ics implements Generator
@@ -65,6 +65,13 @@ class Ics implements Generator
             $url[] = 'DTEND:'.gmdate($dateTimeFormat, $link->to->getTimestamp());
         }
 
+        // A RECUR value is structured data, so its semicolons and commas are separators
+        // and must not go through the TEXT escaping of escapeString().
+        // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5.3
+        if (isset($this->options['RRULE'])) {
+            $url[] = 'RRULE:'.$this->options['RRULE'];
+        }
+
         if ($link->description) {
             $url[] = 'DESCRIPTION:'.$this->escapeString(strip_tags($link->description));
         }
@@ -75,6 +82,24 @@ class Ics implements Generator
         foreach ($link->guests as $guest) {
             $role = $guest['optional'] ? 'OPT-PARTICIPANT' : 'REQ-PARTICIPANT';
             $url[] = 'ATTENDEE;ROLE='.$role.':mailto:'.$this->escapeCalendarAddress($guest['email']);
+        }
+
+        // TRANSP, CLASS and the Microsoft busy status all take an enumerated token rather than TEXT,
+        // so they are emitted verbatim as well.
+        // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.7
+        if (isset($this->options['TRANSP'])) {
+            $url[] = 'TRANSP:'.$this->options['TRANSP'];
+        }
+
+        // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.3
+        if (isset($this->options['CLASS'])) {
+            $url[] = 'CLASS:'.$this->options['CLASS'];
+        }
+
+        // TRANSP only tells busy from free. Outlook needs this extension to show tentative or out of office.
+        // @see https://learn.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxcical/
+        if (isset($this->options['X-MICROSOFT-CDO-BUSYSTATUS'])) {
+            $url[] = 'X-MICROSOFT-CDO-BUSYSTATUS:'.$this->options['X-MICROSOFT-CDO-BUSYSTATUS'];
         }
 
         if (isset($this->options['URL'])) {

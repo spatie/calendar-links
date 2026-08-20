@@ -73,6 +73,10 @@ echo $link->ics(['UID' => 'custom-id']); // Custom UID (to update existing event
 echo $link->ics(['URL' => 'https://my-page.com']); // Custom URL
 echo $link->ics(['REMINDER' => []]); // Add the default reminder (for iCal & Outlook)
 echo $link->ics(['REMINDER' => ['DESCRIPTION' => 'Remind me', 'TIME' => new \DateTime('tomorrow 12:30 UTC')]]); // Add a custom reminder
+echo $link->ics(['RRULE' => 'FREQ=WEEKLY;BYDAY=MO,WE,FR']); // Recurring event (RFC 5545 section 3.8.5.3)
+echo $link->ics(['TRANSP' => 'TRANSPARENT']); // Show as free instead of busy (RFC 5545 section 3.8.2.7)
+echo $link->ics(['CLASS' => 'PRIVATE']); // Visibility: PUBLIC, PRIVATE or CONFIDENTIAL (RFC 5545 section 3.8.1.3)
+echo $link->ics(['TRANSP' => 'OPAQUE', 'X-MICROSOFT-CDO-BUSYSTATUS' => 'OOF']); // TRANSP only tells busy from free, so Outlook needs this extension for tentative and out of office
 echo $link->ics([], ['format' => 'file']); // use file output; e.g. to attach ics as a file to an email.
 
 // Generate a data URI using arbitrary generator:

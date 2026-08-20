@@ -100,6 +100,35 @@ final class IcsGeneratorTest extends TestCase
     }
 
     #[Test]
+    public function it_can_generate_a_recurring_event(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator(['RRULE' => 'FREQ=WEEKLY;BYDAY=MO,WE,FR;COUNT=10'])->generate($this->createShortEventLink())
+        );
+    }
+
+    #[Test]
+    public function it_keeps_the_separators_of_a_recurrence_rule_unescaped(): void
+    {
+        // A RECUR value is structured, so escaping its semicolons and commas would break the rule.
+        $output = $this->generator(['RRULE' => 'FREQ=WEEKLY;BYDAY=MO,WE,FR'])->generate($this->createShortEventLink());
+
+        $this->assertStringContainsString('RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR', $output);
+    }
+
+    #[Test]
+    public function it_can_generate_an_event_with_availability_and_visibility(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator([
+                'TRANSP' => 'TRANSPARENT',
+                'CLASS' => 'PRIVATE',
+                'X-MICROSOFT-CDO-BUSYSTATUS' => 'OOF',
+            ])->generate($this->createShortEventLink())
+        );
+    }
+
+    #[Test]
     public function it_percent_encodes_uri_significant_characters_in_attendee_addresses(): void
     {
         // `?`, `&`, `=`, `/` and `%` are all legal in an email address, and all significant in a mailto URI.
