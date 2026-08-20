@@ -18,6 +18,7 @@ use Spatie\CalendarLinks\Generators\Yahoo;
  * @psalm-import-type YahooUrlParameters from \Spatie\CalendarLinks\Generators\Yahoo
  * @psalm-import-type OutlookUrlParameters from \Spatie\CalendarLinks\Generators\BaseOutlook
  * @psalm-import-type IcsPresentationOptions from \Spatie\CalendarLinks\Generators\Ics
+ * @psalm-type LinkGuest = array{email: string, optional: bool}
  */
 class Link
 {
@@ -32,6 +33,9 @@ class Link
     public string $description = '';
 
     public string $address = '';
+
+    /** @psalm-var list<LinkGuest> */
+    public array $guests = [];
 
     final public function __construct(string $title, \DateTimeInterface $from, \DateTimeInterface $to, bool $allDay = false)
     {
@@ -90,6 +94,40 @@ class Link
     public function address(string $address): static
     {
         $this->address = $address;
+
+        return $this;
+    }
+
+    /**
+     * Add a guest (attendee) to the Event.
+     *
+     * @param string $email A plain email address. Display names are not supported, because Yahoo cannot represent them.
+     * @param bool $optional Whether attendance is optional. Yahoo has no optional role, so optional guests are invited as required there.
+     * @throws \Spatie\CalendarLinks\Exceptions\InvalidLink When the email address is invalid.
+     */
+    public function guest(string $email, bool $optional = false): static
+    {
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw InvalidLink::invalidGuestEmail($email);
+        }
+
+        $this->guests[] = ['email' => $email, 'optional' => $optional];
+
+        return $this;
+    }
+
+    /**
+     * Add several guests (attendees) to the Event at once.
+     *
+     * @param list<string> $emails Plain email addresses.
+     * @param bool $optional Whether attendance is optional for all of them.
+     * @throws \Spatie\CalendarLinks\Exceptions\InvalidLink When any of the email addresses is invalid.
+     */
+    public function guests(array $emails, bool $optional = false): static
+    {
+        foreach ($emails as $email) {
+            $this->guest($email, $optional);
+        }
 
         return $this;
     }

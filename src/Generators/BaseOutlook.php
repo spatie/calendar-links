@@ -60,6 +60,24 @@ abstract class BaseOutlook implements Generator
             $url .= '&location='.$this->sanitizeString($link->address);
         }
 
+        $requiredGuests = [];
+        $optionalGuests = [];
+        foreach ($link->guests as $guest) {
+            if ($guest['optional']) {
+                $optionalGuests[] = $this->sanitizeString($guest['email']);
+            } else {
+                $requiredGuests[] = $this->sanitizeString($guest['email']);
+            }
+        }
+
+        if ($requiredGuests !== []) {
+            $url .= '&to='.implode(',', $requiredGuests);
+        }
+
+        if ($optionalGuests !== []) {
+            $url .= '&cc='.implode(',', $optionalGuests);
+        }
+
         foreach ($this->urlParameters as $key => $value) {
             // A list of values is flattened into a repeated parameter.
             foreach (is_array($value) ? $value : [$value] as $singleValue) {

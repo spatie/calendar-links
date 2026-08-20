@@ -79,6 +79,28 @@ echo $link->ics([], ['format' => 'file']); // use file output; e.g. to attach ic
 echo $link->formatWith(new \Your\Generator());
 ```
 
+### Guests
+
+Guests (attendees) are supported by every generator, with a required/optional distinction:
+
+```php
+$link = Link::create('Sebastian’s birthday', $from, $to)
+    ->guest('sebastian@example.com')
+    ->guests(['freek@example.com', 'alex@example.com'])
+    ->guest('rias@example.com', optional: true);
+```
+
+Only plain email addresses are accepted. A display name (the `Name <email>` form) throws an `InvalidLink` exception, because Yahoo cannot represent one.
+
+How each generator maps guests:
+
+| Generator | Required | Optional |
+| --- | --- | --- |
+| Google | `add=` | `add=`, with an `_o` suffix on the address |
+| WebOutlook / WebOffice | `to=` | `cc=` |
+| Yahoo | `inv_list=` | `inv_list=` (Yahoo has no optional role, so optional guests are invited as required ones) |
+| ICS | `ATTENDEE;ROLE=REQ-PARTICIPANT` | `ATTENDEE;ROLE=OPT-PARTICIPANT` |
+
 ## Package principles
 
 1. it should produce a small output (to keep page-size small)

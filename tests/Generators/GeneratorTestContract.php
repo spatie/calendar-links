@@ -55,6 +55,14 @@ trait GeneratorTestContract
     }
 
     #[Test]
+    public function it_can_generate_an_event_link_with_guests(): void
+    {
+        $this->assertMatchesSnapshot(
+            $this->generator()->generate($this->createEventWithGuestsLink())
+        );
+    }
+
+    #[Test]
     public function it_correctly_generates_all_day_events_by_days(): void
     {
         $this->assertMatchesSnapshot(

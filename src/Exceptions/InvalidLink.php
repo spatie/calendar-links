@@ -16,4 +16,9 @@ class InvalidLink extends InvalidArgumentException
     {
         return new self("TO time (`{$to->format(self::DATETIME_FORMAT)}`) must be greater than FROM time (`{$from->format(self::DATETIME_FORMAT)}`)");
     }
+
+    public static function invalidGuestEmail(string $email): self
+    {
+        return new self("Guest email address (`{$email}`) is invalid. Pass a plain email address, without a display name.");
+    }
 }

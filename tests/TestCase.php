@@ -95,6 +95,19 @@ Bring a dog, bring a frog';
         ));
     }
 
+    protected function createEventWithGuestsLink(): Link
+    {
+        return Link::create(
+            'Birthday',
+            DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00', new DateTimeZone('UTC')),
+            DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00', new DateTimeZone('UTC'))
+        )
+            ->address('Party Lane 1A, 1337 Funtown')
+            ->guest('santa@example.com')
+            ->guests(['easter.bunny@example.com', 'tooth.fairy@example.com'])
+            ->guest('krampus@example.com', optional: true);
+    }
+
     protected function createDescriptionIsHtmlCodeEventLink(): Link
     {
         $description = 'With balloons, clowns and stuff

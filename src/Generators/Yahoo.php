@@ -62,6 +62,18 @@ class Yahoo implements Generator
             $url .= '&in_loc='.$this->sanitizeText($link->address);
         }
 
+        if ($link->guests !== []) {
+            $guestList = [];
+            foreach ($link->guests as $guest) {
+                // Yahoo splits `inv_list` before decoding it, so every address is encoded on its own
+                // and the parts are joined with a literal comma.
+                $guestList[] = $this->sanitizeText($guest['email']);
+            }
+
+            // Yahoo has no optional role, so optional guests are invited as required ones.
+            $url .= '&inv_list='.implode(',', $guestList);
+        }
+
         foreach ($this->urlParameters as $key => $value) {
             // A list of values is flattened into a repeated parameter.
             foreach (is_array($value) ? $value : [$value] as $singleValue) {

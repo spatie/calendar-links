@@ -1,0 +1,1 @@
+https://outlook.live.com/calendar/action/compose?path=/calendar/action/compose&rru=addevent&startdt=2018-02-01T09:00:00Z&enddt=2018-02-01T18:00:00Z&subject=Birthday&location=Party%20Lane%201A%2C%201337%20Funtown&to=santa%40example.com,easter.bunny%40example.com,tooth.fairy%40example.com&cc=krampus%40example.com

@@ -52,6 +52,17 @@ class Google implements Generator
             $url .= '&location='.urlencode($link->address);
         }
 
+        if ($link->guests !== []) {
+            $guestList = [];
+            foreach ($link->guests as $guest) {
+                // Google marks an optional attendee with an `_o` suffix on the address.
+                $guestList[] = $guest['email'].($guest['optional'] ? '_o' : '');
+            }
+
+            // Google decodes the query data before splitting it, so encoding the commas is harmless here.
+            $url .= '&add='.urlencode(implode(',', $guestList));
+        }
+
         foreach ($this->urlParameters as $key => $value) {
             // A list of values is flattened into a repeated parameter (e.g. Google's sprop).
             foreach (is_array($value) ? $value : [$value] as $singleValue) {

@@ -72,6 +72,11 @@ class Ics implements Generator
             $url[] = 'LOCATION:'.$this->escapeString($link->address);
         }
 
+        foreach ($link->guests as $guest) {
+            $role = $guest['optional'] ? 'OPT-PARTICIPANT' : 'REQ-PARTICIPANT';
+            $url[] = 'ATTENDEE;ROLE='.$role.':mailto:'.$this->escapeString($guest['email']);
+        }
+
         if (isset($this->options['URL'])) {
             $url[] = 'URL;VALUE=URI:'.$this->options['URL'];
         }
