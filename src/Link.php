@@ -43,6 +43,13 @@ class Link
     /** @psalm-var list<LinkGuest> */
     public array $guests = [];
 
+    /**
+     * Every TZDB name, keyed for lookup. The list is fixed for the lifetime of the process, so it is
+     * built once instead of on every generated link.
+     * @psalm-var array<string, true>|null
+     */
+    private static ?array $timezoneIdentifiers = null;
+
     final public function __construct(string $title, \DateTimeInterface $from, \DateTimeInterface $to, bool $allDay = false)
     {
         $this->title = $title;
@@ -265,6 +272,51 @@ class Link
         $name = strtolower($timezone->getName());
 
         return ! in_array($name, self::UTC_ZONE_NAMES, true) && ! str_starts_with($name, 'etc/');
+    }
+
+    /**
+     * Whether both ends carry a timezone that a calendar service can resolve by name, so a generator
+     * may name the zone instead of writing the event in UTC. Both ends are judged together: naming
+     * only one of them would leave the pair inconsistent.
+     *
+     * Parsing an ISO 8601 string with an offset (`2026-01-01T10:00:00+02:00`) is the common way to
+     * end up without one, since the resulting zone is named `+02:00`.
+     */
+    public function hasResolvableTimezones(): bool
+    {
+        return self::isResolvableTimezone($this->fromTimezone) && self::isResolvableTimezone($this->toTimezone);
+    }
+
+    /**
+     * A TZDB region name (`Europe/Amsterdam`) is the only spelling every calendar service resolves,
+     * with `UTC` as the one region-less identifier they all accept too. Everything else DateTimeZone
+     * accepts is rejected here:
+     *
+     * - an offset (`+02:00`) or an abbreviation (`CEST`) names no region and carries no DST rules,
+     *   so there is nothing for a service to look up;
+     * - `Etc/GMT±N` is a real TZDB identifier, but its sign is inverted from the offset it names and
+     *   Google rejects it outright, raw and percent encoded alike;
+     * - the region-less legacy names (`EST`, `MST7MDT`) are POSIX rules rather than places.
+     *
+     * @see https://data.iana.org/time-zones/tzdb/etcetera
+     */
+    private static function isResolvableTimezone(\DateTimeZone $timezone): bool
+    {
+        $name = $timezone->getName();
+
+        if ($name === 'UTC') {
+            return true;
+        }
+
+        if (! str_contains($name, '/') || str_starts_with($name, 'Etc/')) {
+            return false;
+        }
+
+        // The backward names (`US/Pacific`, `Europe/Kiev`) are shipped by IANA and resolve like any
+        // other region, so the deprecated list is included rather than DateTimeZone::ALL alone.
+        self::$timezoneIdentifiers ??= array_fill_keys(\DateTimeZone::listIdentifiers(\DateTimeZone::ALL_WITH_BC), true);
+
+        return isset(self::$timezoneIdentifiers[$name]);
     }
 
     public function formatWith(Generator $generator): string
