@@ -9,6 +9,10 @@ All notable changes to `calendar-links` will be documented in this file
 - Support separate start and end timezones (useful for flights): new `Link::$fromTimezone`, `Link::$toTimezone` and `Link::hasDistinctTimezones()`. Google links use `stz` and `etz`, ICS files write each endpoint with its own `TZID` (#233)
 - ICS: support `TRANSP`, `CLASS`, `RRULE` and `X-MICROSOFT-CDO-BUSYSTATUS` via the options array (#230)
 - Support repeated URL parameters in URL generators: an array value in `$urlParameters` is rendered as a repeated query parameter (#228)
+- ICS: subclasses can append extra properties through the new `additionalCalendarProperties()` and `additionalEventProperties()` extension points
+
+### Changed
+- Generators are easier to extend: `Ics::generateAlertComponent()`, `Yahoo::sanitizeText()`, `Yahoo::sanitizeAddressList()` and `BaseOutlook::sanitizeString()` are now `protected`, and `Google`/`Yahoo` read `BASE_URL` late statically so a subclass can redefine it
 
 ### Fixed
 - Yahoo: align deep link parameters with the service parser. The base URL drops the stale `view=d&type=20` pair, timed events send wall clock `ST` and `ET` values instead of UTC, single day all-day events send `DUR=allday`, and multi day all-day events send an exclusive `ET` end date (#232)
