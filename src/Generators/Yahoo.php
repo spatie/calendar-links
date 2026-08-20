@@ -107,7 +107,7 @@ class Yahoo implements Generator
     }
 
     /**
-     * Prepare text to use used in URL and parsed by the service.
+     * Prepare text to be used in URL and parsed by the service.
      * @param string $text
      * @return string
      */

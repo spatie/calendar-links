@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Spatie\CalendarLinks\Generators;
 
+/** @api */
 final class WebOffice extends BaseOutlook
 {
     /** @var non-empty-string */

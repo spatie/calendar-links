@@ -9,6 +9,7 @@ use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Link;
 
 /**
+ * @api
  * @see https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/main/services/outlook-web.md
  * @psalm-type OutlookUrlParameters = array<string, scalar|null|list<scalar|null>>
  */
