@@ -225,8 +225,99 @@ final class IcsGeneratorTest extends TestCase
 
         $this->assertStringContainsString(
             'ATTENDEE;ROLE=REQ-PARTICIPANT:mailto:who%3Fwhat%26why%3Dhow%2Fnow%25then@example.com',
-            $output
+            $this->unfold($output)
         );
+    }
+
+    #[Test]
+    public function it_folds_content_lines_longer_than_75_octets(): void
+    {
+        $title = str_repeat('a', 200);
+
+        $output = $this->generator()->generate($this->eventWithTitle($title));
+
+        foreach (explode("\r\n", $output) as $line) {
+            $this->assertLessThanOrEqual(75, strlen($line), "Line exceeds 75 octets: {$line}");
+        }
+
+        $this->assertStringContainsString("SUMMARY:{$title}", $this->unfold($output));
+        // The fold is CRLF plus exactly one space, and the space counts towards the 75 octets.
+        $this->assertStringContainsString('SUMMARY:'.str_repeat('a', 67)."\r\n ".str_repeat('a', 74), $output);
+    }
+
+    #[Test]
+    public function it_does_not_split_a_multibyte_character_when_folding(): void
+    {
+        // Padding of 67 octets fills the first line up to the fold boundary, so the next character
+        // to be written is the first emoji and its four octets straddle the limit.
+        $title = str_repeat('a', 67).str_repeat('🎉', 20);
+
+        $output = $this->generator()->generate($this->eventWithTitle($title));
+
+        foreach (explode("\r\n", $output) as $line) {
+            $this->assertTrue(mb_check_encoding($line, 'UTF-8'), "Line is not valid UTF-8: {$line}");
+            $this->assertLessThanOrEqual(75, strlen($line), "Line exceeds 75 octets: {$line}");
+        }
+
+        $this->assertStringContainsString("SUMMARY:{$title}", $this->unfold($output));
+    }
+
+    #[Test]
+    public function it_folds_a_line_that_unfolding_restores_exactly(): void
+    {
+        // Two byte Cyrillic and four byte emoji land on different boundaries, so both paths of the
+        // backtracking are exercised, and unfolding has to give back the input byte for byte.
+        $title = 'Годовщина 🎉 '.str_repeat('праздник ', 12).str_repeat('🎂', 15);
+
+        $output = $this->generator()->generate($this->eventWithTitle($title));
+
+        $this->assertStringContainsString('SUMMARY:'.$title."\r\n", $this->unfold($output));
+    }
+
+    #[Test]
+    public function it_terminates_the_output_with_a_crlf(): void
+    {
+        $output = $this->generator()->generate($this->createShortEventLink());
+
+        $this->assertStringEndsWith("END:VCALENDAR\r\n", $output);
+    }
+
+    #[Test]
+    public function it_declares_the_registered_charset_name_in_the_data_uri(): void
+    {
+        $output = $this->generator([], ['format' => Ics::FORMAT_HTML])->generate($this->createShortEventLink());
+
+        $this->assertStringStartsWith('data:text/calendar;charset=utf-8;base64,', $output);
+    }
+
+    #[Test]
+    public function it_folds_the_base64_encoded_link_as_well(): void
+    {
+        $title = str_repeat('a', 200);
+
+        $output = $this->generator([], ['format' => Ics::FORMAT_HTML])->generate($this->eventWithTitle($title));
+
+        $decoded = base64_decode(substr($output, strlen('data:text/calendar;charset=utf-8;base64,')), true);
+
+        $this->assertIsString($decoded);
+        $this->assertStringEndsWith("END:VCALENDAR\r\n", $decoded);
+        $this->assertStringContainsString("SUMMARY:{$title}", $this->unfold($decoded));
+        $this->assertStringContainsString("\r\n ", $decoded);
+    }
+
+    #[Test]
+    public function it_strips_control_characters_that_are_invalid_in_a_text_value(): void
+    {
+        $link = $this->eventWithTitle("Bell\x07 and null\x00 and delete\x7F")
+            ->description("Vertical\x0Btab and unit\x1Fseparator")
+            ->address("Tab\tkept, comma; semicolon\\ backslash\nnewline");
+
+        $output = $this->generator()->generate($link);
+
+        $this->assertStringContainsString('SUMMARY:Bell and null and delete', $output);
+        $this->assertStringContainsString('DESCRIPTION:Verticaltab and unitseparator', $output);
+        // HTAB stays, and the existing TEXT escaping is untouched by the stripping.
+        $this->assertStringContainsString("LOCATION:Tab\tkept\\, comma\\; semicolon\\\\ backslash\\nnewline", $output);
     }
 
     /** @test */
@@ -268,5 +359,20 @@ final class IcsGeneratorTest extends TestCase
 
         $this->assertStringContainsString('DESCRIPTION:0', $output);
         $this->assertStringContainsString('LOCATION:0', $output);
+    }
+
+    private function eventWithTitle(string $title): Link
+    {
+        return Link::create(
+            $title,
+            DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00', new DateTimeZone('UTC')),
+            DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00', new DateTimeZone('UTC'))
+        );
+    }
+
+    /** Reverses the RFC 5545 §3.1 folding: a CRLF followed by a single space is removed. */
+    private function unfold(string $output): string
+    {
+        return str_replace("\r\n ", '', $output);
     }
 }
