@@ -4,7 +4,12 @@
     "license": "MIT",
     "keywords": [
         "spatie",
-        "calendar-links"
+        "calendar-links",
+        "ics",
+        "ical",
+        "google-calendar",
+        "outlook",
+        "yahoo"
     ],
     "authors": [
         {
