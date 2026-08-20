@@ -63,6 +63,18 @@ class Ics implements Generator
     protected array $presentationOptions = [];
 
     /**
+     * Whether a zone was found to move its clocks, keyed by the zone and the window it was asked about.
+     *
+     * generate() reaches observesAChange() three times over one link, through shouldNameTimezones():
+     * once to choose how to write the endpoints, and twice more through referencedTimezones(). The
+     * answer depends on the zone and the event's two instants and nothing else, so it is worked out
+     * once. Reading a zone's transition table is the most expensive thing this class does.
+     *
+     * @var array<string, bool>
+     */
+    private array $observedChanges = [];
+
+    /**
      * Option values are validated here rather than in generate(), so that a value the calendar cannot
      * represent is rejected where it enters the library and the stack trace points at the caller that
      * supplied it, instead of at whatever renders the link later on.
@@ -578,15 +590,8 @@ class Ics implements Generator
      * would describe. A zone that does not is one offset from end to end, which a UTC instant already
      * carries.
      *
-     * generate() asks this through shouldNameTimezones(), which it reaches three times over one link:
-     * once to choose how to write the endpoints, and twice more through referencedTimezones(). The
-     * answer is a function of the zone and the event's two instants and nothing else, so it is worked
-     * out once and kept. Reading a zone's table is the most expensive thing this class does.
-     *
-     * @var array<string, bool>
+     * @see self::$observedChanges The answer is worked out once per zone and window, and kept.
      */
-    private array $observedChanges = [];
-
     private function observesAChange(\DateTimeZone $timezone, Link $link): bool
     {
         $windowStart = $link->from->modify('-1 year')->getTimestamp();
