@@ -137,6 +137,23 @@ ATTENDEE;ROLE=OPT-PARTICIPANT:mailto:willem@example.com
 
 Two things to keep in mind. Only plain email addresses are accepted, so a display name (the `Name <email>` form) throws an `InvalidLink` exception, because Yahoo cannot represent one. And guests are emitted in addition to any custom URL parameters, so if you also pass `add`, `to`, `cc` or `inv_list` by hand, the parameter appears twice and the service decides which one wins.
 
+### Yahoo parameters
+
+`yahoo()` takes an array of extra query parameters:
+
+```php
+echo $link->yahoo([
+    'TYPE' => 7,
+    'inv_list' => 'freek@example.com,ruben@example.com',
+]);
+```
+
+`TYPE` picks the event charm, as a zero based index into Yahoo's list of 17 charms (`0` is General, `7` is Birthday, `13` is Phone).
+
+`inv_list` accepts a comma separated list of plain email addresses. Yahoo splits the value before decoding it, so each address is encoded on its own and the commas stay literal. A display name (the `Name <email>` form) is not supported, and unlike `TITLE` and `DESC`, a `+` is not decoded as a space there.
+
+Yahoo has no timezone parameter, so a timed event is sent as floating local time: an event created at 09:00 is composed as 09:00, whatever the reader's timezone.
+
 ### ICS options
 
 `ics()` takes an array of properties that are written into the file as RFC 5545 values:

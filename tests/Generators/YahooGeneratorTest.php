@@ -55,4 +55,24 @@ final class YahooGeneratorTest extends TestCase
 
         $this->assertMatchesSnapshot($link->yahoo(['tag' => ['first tag', 'second tag'], 'uid' => '750e0c92aa33a7382460a280c2dfb8e6']));
     }
+
+    #[Test]
+    public function it_keeps_the_wall_clock_time_of_an_event_outside_utc(): void
+    {
+        $link = Link::create(
+            'Birthday',
+            DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00', new DateTimeZone('Europe/Brussels')),
+            DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00', new DateTimeZone('Europe/Brussels'))
+        );
+
+        $this->assertMatchesSnapshot($link->yahoo());
+    }
+
+    #[Test]
+    public function it_can_generate_an_url_with_a_multi_address_guest_list_parameter(): void
+    {
+        $link = $this->createShortEventLink();
+
+        $this->assertMatchesSnapshot($link->yahoo(['inv_list' => 'santa@example.com,easter.bunny@example.com']));
+    }
 }
