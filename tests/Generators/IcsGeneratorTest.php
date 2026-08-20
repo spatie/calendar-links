@@ -283,13 +283,21 @@ final class IcsGeneratorTest extends TestCase
     }
 
     #[Test]
+    public function it_declares_the_registered_charset_name_in_the_data_uri(): void
+    {
+        $output = $this->generator([], ['format' => Ics::FORMAT_HTML])->generate($this->createShortEventLink());
+
+        $this->assertStringStartsWith('data:text/calendar;charset=utf-8;base64,', $output);
+    }
+
+    #[Test]
     public function it_folds_the_base64_encoded_link_as_well(): void
     {
         $title = str_repeat('a', 200);
 
         $output = $this->generator([], ['format' => Ics::FORMAT_HTML])->generate($this->eventWithTitle($title));
 
-        $decoded = base64_decode(substr($output, strlen('data:text/calendar;charset=utf8;base64,')), true);
+        $decoded = base64_decode(substr($output, strlen('data:text/calendar;charset=utf-8;base64,')), true);
 
         $this->assertIsString($decoded);
         $this->assertStringEndsWith("END:VCALENDAR\r\n", $decoded);

@@ -165,7 +165,9 @@ class Ics implements Generator
      */
     protected function buildLink(array $propertiesAndComponents): string
     {
-        return 'data:text/calendar;charset=utf8;base64,'.base64_encode($this->serializeContentLines($propertiesAndComponents));
+        // utf-8 is the name registered with IANA, utf8 is not an alias of it.
+        // @see https://www.iana.org/assignments/character-sets/character-sets.xhtml
+        return 'data:text/calendar;charset=utf-8;base64,'.base64_encode($this->serializeContentLines($propertiesAndComponents));
     }
 
     /**
