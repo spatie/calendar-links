@@ -95,8 +95,9 @@ final class TimezoneInvariantsTest extends TestCase
      * reaches a branch the others do not: the flight is the shape that writes two zones into the
      * output as TZIDs, the arrival asks the same of a zone the event ends in rather than starts in,
      * which hasResolvableTimezones() judges by a different rule, the recurring event is the shape a
-     * zone can be named for on its own, and the all-day event names a zone with no clock time to
-     * place in it.
+     * zone can be named for on its own, its collapsed variant is the only one where the zone written
+     * into a TZID and the end zone's own name differ, and the all-day event names a zone with no
+     * clock time to place in it.
      *
      * @param non-empty-string $timezoneName
      * @return array<string, Link>
@@ -112,9 +113,15 @@ final class TimezoneInvariantsTest extends TestCase
 
         $departure = new DateTimeImmutable(self::EVENT_START, $partner);
 
+        // The same offset the swept zone is on, worn as a bare label. It shares that offset and names
+        // no place, so the pair collapses into the start's zone rather than counting as two, which is
+        // the one way a written TZID and the end zone's own name come apart.
+        $spelling = new DateTimeZone($start->format('P'));
+
         return [
             'timed' => Link::create('Standup', $start, $start->modify('+2 hours')),
             'recurring' => Link::create('Standup', $start, $start->modify('+2 hours')),
+            'recurring-collapsed' => Link::create('Standup', $start, $start->modify('+2 hours')->setTimezone($spelling)),
             // Each arrival is derived from its departure instant rather than written as a local time,
             // so the range stays positive whichever offsets the two zones happen to be on.
             'flight' => Link::create('Flight', $start, $start->setTimezone($partner)->modify('+11 hours')),
@@ -134,7 +141,7 @@ final class TimezoneInvariantsTest extends TestCase
      */
     private static function icsOptionsFor(string $shape): array
     {
-        return $shape === 'recurring' ? ['RRULE' => 'FREQ=WEEKLY;COUNT=10'] : [];
+        return str_starts_with($shape, 'recurring') ? ['RRULE' => 'FREQ=WEEKLY;COUNT=10'] : [];
     }
 
     /**
