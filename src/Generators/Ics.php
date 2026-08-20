@@ -33,7 +33,7 @@ class Ics implements Generator
     protected array $options = [];
 
     /** @psalm-var IcsPresentationOptions */
-    protected $presentationOptions = [];
+    protected array $presentationOptions = [];
 
     /**
      * @param IcsOptions $options Optional ICS properties and components
