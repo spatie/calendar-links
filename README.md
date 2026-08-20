@@ -14,13 +14,19 @@ Using this package, you can generate links to add events to calendar systems. He
 use Spatie\CalendarLinks\Link;
 
 Link::create(
-    'Birthday',
-    DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00'),
-    DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00')
+    'Laravel testing workshop',
+    new DateTime('2027-03-15 10:00', new DateTimeZone('Europe/Brussels')),
+    new DateTime('2027-03-15 17:00', new DateTimeZone('Europe/Brussels')),
 )->google();
 ```
 
-This will output: `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Birthday&dates=20180201T090000/20180201T180000&sprop=&sprop=name:`
+This will output:
+
+```
+https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20270315T100000/20270315T170000&ctz=Europe/Brussels&text=Laravel+testing+workshop
+```
+
+Give both dates an explicit timezone, as above. The `ctz` parameter is taken from the start date, so without one your links follow the `date.timezone` of whichever machine generated them.
 
 If you follow that link (and are authenticated with Google), you’ll see a screen to add the event to your calendar.
 
@@ -48,55 +54,70 @@ composer require spatie/calendar-links
 <?php
 use Spatie\CalendarLinks\Link;
 
-$from = DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 09:00');
-$to = DateTime::createFromFormat('Y-m-d H:i', '2018-02-01 18:00');
+$from = new DateTime('2027-03-15 10:00', new DateTimeZone('Europe/Brussels'));
+$to = new DateTime('2027-03-15 17:00', new DateTimeZone('Europe/Brussels'));
 
-$link = Link::create('Sebastian’s birthday', $from, $to)
-    ->description('Cookies & cocktails!')
-    ->address('Kruikstraat 22, 2018 Antwerpen');
+$link = Link::create('Laravel testing workshop', $from, $to)
+    ->description('A full day of hands-on testing. Bring a laptop.')
+    ->address('Samberstraat 69D, 2060 Antwerp, Belgium');
 
-// Generate a link to create an event on Google calendar
+// A link that creates the event on Google calendar
 echo $link->google();
 
-// Generate a link to create an event on Yahoo calendar
+// A link that creates the event on Yahoo calendar
 echo $link->yahoo();
 
-// Generate a link to create an event on outlook.live.com calendar
+// A link that creates the event on outlook.live.com
 echo $link->webOutlook();
 
-// Generate a link to create an event on outlook.cloud.microsoft calendar
+// A link that creates the event on outlook.cloud.microsoft
 echo $link->webOffice();
 
-// Generate a data URI for an ics file (for iCal & Outlook)
+// A data URI holding an ics file, for iCal, Apple Calendar and Outlook
 echo $link->ics();
-echo $link->ics(['UID' => 'custom-id']); // Custom UID (to update existing events)
-echo $link->ics(['URL' => 'https://my-page.com']); // Custom URL
-echo $link->ics(['REMINDER' => []]); // Add the default reminder (for iCal & Outlook)
-echo $link->ics(['REMINDER' => ['DESCRIPTION' => 'Remind me', 'TIME' => new \DateTime('tomorrow 12:30 UTC')]]); // Add a custom reminder
-echo $link->ics(['RRULE' => 'FREQ=WEEKLY;BYDAY=MO,WE,FR']); // Recurring event (RFC 5545 section 3.8.5.3)
-echo $link->ics(['TRANSP' => 'TRANSPARENT']); // Show as free instead of busy (RFC 5545 section 3.8.2.7)
-echo $link->ics(['CLASS' => 'PRIVATE']); // Visibility: PUBLIC, PRIVATE or CONFIDENTIAL (RFC 5545 section 3.8.1.3)
-echo $link->ics(['TRANSP' => 'OPAQUE', 'X-MICROSOFT-CDO-BUSYSTATUS' => 'OOF']); // TRANSP only tells busy from free, so Outlook needs this extension for tentative and out of office
-echo $link->ics([], ['format' => 'file']); // use file output; e.g. to attach ics as a file to an email.
 
-// Generate a data URI using arbitrary generator:
+// The raw ics body instead of a data URI, to attach to an email as a file
+echo $link->ics([], ['format' => 'file']);
+
+// Any generator of your own
 echo $link->formatWith(new \Your\Generator());
+```
+
+`google()` produces:
+
+```
+https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20270315T100000/20270315T170000&ctz=Europe/Brussels&text=Laravel+testing+workshop&details=A+full+day+of+hands-on+testing.+Bring+a+laptop.&location=Samberstraat+69D%2C+2060+Antwerp%2C+Belgium
+```
+
+and `ics([], ['format' => 'file'])` produces:
+
+```
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:Spatie calendar-links
+BEGIN:VEVENT
+UID:dc01d073bb7e6c2bfae1bd5c43283062
+SUMMARY:Laravel testing workshop
+DTSTAMP:20270315T090000Z
+DTSTART:20270315T090000Z
+DTEND:20270315T160000Z
+DESCRIPTION:A full day of hands-on testing. Bring a laptop.
+LOCATION:Samberstraat 69D\, 2060 Antwerp\, Belgium
+END:VEVENT
+END:VCALENDAR
 ```
 
 ### Guests
 
-Guests (attendees) are supported by every generator, with a required/optional distinction:
+Every generator can invite guests, with a required or optional role:
 
 ```php
-$link = Link::create('Sebastian’s birthday', $from, $to)
-    ->guest('sebastian@example.com')
-    ->guests(['freek@example.com', 'alex@example.com'])
-    ->guest('rias@example.com', optional: true);
+$link->guest('freek@example.com')
+    ->guests(['ruben@example.com', 'alex@example.com'])
+    ->guest('willem@example.com', optional: true);
 ```
 
-Only plain email addresses are accepted. A display name (the `Name <email>` form) throws an `InvalidLink` exception, because Yahoo cannot represent one.
-
-How each generator maps guests:
+Each service spells the same thing differently:
 
 | Generator | Required | Optional |
 | --- | --- | --- |
@@ -105,7 +126,48 @@ How each generator maps guests:
 | Yahoo | `inv_list=` | `inv_list=` (Yahoo has no optional role, so optional guests are invited as required ones) |
 | ICS | `ATTENDEE;ROLE=REQ-PARTICIPANT` | `ATTENDEE;ROLE=OPT-PARTICIPANT` |
 
-Guests are emitted in addition to any custom URL parameters. If you also pass `add`, `to`, `cc` or `inv_list` yourself, the parameter appears twice and the service decides which one wins, so pick one mechanism per event.
+So the ics file above gains:
+
+```
+ATTENDEE;ROLE=REQ-PARTICIPANT:mailto:freek@example.com
+ATTENDEE;ROLE=REQ-PARTICIPANT:mailto:ruben@example.com
+ATTENDEE;ROLE=REQ-PARTICIPANT:mailto:alex@example.com
+ATTENDEE;ROLE=OPT-PARTICIPANT:mailto:willem@example.com
+```
+
+Two things to keep in mind. Only plain email addresses are accepted, so a display name (the `Name <email>` form) throws an `InvalidLink` exception, because Yahoo cannot represent one. And guests are emitted in addition to any custom URL parameters, so if you also pass `add`, `to`, `cc` or `inv_list` by hand, the parameter appears twice and the service decides which one wins.
+
+### ICS options
+
+`ics()` takes an array of properties that are written into the file as RFC 5545 values:
+
+```php
+echo $link->ics([
+    'UID' => 'workshop-2027-03-15',
+    'URL' => 'https://example.com/workshops/laravel-testing',
+    'RRULE' => 'FREQ=WEEKLY;BYDAY=MO,WE,FR',
+    'TRANSP' => 'TRANSPARENT',
+    'CLASS' => 'PRIVATE',
+    'REMINDER' => ['DESCRIPTION' => 'The workshop starts in 15 minutes'],
+]);
+```
+
+| Option | What it does | Specification |
+| --- | --- | --- |
+| `UID` | Identifies the event, so a later file carrying the same value updates it instead of creating a second one | [section 3.8.4.7](https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.7) |
+| `URL` | Points at a page about the event | [section 3.8.4.6](https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.6) |
+| `PRODID` | Names the product that wrote the file. Defaults to `Spatie calendar-links` | [section 3.7.3](https://datatracker.ietf.org/doc/html/rfc5545#section-3.7.3) |
+| `REMINDER` | Adds an alarm. Pass `[]` for the default of 15 minutes before, or set `DESCRIPTION` and `TIME` | [section 3.6.6](https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.6) |
+| `RRULE` | Repeats the event | [section 3.8.5.3](https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5.3) |
+| `TRANSP` | `OPAQUE` shows the time as busy, `TRANSPARENT` shows it as free | [section 3.8.2.7](https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.7) |
+| `CLASS` | Visibility: `PUBLIC`, `PRIVATE` or `CONFIDENTIAL` | [section 3.8.1.3](https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.3) |
+| `X-MICROSOFT-CDO-BUSYSTATUS` | `FREE`, `TENTATIVE`, `BUSY` or `OOF`. `TRANSP` only tells busy from free, so Outlook needs this one to show tentative or out of office | MS-OXCICAL |
+
+A second argument controls presentation rather than content:
+
+```php
+echo $link->ics([], ['format' => 'file']); // the raw ics body, rather than a data URI
+```
 
 ## Package principles
 
