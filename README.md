@@ -135,7 +135,7 @@ DTSTART;TZID=Asia/Tokyo:20270315T090000
 DTEND;TZID=America/Los_Angeles:20270315T093000
 ```
 
-`DTSTAMP` stays in UTC, as RFC 5545 requires.
+`DTSTAMP` stays in UTC, as RFC 5545 requires. Each zone named this way also gets its own `VTIMEZONE` component, placed before the event and holding the offsets in force around it, so the file stands on its own for a client that does not resolve bare IANA names (older Outlook desktop, for instance). The component covers the year either side of the event and carries no recurrence rule, so combining `RRULE` with two timezones leaves occurrences beyond that year resolving against the last change written, which is an hour out for part of each later year on a client that cannot resolve the zone name itself.
 
 Nothing needs switching on. An event whose two ends share a zone is generated exactly as before, and so is an all-day event, which has no clock time to place in a zone. Yahoo has no timezone parameter and Outlook accepts only UTC or the viewer's own zone, so both keep their current output.
 

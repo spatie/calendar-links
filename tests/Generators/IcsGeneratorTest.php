@@ -255,6 +255,213 @@ final class IcsGeneratorTest extends TestCase
     }
 
     #[Test]
+    public function it_defines_a_vtimezone_for_every_referenced_tzid(): void
+    {
+        // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.5
+        $output = $this->generator()->generate($this->createFlightWithDistinctTimezonesLink());
+
+        $this->assertSame(2, substr_count($output, 'BEGIN:VTIMEZONE'));
+        $this->assertStringContainsString("BEGIN:VTIMEZONE\r\nTZID:Asia/Tokyo\r\n", $output);
+        $this->assertStringContainsString("BEGIN:VTIMEZONE\r\nTZID:America/Los_Angeles\r\n", $output);
+
+        // A component is only useful to a client that reads it before the event that leans on it.
+        $this->assertLessThan(strpos($output, 'BEGIN:VEVENT'), strpos($output, 'BEGIN:VTIMEZONE'));
+        $this->assertLessThan(strpos($output, 'BEGIN:VEVENT'), strpos($output, 'END:VTIMEZONE'));
+    }
+
+    #[Test]
+    public function it_describes_both_observances_of_a_zone_that_changes_its_clocks(): void
+    {
+        // The flight lands on 2027-03-15, the day after Los Angeles moved to daylight saving time,
+        // so the change that applies to it is the last one written before it.
+        $output = $this->generator()->generate($this->createFlightWithDistinctTimezonesLink());
+
+        $this->assertStringContainsString(
+            implode("\r\n", [
+                'BEGIN:STANDARD',
+                'DTSTART:20261101T020000',
+                'TZOFFSETFROM:-0700',
+                'TZOFFSETTO:-0800',
+                'TZNAME:PST',
+                'END:STANDARD',
+                'BEGIN:DAYLIGHT',
+                'DTSTART:20270314T020000',
+                'TZOFFSETFROM:-0800',
+                'TZOFFSETTO:-0700',
+                'TZNAME:PDT',
+                'END:DAYLIGHT',
+            ]),
+            $output
+        );
+    }
+
+    #[Test]
+    public function it_describes_a_zone_that_keeps_one_offset_with_a_standard_observance_alone(): void
+    {
+        // Neither zone observes daylight saving time, so there is no DAYLIGHT rule to state.
+        $link = Link::create(
+            'Bengaluru to Reykjavik',
+            new DateTime('2027-07-01 09:00', new DateTimeZone('Asia/Kolkata')),
+            new DateTime('2027-07-01 15:30', new DateTimeZone('Atlantic/Reykjavik')),
+        );
+
+        $output = $this->generator()->generate($link);
+
+        $this->assertSame(2, substr_count($output, 'BEGIN:VTIMEZONE'));
+        $this->assertSame(2, substr_count($output, 'BEGIN:STANDARD'));
+        $this->assertStringNotContainsString('BEGIN:DAYLIGHT', $output);
+
+        // A zone that never changes leaves and arrives at the same offset.
+        $this->assertStringContainsString("TZOFFSETFROM:+0530\r\nTZOFFSETTO:+0530\r\nTZNAME:IST", $output);
+        $this->assertStringContainsString("TZOFFSETFROM:+0000\r\nTZOFFSETTO:+0000\r\nTZNAME:GMT", $output);
+    }
+
+    #[Test]
+    public function it_keeps_every_change_of_a_zone_that_changes_twice_in_one_direction(): void
+    {
+        // Morocco suspends its summer time for Ramadan and restores it weeks later, so a single year
+        // holds two changes to standard time at two different offsets. Keeping one observance of
+        // each kind would drop the March restoration and leave the event resolving to the Ramadan
+        // offset, an hour out.
+        $link = Link::create(
+            'Casablanca to Tokyo',
+            new DateTime('2026-05-15 09:00', new DateTimeZone('Africa/Casablanca')),
+            new DateTime('2026-05-15 20:00', new DateTimeZone('Asia/Tokyo')),
+        );
+
+        $output = $this->generator()->generate($link);
+        $onsets = $this->onsetsOf('Africa/Casablanca', $output);
+
+        $this->assertSame([
+            ['20250515T090000', '+0100'], // the offset already in effect when the window opens
+            ['20260215T030000', '+0000'], // Ramadan begins, the clocks go back
+            ['20260322T020000', '+0100'], // Ramadan ends, summer time is restored
+            ['20260920T020000', '+0000'], // the ordinary end of summer time
+        ], $onsets);
+
+        // A local time takes the observance with the latest onset at or before it. Of the three that
+        // precede the event starting 2026-05-15 09:00, the restoration is the last, so the event
+        // resolves to +0100 rather than the Ramadan offset before it.
+        $this->assertSame([
+            ['20250515T090000', '+0100'],
+            ['20260215T030000', '+0000'],
+            ['20260322T020000', '+0100'],
+        ], array_values(array_filter(
+            $onsets,
+            static fn (array $onset): bool => $onset[0] <= '20260515T090000'
+        )));
+    }
+
+    #[Test]
+    public function it_defines_a_zone_that_has_no_transition_table(): void
+    {
+        // A zone named by a bare abbreviation has no transitions for PHP to return, and reading them
+        // unguarded warned and left a VTIMEZONE with no subcomponent at all, which RFC 5545 forbids.
+        // Such a zone no longer reaches this code through an endpoint, since it cannot be named by a
+        // TZID either, but referencedTimezones() is open for a subclass to put one here.
+        $generator = new class ([], ['format' => Ics::FORMAT_FILE]) extends Ics {
+            #[\Override]
+            protected function referencedTimezones(Link $link): array
+            {
+                return [new DateTimeZone('EST')];
+            }
+        };
+
+        set_error_handler(static function (int $severity, string $message): never {
+            throw new \ErrorException($message, severity: $severity);
+        });
+
+        try {
+            $output = $generator->generate($this->createFlightWithDistinctTimezonesLink());
+        } finally {
+            restore_error_handler();
+        }
+
+        $this->assertSame([['20260314T190000', '-0500']], $this->onsetsOf('EST', $output));
+
+        // A zone that never changes leaves and arrives at the same offset.
+        $this->assertStringContainsString("TZOFFSETFROM:-0500\r\nTZOFFSETTO:-0500\r\nTZNAME:EST", $output);
+    }
+
+    /**
+     * The onsets of one zone's component, as [DTSTART, TZOFFSETTO] pairs in the order written.
+     *
+     * @return list<array{string, string}>
+     */
+    private function onsetsOf(string $tzid, string $ics): array
+    {
+        preg_match('/BEGIN:VTIMEZONE\r\nTZID:'.preg_quote($tzid, '/').'\r\n(.*?)END:VTIMEZONE/s', $ics, $component);
+        preg_match_all('/DTSTART:(\d{8}T\d{6})\r\n.*?TZOFFSETTO:(\S+)/s', $component[1] ?? '', $onsets, PREG_SET_ORDER);
+
+        return array_map(static fn (array $onset): array => [$onset[1], $onset[2]], $onsets);
+    }
+
+    #[Test]
+    public function it_defines_a_zone_referenced_twice_only_once(): void
+    {
+        // The rule is one component per unique TZID, not one per property that names a zone.
+        $generator = new class ([], ['format' => Ics::FORMAT_FILE]) extends Ics {
+            #[\Override]
+            protected function referencedTimezones(Link $link): array
+            {
+                return [new DateTimeZone('Asia/Tokyo'), new DateTimeZone('Asia/Tokyo')];
+            }
+        };
+
+        $output = $generator->generate($this->createFlightWithDistinctTimezonesLink());
+
+        $this->assertSame(1, substr_count($output, 'BEGIN:VTIMEZONE'));
+        $this->assertSame(1, substr_count($output, 'TZID:Asia/Tokyo'));
+    }
+
+    #[Test]
+    public function it_defines_no_timezone_when_the_gate_is_closed(): void
+    {
+        // The components and the TZID parameters that reference them are gated together, so a
+        // narrower gate must leave no component behind naming a zone the file never mentions.
+        $generator = new class ([], ['format' => Ics::FORMAT_FILE]) extends Ics {
+            #[\Override]
+            protected function shouldDefineTimezones(Link $link): bool
+            {
+                return false;
+            }
+        };
+
+        $output = $generator->generate($this->createFlightWithDistinctTimezonesLink());
+
+        $this->assertStringNotContainsString('VTIMEZONE', $output);
+    }
+
+    #[Test]
+    public function it_defines_no_timezone_for_a_zone_the_client_cannot_resolve(): void
+    {
+        // An offset style name cannot go in a TZID, so both endpoints fall back to UTC instants and
+        // reference no zone. Defining one anyway would leave an orphan component, and would write
+        // the `-07:00` into a TZID whose value cannot carry the colon.
+        $link = Link::create(
+            'Tokyo to nowhere in particular',
+            new DateTime('2027-03-15 09:00', new DateTimeZone('Asia/Tokyo')),
+            new DateTime('2027-03-15 09:30', new DateTimeZone('-07:00')),
+        );
+
+        $output = $this->generator()->generate($link);
+
+        $this->assertStringNotContainsString('VTIMEZONE', $output);
+        $this->assertStringNotContainsString('TZID', $output);
+        $this->assertStringContainsString('DTSTART:20270315T000000Z', $output);
+    }
+
+    #[Test]
+    public function it_defines_no_timezone_when_the_endpoints_share_a_zone(): void
+    {
+        // Both endpoints are written as UTC instants, so no TZID is referenced and nothing needs defining.
+        $output = $this->generator()->generate($this->createShortEventLink());
+
+        $this->assertStringNotContainsString('VTIMEZONE', $output);
+        $this->assertStringContainsString('DTSTART:20180201T090000Z', $output);
+    }
+
+    #[Test]
     public function it_can_generate_a_recurring_event(): void
     {
         $this->assertMatchesSnapshot(
