@@ -5,9 +5,7 @@
 /.github            export-ignore
 /.gitattributes     export-ignore
 /.gitignore         export-ignore
-/.travis.yml        export-ignore
 /phpunit.xml.dist   export-ignore
-/.scrutinizer.yml   export-ignore
 /tests              export-ignore
 /.editorconfig      export-ignore
 
@@ -16,6 +14,3 @@
 
 # All test snapshots and text stubs must have CRLF line endings
 tests/**/__snapshots__/IcsGeneratorTest*    text eol=crlf
-
-# PHPUnit
-.phpunit.cache
