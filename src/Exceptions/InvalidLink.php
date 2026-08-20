@@ -10,11 +10,11 @@ use InvalidArgumentException;
 /** @api */
 class InvalidLink extends InvalidArgumentException
 {
-    private const string DATETIME_FORMAT = 'Y-m-d H:i:s';
+    private const string DATETIME_FORMAT = 'Y-m-d H:i:s e';
 
     public static function negativeDateRange(DateTimeInterface $from, DateTimeInterface $to): self
     {
-        return new self("TO time (`{$to->format(self::DATETIME_FORMAT)}`) must be greater than FROM time (`{$from->format(self::DATETIME_FORMAT)}`)");
+        return new self("TO time (`{$to->format(self::DATETIME_FORMAT)}`) must not be earlier than FROM time (`{$from->format(self::DATETIME_FORMAT)}`)");
     }
 
     public static function invalidGuestEmail(string $email): self
