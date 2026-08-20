@@ -46,6 +46,24 @@ final class GeneratorExtensibilityTest extends TestCase
     }
 
     #[Test]
+    public function ics_subclass_event_properties_are_emitted_before_the_alarm_component(): void
+    {
+        $generator = new class (['REMINDER' => ['DESCRIPTION' => 'Almost time']], ['format' => Ics::FORMAT_FILE]) extends Ics {
+            #[\Override]
+            protected function additionalEventProperties(Link $link): array
+            {
+                return ['STATUS:CONFIRMED'];
+            }
+        };
+
+        $ics = $generator->generate($this->createShortEventLink());
+
+        // RFC 5545 section 3.6.1: every VEVENT property comes before the nested VALARM component.
+        $this->assertLessThan(strpos($ics, 'BEGIN:VALARM'), strpos($ics, 'STATUS:CONFIRMED'));
+        $this->assertLessThan(strpos($ics, 'END:VEVENT'), strpos($ics, 'END:VALARM'));
+    }
+
+    #[Test]
     public function google_subclass_can_change_the_base_url(): void
     {
         $generator = new class () extends Google {
