@@ -9,7 +9,6 @@
     findUnusedVariablesAndParams="true"
     resolveFromConfigFile="true"
     useDocblockPropertyTypes="true"
-    errorBaseline="psalm-baseline.xml"
 >
     <projectFiles>
         <directory name="src"/>

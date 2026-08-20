@@ -52,14 +52,14 @@ class Link
         $this->fromTimezone = $from->getTimezone();
         $this->toTimezone = $to->getTimezone();
 
-        // Ensures timezones match.
-        if ($from->getTimezone()->getName() !== $to->getTimezone()->getName()) {
-            $to = (clone $to)->setTimezone($from->getTimezone());
-        }
-
         $this->from = \DateTimeImmutable::createFromInterface($from);
 
         $immutableTo = \DateTimeImmutable::createFromInterface($to);
+
+        // Ensures timezones match.
+        if ($this->fromTimezone->getName() !== $this->toTimezone->getName()) {
+            $immutableTo = $immutableTo->setTimezone($this->fromTimezone);
+        }
 
         // Ensures from date is earlier than to date.
         if ($this->from > $immutableTo) {
@@ -86,8 +86,7 @@ class Link
     public static function createAllDay(string $title, \DateTimeInterface $from, int $numberOfDays = 1): static
     {
         $lastDay = $numberOfDays - 1;
-        $to = (clone $from)->modify("+$lastDay days");
-        assert($to instanceof \DateTimeInterface);
+        $to = \DateTimeImmutable::createFromInterface($from)->modify("+$lastDay days");
 
         return new static($title, $from, $to, true);
     }
