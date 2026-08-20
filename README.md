@@ -142,15 +142,12 @@ Two things to keep in mind. Only plain email addresses are accepted, so a displa
 `yahoo()` takes an array of extra query parameters:
 
 ```php
-echo $link->yahoo([
-    'TYPE' => 7,
-    'inv_list' => 'freek@example.com,ruben@example.com',
-]);
+echo $link->yahoo(['TYPE' => 7]);
 ```
 
 `TYPE` picks the event charm, as a zero based index into Yahoo's list of 17 charms (`0` is General, `7` is Birthday, `13` is Phone).
 
-`inv_list` accepts a comma separated list of plain email addresses. Yahoo splits the value before decoding it, so each address is encoded on its own and the commas stay literal. A display name (the `Name <email>` form) is not supported, and unlike `TITLE` and `DESC`, a `+` is not decoded as a space there.
+Guests belong in `guests()` rather than in a hand written `inv_list`, which would emit the parameter twice. If you do pass one anyway, it takes a comma separated list of plain email addresses: Yahoo splits the value before decoding it, so each address is encoded on its own and the commas stay literal. A display name (the `Name <email>` form) is not supported, and unlike `TITLE` and `DESC`, a `+` is not decoded as a space there.
 
 Yahoo has no timezone parameter, so a timed event is sent as floating local time: an event created at 09:00 is composed as 09:00, whatever the reader's timezone.
 
