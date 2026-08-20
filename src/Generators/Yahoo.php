@@ -76,7 +76,7 @@ class Yahoo implements Generator
         foreach ($this->urlParameters as $key => $value) {
             // A list of values is flattened into a repeated parameter.
             foreach (is_array($value) ? $value : [$value] as $singleValue) {
-                $url .= '&'.urlencode($key).(in_array($singleValue, [null, ''], true) ? '' : '='.$this->sanitizeParameterValue($key, (string) $singleValue));
+                $url .= '&'.urlencode($key).(in_array($singleValue, [null, '', false], true) ? '' : '='.$this->sanitizeParameterValue($key, (string) $singleValue));
             }
         }
 

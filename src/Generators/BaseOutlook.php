@@ -82,7 +82,7 @@ abstract class BaseOutlook implements Generator
         foreach ($this->urlParameters as $key => $value) {
             // A list of values is flattened into a repeated parameter.
             foreach (is_array($value) ? $value : [$value] as $singleValue) {
-                $url .= '&'.urlencode($key).(in_array($singleValue, [null, ''], true) ? '' : '='.$this->sanitizeString((string) $singleValue));
+                $url .= '&'.urlencode($key).(in_array($singleValue, [null, '', false], true) ? '' : '='.$this->sanitizeString((string) $singleValue));
             }
         }
 
