@@ -205,11 +205,23 @@ echo $link->ics([
 | `UID` | Identifies the event, so a later file carrying the same value updates it instead of creating a second one | [section 3.8.4.7](https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.7) |
 | `URL` | Points at a page about the event | [section 3.8.4.6](https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.6) |
 | `PRODID` | Names the product that wrote the file. Defaults to `Spatie calendar-links` | [section 3.7.3](https://datatracker.ietf.org/doc/html/rfc5545#section-3.7.3) |
+| `DTSTAMP` | When the event information was last revised. Takes a `DateTimeInterface` and is written in UTC. Defaults to the event start | [section 3.8.7.2](https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.2) |
 | `REMINDER` | Adds an alarm. Pass `[]` for the default of 15 minutes before, or set `DESCRIPTION` and `TIME` | [section 3.6.6](https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.6) |
 | `RRULE` | Repeats the event | [section 3.8.5.3](https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5.3) |
 | `TRANSP` | `OPAQUE` shows the time as busy, `TRANSPARENT` shows it as free | [section 3.8.2.7](https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.7) |
 | `CLASS` | Visibility: `PUBLIC`, `PRIVATE` or `CONFIDENTIAL` | [section 3.8.1.3](https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.3) |
 | `X-MICROSOFT-CDO-BUSYSTATUS` | `FREE`, `TENTATIVE`, `BUSY` or `OOF`. `TRANSP` only tells busy from free, so Outlook needs this one to show tentative or out of office | MS-OXCICAL |
+
+`DTSTAMP` defaults to the event start rather than the moment the file is written, so the same `Link` always produces the same bytes and the output stays cacheable. The cost is that a client cannot read it as a revision signal when the same `UID` is imported twice. Pass your own value when that matters:
+
+```php
+echo $link->ics([
+    'UID' => 'workshop-2027-03-15',
+    'DTSTAMP' => new DateTimeImmutable('now'),
+]);
+```
+
+It has to be a `DateTimeInterface`, so a date string throws an `InvalidLink` rather than being quietly ignored. The value is written as a UTC date-time, for all-day events too, since RFC 5545 does not allow a bare date here.
 
 A second argument controls presentation rather than content:
 

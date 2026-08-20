@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Spatie\CalendarLinks\Generators;
 
+use Spatie\CalendarLinks\Exceptions\InvalidLink;
 use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Link;
 
 /**
  * @api
  * @see https://icalendar.org/RFC-Specifications/iCalendar-RFC-5545/
- * @psalm-type IcsOptions = array{UID?: string, URL?: string, PRODID?: string, REMINDER?: array{DESCRIPTION?: string, TIME?: \DateTimeInterface}, TRANSP?: 'OPAQUE'|'TRANSPARENT', CLASS?: 'PUBLIC'|'PRIVATE'|'CONFIDENTIAL', RRULE?: string, X-MICROSOFT-CDO-BUSYSTATUS?: 'FREE'|'TENTATIVE'|'BUSY'|'OOF'}
+ * @psalm-type IcsOptions = array{UID?: string, URL?: string, PRODID?: string, DTSTAMP?: \DateTimeInterface, REMINDER?: array{DESCRIPTION?: string, TIME?: \DateTimeInterface}, TRANSP?: 'OPAQUE'|'TRANSPARENT', CLASS?: 'PUBLIC'|'PRIVATE'|'CONFIDENTIAL', RRULE?: string, X-MICROSOFT-CDO-BUSYSTATUS?: 'FREE'|'TENTATIVE'|'BUSY'|'OOF'}
  * @psalm-type IcsPresentationOptions = array{format?: self::FORMAT_*}
  */
 class Ics implements Generator
@@ -38,9 +39,18 @@ class Ics implements Generator
     /**
      * @param IcsOptions $options Optional ICS properties and components
      * @param IcsPresentationOptions $presentationOptions
+     * @throws InvalidLink
      */
     public function __construct(array $options = [], array $presentationOptions = [])
     {
+        // The IcsOptions type is a docblock, so it binds static analysis and nothing else. A DTSTAMP
+        // that is not a DateTimeInterface is rejected here rather than silently replaced by the
+        // default, because a caller who passes one asked for revision semantics and a fallback would
+        // hand them a file that looks right and carries the wrong stamp.
+        if (isset($options['DTSTAMP']) && ! $options['DTSTAMP'] instanceof \DateTimeInterface) {
+            throw InvalidLink::invalidDateTimeOption('DTSTAMP', $options['DTSTAMP']);
+        }
+
         $this->options = $options;
         $this->presentationOptions = $presentationOptions;
     }
@@ -59,26 +69,27 @@ class Ics implements Generator
             'SUMMARY:'.$this->escapeString($link->title),
         ];
 
-        $dateTimeFormat = $link->allDay ? $this->dateFormat : $this->dateTimeFormat;
+        // DTSTAMP records when the event information was last revised. It defaults to the event start
+        // rather than the moment of generation, on purpose: the same Link then always produces the same
+        // file, which keeps the output cacheable and snapshot tests stable. Pass a DTSTAMP option to get
+        // revision semantics instead. Either way the value is written as a UTC date-time, never as a bare
+        // date, including for an all-day event.
+        // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.2
+        $dateStamp = $this->options['DTSTAMP'] ?? $link->from;
+        $url[] = 'DTSTAMP:'.gmdate($this->dateTimeFormat, $dateStamp->getTimestamp());
 
-        // DTSTAMP must always be UTC datetime. @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.2
         if ($link->allDay) {
-            $url[] = 'DTSTAMP:'.gmdate($this->dateTimeFormat, $link->from->getTimestamp());
-            $url[] = 'DTSTART;VALUE=DATE:'.$link->from->format($dateTimeFormat);
+            $url[] = 'DTSTART;VALUE=DATE:'.$link->from->format($this->dateFormat);
             $url[] = 'DURATION:P'.(max(1, (int) $link->from->diff($link->to)->days)).'D';
+        } elseif ($link->hasDistinctTimezones()) {
+            // Both endpoints are written as local times, each named by its own TZID, so the file
+            // shows the event's own zones rather than flattening them to UTC.
+            // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.19
+            $url[] = 'DTSTART;TZID='.$link->fromTimezone->getName().':'.$link->from->format(self::LOCAL_DATETIME_FORMAT);
+            $url[] = 'DTEND;TZID='.$link->toTimezone->getName().':'.$link->to->setTimezone($link->toTimezone)->format(self::LOCAL_DATETIME_FORMAT);
         } else {
-            $url[] = 'DTSTAMP:'.gmdate($dateTimeFormat, $link->from->getTimestamp());
-
-            if ($link->hasDistinctTimezones()) {
-                // Both endpoints are written as local times, each named by its own TZID, so the file
-                // shows the event's own zones rather than flattening them to UTC.
-                // @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.19
-                $url[] = 'DTSTART;TZID='.$link->fromTimezone->getName().':'.$link->from->format(self::LOCAL_DATETIME_FORMAT);
-                $url[] = 'DTEND;TZID='.$link->toTimezone->getName().':'.$link->to->setTimezone($link->toTimezone)->format(self::LOCAL_DATETIME_FORMAT);
-            } else {
-                $url[] = 'DTSTART:'.gmdate($dateTimeFormat, $link->from->getTimestamp());
-                $url[] = 'DTEND:'.gmdate($dateTimeFormat, $link->to->getTimestamp());
-            }
+            $url[] = 'DTSTART:'.gmdate($this->dateTimeFormat, $link->from->getTimestamp());
+            $url[] = 'DTEND:'.gmdate($this->dateTimeFormat, $link->to->getTimestamp());
         }
 
         // A RECUR value is structured data, so its semicolons and commas are separators
