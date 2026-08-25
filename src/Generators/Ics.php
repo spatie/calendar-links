@@ -63,18 +63,6 @@ class Ics implements Generator
     protected array $presentationOptions = [];
 
     /**
-     * Whether a zone was found to move its clocks, keyed by the zone and the window it was asked about.
-     *
-     * generate() reaches observesAChange() three times over one link, through shouldNameTimezones():
-     * once to choose how to write the endpoints, and twice more through referencedTimezones(). The
-     * answer depends on the zone and the event's two instants and nothing else, so it is worked out
-     * once. Reading a zone's transition table is the most expensive thing this class does.
-     *
-     * @var array<string, bool>
-     */
-    private array $observedChanges = [];
-
-    /**
      * Option values are validated here rather than in generate(), so that a value the calendar cannot
      * represent is rejected where it enters the library and the stack trace points at the caller that
      * supplied it, instead of at whatever renders the link later on.
@@ -555,18 +543,17 @@ class Ics implements Generator
     /**
      * Whether the endpoints are written as local times named by a TZID, rather than as UTC instants.
      *
-     * A UTC instant is unambiguous, so it is the better answer for an event that happens once: it
-     * needs no VTIMEZONE and no zone database on the reading side. A recurrence is the case it cannot
-     * serve. An RRULE repeats the local time of its DTSTART, so a start pinned to UTC repeats in UTC,
-     * and every occurrence on the far side of a daylight saving change lands an hour away from the
-     * time the event was booked for. Naming the zone is what keeps a weekly 09:00 at 09:00.
+     * A named TZID is written for every timed event whose timezones can be resolved, whether or not
+     * it recurs, and whether or not the zone currently observes daylight saving. This matches how
+     * Google Calendar and other major clients write events: the event carries the zone it was created
+     * in, not just the instant it happens to fall on today.
      *
-     * A recurrence in a zone that never moves its clocks has nothing to drift against, so UTC instants
-     * still say the same thing there and are left alone: naming UTC, or a zone that keeps one offset
-     * the year round, would only add a VTIMEZONE describing a zone that never changes.
-     *
-     * An event whose two ends genuinely name different zones is written this way whether it recurs or
-     * not, since UTC instants would flatten the pair and lose what the two zones were for.
+     * This matters most for a recurrence: an RRULE repeats the local time of DTSTART, so a start
+     * pinned to UTC repeats in UTC, and every occurrence on the far side of a daylight saving change
+     * lands an hour away from the time the event was booked for. Naming the zone is what keeps a
+     * weekly 09:00 at 09:00. A flat-offset zone has nothing to drift against today, but naming it
+     * anyway keeps behavior uniform and correct if the zone's rules ever change upstream (tzdata is
+     * revised periodically), and matches what other clients write regardless.
      *
      * A TZID may only name a zone the client can look up, and a param-value carries no unquoted `:`,
      * so a zone that is only an offset (`+02:00`) would fail to resolve and cut the property value in
@@ -577,36 +564,7 @@ class Ics implements Generator
      */
     protected function shouldNameTimezones(Link $link): bool
     {
-        if ($link->allDay || ! $link->hasResolvableTimezones()) {
-            return false;
-        }
-
-        return $link->hasDistinctTimezones()
-            || (isset($this->options['RRULE']) && $this->observesAChange($link->fromTimezone, $link));
-    }
-
-    /**
-     * Whether the zone moves its clocks anywhere near the event, over the same stretch the VTIMEZONE
-     * would describe. A zone that does not is one offset from end to end, which a UTC instant already
-     * carries.
-     *
-     * @see self::$observedChanges The answer is worked out once per zone and window, and kept.
-     */
-    private function observesAChange(\DateTimeZone $timezone, Link $link): bool
-    {
-        $windowStart = $link->from->modify('-1 year')->getTimestamp();
-        $windowEnd = $link->to->modify('+1 year')->getTimestamp() + self::RULE_PROBE_YEARS * self::SECONDS_PER_YEAR;
-
-        $key = $timezone->getName()."\0".$windowStart."\0".$windowEnd;
-
-        if (! isset($this->observedChanges[$key])) {
-            $transitions = $timezone->getTransitions($windowStart, $windowEnd);
-
-            // The first entry is the offset already in force when the stretch opens, not a change.
-            $this->observedChanges[$key] = is_array($transitions) && count($transitions) > 1;
-        }
-
-        return $this->observedChanges[$key];
+        return ! $link->allDay && $link->hasResolvableTimezones();
     }
 
     /**

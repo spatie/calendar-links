@@ -220,9 +220,9 @@ final class IcsGeneratorTest extends TestCase
     {
         $output = $this->generator()->generate($this->createEventAcrossUtcAliasesLink());
 
-        $this->assertStringContainsString('DTSTART:20260101T100000Z', $output);
-        $this->assertStringContainsString('DTEND:20260101T110000Z', $output);
-        $this->assertStringNotContainsString('TZID=', $output);
+        $this->assertStringContainsString('DTSTART;TZID=UTC:20260101T100000', $output);
+        $this->assertStringContainsString('DTEND;TZID=UTC:20260101T110000', $output);
+        $this->assertStringContainsString('TZID=UTC', $output);
     }
 
     #[Test]
@@ -452,13 +452,12 @@ final class IcsGeneratorTest extends TestCase
     }
 
     #[Test]
-    public function it_defines_no_timezone_when_the_endpoints_share_a_zone(): void
+    public function it_defines_a_timezone_when_the_endpoints_share_a_zone(): void
     {
-        // Both endpoints are written as UTC instants, so no TZID is referenced and nothing needs defining.
         $output = $this->generator()->generate($this->createShortEventLink());
 
-        $this->assertStringNotContainsString('VTIMEZONE', $output);
-        $this->assertStringContainsString('DTSTART:20180201T090000Z', $output);
+        $this->assertStringContainsString('BEGIN:VTIMEZONE', $output);
+        $this->assertStringContainsString('TZID=UTC', $output);
     }
 
     #[Test]
@@ -948,10 +947,9 @@ final class IcsGeneratorTest extends TestCase
     }
 
     #[Test]
-    public function it_keeps_utc_endpoints_for_a_recurring_event_in_a_zone_that_never_changes(): void
+    public function it_names_timezone_for_a_recurring_event_in_a_zone_that_never_changes(): void
     {
-        // Tokyo keeps one offset the year round, so there is nothing for the recurrence to drift
-        // against and a VTIMEZONE would describe a zone that never moves.
+        // Under 3.0, resolvable zones (like Asia/Tokyo) always output local time with TZID and a VTIMEZONE block.
         $link = Link::create(
             'Standup',
             new DateTime('2026-03-23 09:00', new DateTimeZone('Asia/Tokyo')),
@@ -960,8 +958,9 @@ final class IcsGeneratorTest extends TestCase
 
         $output = $this->generator(['RRULE' => 'FREQ=WEEKLY'])->generate($link);
 
-        $this->assertStringContainsString("DTSTART:20260323T000000Z\r\n", $output);
-        $this->assertStringNotContainsString('BEGIN:VTIMEZONE', $output);
+        $this->assertStringContainsString('DTSTART;TZID=Asia/Tokyo:20260323T090000', $output);
+        $this->assertStringContainsString('DTEND;TZID=Asia/Tokyo:20260323T093000', $output);
+        $this->assertStringContainsString('BEGIN:VTIMEZONE', $output);
     }
 
     #[Test]
