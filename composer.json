@@ -52,6 +52,9 @@
         "psalm": "vendor/bin/psalm",
         "psalm:ci": "vendor/bin/psalm --shepherd",
         "test": "vendor/bin/pest",
-        "test:update-snapshots": "vendor/bin/pest -d --update-snapshots"
+        "test:update-snapshots": [
+            "@putenv UPDATE_SNAPSHOTS=true",
+            "@test"
+        ]
     }
 }
