@@ -365,6 +365,18 @@ class Link
         return $this->formatWith(new Ics($options, $presentationOptions));
     }
 
+    /**
+     * Retain named timezones for resolvable timed events, with UTC fallback for repeated instants.
+     *
+     * @psalm-param IcsOptions $options
+     * @psalm-param IcsPresentationOptions $presentationOptions
+     * @throws InvalidLink When an option value cannot be written to the calendar.
+     */
+    public function icsWithTimezones(array $options = [], array $presentationOptions = []): string
+    {
+        return $this->formatWith(new Ics($options, $presentationOptions, withTimezones: true));
+    }
+
     /** @psalm-param YahooUrlParameters $urlParameters */
     public function yahoo(array $urlParameters = []): string
     {

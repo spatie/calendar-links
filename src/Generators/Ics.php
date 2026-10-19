@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Spatie\CalendarLinks\Generators;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
 use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Link;
@@ -62,16 +64,9 @@ class Ics implements Generator
     /** @psalm-var IcsPresentationOptions */
     protected array $presentationOptions = [];
 
-    /**
-     * Whether a zone was found to move its clocks, keyed by the zone and the window it was asked about.
-     *
-     * generate() reaches observesAChange() three times over one link, through shouldNameTimezones():
-     * once to choose how to write the endpoints, and twice more through referencedTimezones(). The
-     * answer depends on the zone and the event's two instants and nothing else, so it is worked out
-     * once. Reading a zone's transition table is the most expensive thing this class does.
-     *
-     * @var array<string, bool>
-     */
+    private bool $withTimezones = false;
+
+    /** @var array<string, bool> */
     private array $observedChanges = [];
 
     /**
@@ -81,9 +76,10 @@ class Ics implements Generator
      *
      * @param IcsOptions $options Optional ICS properties and components
      * @param IcsPresentationOptions $presentationOptions
+     * @param bool $withTimezones Opt in to named zones for all resolvable timed events.
      * @throws InvalidLink When an option value cannot be written to the calendar.
      */
-    public function __construct(array $options = [], array $presentationOptions = [])
+    public function __construct(array $options = [], array $presentationOptions = [], bool $withTimezones = false)
     {
         // The IcsOptions type is a docblock, so it binds static analysis and nothing else. A DTSTAMP
         // that is not a DateTimeInterface is rejected here rather than silently replaced by the
@@ -101,6 +97,7 @@ class Ics implements Generator
 
         $this->options = $options;
         $this->presentationOptions = $presentationOptions;
+        $this->withTimezones = $withTimezones;
     }
 
     /**
@@ -555,25 +552,14 @@ class Ics implements Generator
     /**
      * Whether the endpoints are written as local times named by a TZID, rather than as UTC instants.
      *
-     * A UTC instant is unambiguous, so it is the better answer for an event that happens once: it
-     * needs no VTIMEZONE and no zone database on the reading side. A recurrence is the case it cannot
-     * serve. An RRULE repeats the local time of its DTSTART, so a start pinned to UTC repeats in UTC,
-     * and every occurrence on the far side of a daylight saving change lands an hour away from the
-     * time the event was booked for. Naming the zone is what keeps a weekly 09:00 at 09:00.
+     * The default retains the 2.x policy: distinct zones and recurrences in changing zones are named.
+     * The opt-in policy names every resolvable timed event, unless that would change its instants.
      *
-     * A recurrence in a zone that never moves its clocks has nothing to drift against, so UTC instants
-     * still say the same thing there and are left alone: naming UTC, or a zone that keeps one offset
-     * the year round, would only add a VTIMEZONE describing a zone that never changes.
+     * RFC 5545 resolves a repeated local time to its first occurrence. A second occurrence cannot
+     * be represented with TZID, so keep both endpoints in UTC rather than changing the event's
+     * instants or duration. A recurrence on this fallback path consequently repeats in UTC.
      *
-     * An event whose two ends genuinely name different zones is written this way whether it recurs or
-     * not, since UTC instants would flatten the pair and lose what the two zones were for.
-     *
-     * A TZID may only name a zone the client can look up, and a param-value carries no unquoted `:`,
-     * so a zone that is only an offset (`+02:00`) would fail to resolve and cut the property value in
-     * half. Those events keep the UTC instants. An all-day event has no clock time to place in a zone.
-     *
-     * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.1
-     * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5.3
+     * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.5
      */
     protected function shouldNameTimezones(Link $link): bool
     {
@@ -581,18 +567,16 @@ class Ics implements Generator
             return false;
         }
 
-        return $link->hasDistinctTimezones()
-            || (isset($this->options['RRULE']) && $this->observesAChange($link->fromTimezone, $link));
+        if (! $this->withTimezones) {
+            return $link->hasDistinctTimezones()
+                || (isset($this->options['RRULE']) && $this->observesAChange($link->fromTimezone, $link));
+        }
+
+        return ! $this->isRepeatedInstant($link->from, $link->fromTimezone)
+            && ! $this->isRepeatedInstant($link->to, $this->endTimezone($link));
     }
 
-    /**
-     * Whether the zone moves its clocks anywhere near the event, over the same stretch the VTIMEZONE
-     * would describe. A zone that does not is one offset from end to end, which a UTC instant already
-     * carries.
-     *
-     * @see self::$observedChanges The answer is worked out once per zone and window, and kept.
-     */
-    private function observesAChange(\DateTimeZone $timezone, Link $link): bool
+    private function observesAChange(DateTimeZone $timezone, Link $link): bool
     {
         $windowStart = $link->from->modify('-1 year')->getTimestamp();
         $windowEnd = $link->to->modify('+1 year')->getTimestamp() + self::RULE_PROBE_YEARS * self::SECONDS_PER_YEAR;
@@ -602,11 +586,35 @@ class Ics implements Generator
         if (! isset($this->observedChanges[$key])) {
             $transitions = $timezone->getTransitions($windowStart, $windowEnd);
 
-            // The first entry is the offset already in force when the stretch opens, not a change.
             $this->observedChanges[$key] = is_array($transitions) && count($transitions) > 1;
         }
 
         return $this->observedChanges[$key];
+    }
+
+    private function isRepeatedInstant(DateTimeImmutable $date, DateTimeZone $timezone): bool
+    {
+        $timestamp = $date->getTimestamp();
+        // Two days also cover date-line rollbacks, not just one-hour daylight saving changes.
+        $transitions = $timezone->getTransitions($timestamp - 2 * 24 * 60 * 60, $timestamp + 1);
+
+        if ($transitions === false) {
+            return false;
+        }
+
+        $previousOffset = null;
+
+        foreach ($transitions as $transition) {
+            if ($previousOffset !== null) {
+                if ($timestamp < $transition['ts'] + $previousOffset - $transition['offset']) {
+                    return true;
+                }
+            }
+
+            $previousOffset = $transition['offset'];
+        }
+
+        return false;
     }
 
     /**

@@ -137,9 +137,18 @@ DTEND;TZID=America/Los_Angeles:20270315T093000
 
 `DTSTAMP` stays in UTC, as RFC 5545 requires. Each zone named this way also gets its own `VTIMEZONE` component, placed before the event and holding the offsets in force around it, so the file stands on its own for a client that does not resolve bare IANA names (older Outlook desktop, for instance). The component lists every change the zone makes in the year either side of the event, and the last change of each kind carries a yearly recurrence rule whenever the zone repeats it on a fixed weekday of a fixed month, so the component keeps describing the zone for occurrences far beyond that year. A zone that moves its clocks on dates that do not repeat that way (Africa/Casablanca suspends its summer time for Ramadan and restores it weeks later) is written without a rule rather than with a guessed one, and there the listed year is all a client has to go on.
 
-Nothing needs switching on. An event whose two ends share a zone is generated exactly as before, and so is an all-day event, which has no clock time to place in a zone. Yahoo has no timezone parameter and Outlook accepts only UTC or the viewer's own zone, so both keep their current output.
+To retain named timezones even when both endpoints share a zone, use `icsWithTimezones()`:
+
+```php
+$link->icsWithTimezones(); // Base64 data URI
+$link->icsWithTimezones(['RRULE' => 'FREQ=WEEKLY'], ['format' => 'file']);
+```
+
+It accepts the same options and presentation options as `ics()`. It names resolvable zones including `UTC` and regions without daylight saving such as `Asia/Tokyo`. Existing `ics()` calls and the default `Ics` generator keep their output unchanged. All-day events remain date-only; other calendar generators are unaffected.
 
 Both ends have to name a place for this. If either one does not, the pair is written in UTC together, since naming only one end would leave the other to be read in whichever zone the viewer sits in.
+
+`icsWithTimezones()` has one additional fallback: when either endpoint is the second occurrence of a repeated local time after clocks move backward, both endpoints are written in UTC without `VTIMEZONE`. RFC 5545 interprets a local time with `TZID` as the first occurrence, so naming the zone there would change the supplied instant. This applies to half-hour and date-line rollbacks too. A recurrence using this fallback repeats in UTC, not local wall time. The legacy `ics()` behavior is preserved, including for repeated times.
 
 `$link->from` and `$link->to` are unchanged too: `$to` is still normalised into `$from`'s zone, so the two are directly comparable. The zones are recorded separately, on `$link->fromTimezone` and `$link->toTimezone`.
 
@@ -239,7 +248,7 @@ echo $link->ics([], ['format' => 'file']); // the raw ics body, rather than a da
 
 ### Recurring events and timezones
 
-A recurrence repeats the local time of its start, so the zone that time is read in decides where every later occurrence lands. An event written as a UTC instant repeats in UTC, which is an hour away from where it was booked for every occurrence on the far side of a daylight saving change. So an `RRULE` in a zone that moves its clocks is written with a `TZID` and a matching `VTIMEZONE`, where the same event without an `RRULE` would be written in UTC:
+A recurrence repeats the local time of its start, so the zone that time is read in decides where every later occurrence lands. `ics()` names zones for events with distinct resolvable endpoint zones and recurrences in zones with clock changes. `icsWithTimezones()` also names shared and fixed-offset regions, with or without an `RRULE`. A named zone keeps a weekly 09:00 at 09:00 across daylight saving changes:
 
 ```
 DTSTART;TZID=Europe/Warsaw:20260323T090000
@@ -247,7 +256,7 @@ DTEND;TZID=Europe/Warsaw:20260323T093000
 RRULE:FREQ=WEEKLY
 ```
 
-Nothing changes for a recurring event in UTC or in a zone that keeps one offset the year round (`Asia/Tokyo`), since there is nothing there for the occurrences to drift against, nor for a zone that names no place, which has nothing a `TZID` can point at.
+When opting in, recurring events in `UTC` and fixed-offset regions such as `Asia/Tokyo` use the same named-zone representation. Bare offsets, unsupported abbreviations, and second occurrences of repeated local times keep UTC endpoints. `UNTIL` remains a UTC date-time for a timed recurrence; any `BYHOUR`, `BYMINUTE`, or `BYDAY` fields are interpreted in the timezone of `DTSTART`, so review rules previously written for UTC endpoints. See [the opt-in guide](UPGRADE.md#opting-in-to-named-timezones-in-22).
 
 ### Extending a generator
 
