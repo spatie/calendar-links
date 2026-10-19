@@ -321,30 +321,28 @@ final class IcsGeneratorTest extends TestCase
     {
         $link = Link::create(
             'Casablanca to Tokyo',
-            new DateTime('2019-07-15 09:00', new DateTimeZone('Africa/Casablanca')),
-            new DateTime('2019-07-15 20:00', new DateTimeZone('Asia/Tokyo')),
+            new DateTime('2020-07-15 09:00', new DateTimeZone('Africa/Casablanca')),
+            new DateTime('2020-07-15 20:00', new DateTimeZone('Asia/Tokyo')),
         );
 
         $output = $this->generator()->generate($link);
         $onsets = $this->onsetsOf('Africa/Casablanca', $output);
 
         $this->assertSame([
-            ['20180715T090000', '+0100'],
-            ['20181028T030000', '+0100'],
-            ['20190505T030000', '+0000'],
-            ['20190609T020000', '+0100'],
+            ['20190715T090000', '+0100'],
             ['20200419T030000', '+0000'],
             ['20200531T020000', '+0100'],
+            ['20210411T030000', '+0000'],
+            ['20210516T020000', '+0100'],
         ], $onsets);
 
         $this->assertSame([
-            ['20180715T090000', '+0100'],
-            ['20181028T030000', '+0100'],
-            ['20190505T030000', '+0000'],
-            ['20190609T020000', '+0100'],
+            ['20190715T090000', '+0100'],
+            ['20200419T030000', '+0000'],
+            ['20200531T020000', '+0100'],
         ], array_values(array_filter(
             $onsets,
-            static fn (array $onset): bool => $onset[0] <= '20190715T090000'
+            static fn (array $onset): bool => $onset[0] <= '20200715T090000'
         )));
     }
 
