@@ -1,10 +1,18 @@
 name: Psalm
 
 on:
+  pull_request:
+    paths:
+      - '**.php'
+      - 'psalm*'
+      - 'composer.*'
+      - '.github/workflows/psalm.yml'
   push:
     paths:
       - '**.php'
       - 'psalm*'
+      - 'composer.*'
+      - '.github/workflows/psalm.yml'
 
 jobs:
   psalm:
@@ -19,14 +27,8 @@ jobs:
           php-version: '8.3'
           coverage: none
 
-      - name: Cache composer dependencies
-        uses: actions/cache@v6
-        with:
-          path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
-
       - name: Run composer install
         run: composer install -n --prefer-dist
 
       - name: Run Psalm
-        run: composer psalm:ci
+        run: composer psalm

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Spatie\CalendarLinks\Generators;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use Spatie\CalendarLinks\Exceptions\InvalidLink;
 use Spatie\CalendarLinks\Generator;
 use Spatie\CalendarLinks\Link;
@@ -543,28 +545,45 @@ class Ics implements Generator
     /**
      * Whether the endpoints are written as local times named by a TZID, rather than as UTC instants.
      *
-     * A named TZID is written for every timed event whose timezones can be resolved, whether or not
-     * it recurs, and whether or not the zone currently observes daylight saving. This matches how
-     * Google Calendar and other major clients write events: the event carries the zone it was created
-     * in, not just the instant it happens to fall on today.
+     * RFC 5545 resolves a repeated local time to its first occurrence. A second occurrence cannot
+     * be represented with TZID, so keep both endpoints in UTC rather than changing the event's
+     * instants or duration. A recurrence on this fallback path consequently repeats in UTC.
      *
-     * This matters most for a recurrence: an RRULE repeats the local time of DTSTART, so a start
-     * pinned to UTC repeats in UTC, and every occurrence on the far side of a daylight saving change
-     * lands an hour away from the time the event was booked for. Naming the zone is what keeps a
-     * weekly 09:00 at 09:00. A flat-offset zone has nothing to drift against today, but naming it
-     * anyway keeps behavior uniform and correct if the zone's rules ever change upstream (tzdata is
-     * revised periodically), and matches what other clients write regardless.
-     *
-     * A TZID may only name a zone the client can look up, and a param-value carries no unquoted `:`,
-     * so a zone that is only an offset (`+02:00`) would fail to resolve and cut the property value in
-     * half. Those events keep the UTC instants. An all-day event has no clock time to place in a zone.
-     *
-     * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.1
-     * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5.3
+     * @see https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.5
      */
     protected function shouldNameTimezones(Link $link): bool
     {
-        return ! $link->allDay && $link->hasResolvableTimezones();
+        if ($link->allDay || ! $link->hasResolvableTimezones()) {
+            return false;
+        }
+
+        return ! $this->isRepeatedInstant($link->from, $link->fromTimezone)
+            && ! $this->isRepeatedInstant($link->to, $this->endTimezone($link));
+    }
+
+    private function isRepeatedInstant(DateTimeImmutable $date, DateTimeZone $timezone): bool
+    {
+        $timestamp = $date->getTimestamp();
+        // Two days also cover date-line rollbacks, not just one-hour daylight saving changes.
+        $transitions = $timezone->getTransitions($timestamp - 2 * 24 * 60 * 60, $timestamp + 1);
+
+        if ($transitions === false) {
+            return false;
+        }
+
+        $previousOffset = null;
+
+        foreach ($transitions as $transition) {
+            if ($previousOffset !== null) {
+                if ($timestamp < $transition['ts'] + $previousOffset - $transition['offset']) {
+                    return true;
+                }
+            }
+
+            $previousOffset = $transition['offset'];
+        }
+
+        return false;
     }
 
     /**

@@ -10,18 +10,22 @@ on:
       - '**.txt'
       - '**.json'
       - 'composer.*'
+      - 'phpunit.xml.dist'
+      - '.github/workflows/run-tests.yml'
   push:
     paths:
       - '**.php'
       - '**.txt'
       - '**.json'
       - 'composer.*'
+      - 'phpunit.xml.dist'
+      - '.github/workflows/run-tests.yml'
 
 jobs:
   tests:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         os: [ubuntu-latest]
         php: [8.3, 8.4, 8.5]

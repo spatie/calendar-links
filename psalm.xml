@@ -18,4 +18,16 @@
     <plugins>
         <pluginClass class="Psalm\PhpUnitPlugin\Plugin"/>
     </plugins>
+
+    <issueHandlers>
+        <InternalMethod>
+            <!-- Pest exposes these internal implementation methods through its public fluent API. -->
+            <errorLevel type="suppress">
+                <referencedMethod name="Pest\Mixins\Expectation::toContain"/>
+                <referencedMethod name="Pest\Mixins\Expectation::toBe"/>
+                <referencedMethod name="Pest\Mixins\Expectation::toBeFalse"/>
+                <referencedMethod name="Pest\PendingCalls\TestCall::with"/>
+            </errorLevel>
+        </InternalMethod>
+    </issueHandlers>
 </psalm>

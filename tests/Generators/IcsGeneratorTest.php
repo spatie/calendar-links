@@ -216,13 +216,13 @@ final class IcsGeneratorTest extends TestCase
     }
 
     #[Test]
-    public function it_emits_plain_utc_endpoints_for_two_spellings_of_utc(): void
+    public function it_names_utc_once_for_two_spellings_of_utc(): void
     {
         $output = $this->generator()->generate($this->createEventAcrossUtcAliasesLink());
 
         $this->assertStringContainsString('DTSTART;TZID=UTC:20260101T100000', $output);
         $this->assertStringContainsString('DTEND;TZID=UTC:20260101T110000', $output);
-        $this->assertStringContainsString('TZID=UTC', $output);
+        $this->assertSame(1, substr_count($output, "TZID:UTC\r\n"));
     }
 
     #[Test]
@@ -319,36 +319,32 @@ final class IcsGeneratorTest extends TestCase
     #[Test]
     public function it_keeps_every_change_of_a_zone_that_changes_twice_in_one_direction(): void
     {
-        // Morocco suspends its summer time for Ramadan and restores it weeks later, so a single year
-        // holds two changes to standard time at two different offsets. Keeping one observance of
-        // each kind would drop the March restoration and leave the event resolving to the Ramadan
-        // offset, an hour out.
         $link = Link::create(
             'Casablanca to Tokyo',
-            new DateTime('2026-05-15 09:00', new DateTimeZone('Africa/Casablanca')),
-            new DateTime('2026-05-15 20:00', new DateTimeZone('Asia/Tokyo')),
+            new DateTime('2019-07-15 09:00', new DateTimeZone('Africa/Casablanca')),
+            new DateTime('2019-07-15 20:00', new DateTimeZone('Asia/Tokyo')),
         );
 
         $output = $this->generator()->generate($link);
         $onsets = $this->onsetsOf('Africa/Casablanca', $output);
 
         $this->assertSame([
-            ['20250515T090000', '+0100'], // the offset already in effect when the window opens
-            ['20260215T030000', '+0000'], // Ramadan begins, the clocks go back
-            ['20260322T020000', '+0100'], // Ramadan ends, summer time is restored
-            ['20260920T020000', '+0000'], // the ordinary end of summer time
+            ['20180715T090000', '+0100'],
+            ['20181028T030000', '+0100'],
+            ['20190505T030000', '+0000'],
+            ['20190609T020000', '+0100'],
+            ['20200419T030000', '+0000'],
+            ['20200531T020000', '+0100'],
         ], $onsets);
 
-        // A local time takes the observance with the latest onset at or before it. Of the three that
-        // precede the event starting 2026-05-15 09:00, the restoration is the last, so the event
-        // resolves to +0100 rather than the Ramadan offset before it.
         $this->assertSame([
-            ['20250515T090000', '+0100'],
-            ['20260215T030000', '+0000'],
-            ['20260322T020000', '+0100'],
+            ['20180715T090000', '+0100'],
+            ['20181028T030000', '+0100'],
+            ['20190505T030000', '+0000'],
+            ['20190609T020000', '+0100'],
         ], array_values(array_filter(
             $onsets,
-            static fn (array $onset): bool => $onset[0] <= '20260515T090000'
+            static fn (array $onset): bool => $onset[0] <= '20190715T090000'
         )));
     }
 
@@ -949,7 +945,6 @@ final class IcsGeneratorTest extends TestCase
     #[Test]
     public function it_names_timezone_for_a_recurring_event_in_a_zone_that_never_changes(): void
     {
-        // Under 3.0, resolvable zones (like Asia/Tokyo) always output local time with TZID and a VTIMEZONE block.
         $link = Link::create(
             'Standup',
             new DateTime('2026-03-23 09:00', new DateTimeZone('Asia/Tokyo')),
