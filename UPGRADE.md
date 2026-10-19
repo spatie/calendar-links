@@ -1,18 +1,26 @@
-# Upgrading from 2.x to 3.0
+# Opting in to named timezones in 2.2
 
-These changes are for the next major release only, not a 2.x patch or minor release.
+No migration is required. Existing `ics()` calls and the default `Ics` generator retain their 2.1 behavior and output. PHP still requires 8.3 or later.
 
-## Timed ICS events retain their timezone
+To enable the new behavior per export, replace `ics()` with `icsWithTimezones()`:
 
-Timed events with resolvable timezones now write local `DTSTART` and `DTEND` values with `TZID` parameters and one `VTIMEZONE` component per referenced zone. This includes non-recurring events in a single zone, `UTC`, and regions without daylight saving such as `Asia/Tokyo`.
+```php
+$link->icsWithTimezones($options, $presentationOptions);
+```
 
-Previously, named zones were used only for events with distinct resolvable endpoint zones, or recurring events in a zone with clock changes. Other timed events used UTC endpoints with a `Z` suffix and no timezone component.
+Direct generator users can opt in with `new Ics($options, $presentationOptions, withTimezones: true)`.
+
+## Output changes only when opting in
+
+Timed events with resolvable timezones write local `DTSTART` and `DTEND` values with `TZID` parameters and one `VTIMEZONE` component per referenced zone. This includes non-recurring events in a single zone, `UTC`, and regions without daylight saving such as `Asia/Tokyo`.
+
+The legacy method names zones only for events with distinct resolvable endpoint zones, or recurring events in a zone with clock changes. Other timed events use UTC endpoints with a `Z` suffix and no timezone component.
 
 For a single-zone Tokyo event starting at 09:00:
 
 ```text
-Before: DTSTART:20260323T000000Z
-After:  DTSTART;TZID=Asia/Tokyo:20260323T090000
+ics():              DTSTART:20260323T000000Z
+icsWithTimezones():  DTSTART;TZID=Asia/Tokyo:20260323T090000
 ```
 
 Update consumers that assume `DTSTART:`/`DTEND:` have no parameters, require a `Z` suffix, or assume the first `DTSTART` in the file belongs to `VEVENT`: `VTIMEZONE` observances also contain `DTSTART`. Parse the event component with an iCalendar parser. Raw files and base64 data URIs change and become larger; update snapshots and invalidate cached output as needed.
@@ -21,11 +29,11 @@ Review recurrence rules with `BYHOUR`, `BYMINUTE`, or `BYDAY`: those fields now 
 
 ## Repeated local times preserve the supplied instants
 
-When clocks move backward, RFC 5545 interprets a repeated local time with `TZID` as its first occurrence. If either endpoint is the second occurrence, both endpoints now use UTC and no timezone component, preserving the supplied instants and duration. This also corrects previously named recurring and distinct-zone events. A recurring event on this fallback path repeats in UTC; review whether its future local times match your intent.
+When clocks move backward, RFC 5545 interprets a repeated local time with `TZID` as its first occurrence. With `icsWithTimezones()`, if either endpoint is the second occurrence, both endpoints use UTC and no timezone component, preserving the supplied instants and duration. A recurring event on this fallback path repeats in UTC; review whether its future local times match your intent. `ics()` preserves its existing behavior even for these repeated-time recurrences.
 
 ## What does not change
 
-- PHP still requires 8.3 or later; public method signatures are unchanged.
+- Existing calls and constructor arguments remain supported; the generator has an optional third argument for opting in.
 - All-day events stay date-only, with the same inclusive end-date handling.
 - Unresolvable zones still fall back to UTC; `DTSTAMP` and absolute reminder triggers remain UTC.
 - Google, Yahoo, and Outlook output is unchanged.

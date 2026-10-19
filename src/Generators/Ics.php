@@ -64,6 +64,11 @@ class Ics implements Generator
     /** @psalm-var IcsPresentationOptions */
     protected array $presentationOptions = [];
 
+    private bool $withTimezones = false;
+
+    /** @var array<string, bool> */
+    private array $observedChanges = [];
+
     /**
      * Option values are validated here rather than in generate(), so that a value the calendar cannot
      * represent is rejected where it enters the library and the stack trace points at the caller that
@@ -71,9 +76,10 @@ class Ics implements Generator
      *
      * @param IcsOptions $options Optional ICS properties and components
      * @param IcsPresentationOptions $presentationOptions
+     * @param bool $withTimezones Opt in to named zones for all resolvable timed events.
      * @throws InvalidLink When an option value cannot be written to the calendar.
      */
-    public function __construct(array $options = [], array $presentationOptions = [])
+    public function __construct(array $options = [], array $presentationOptions = [], bool $withTimezones = false)
     {
         // The IcsOptions type is a docblock, so it binds static analysis and nothing else. A DTSTAMP
         // that is not a DateTimeInterface is rejected here rather than silently replaced by the
@@ -91,6 +97,7 @@ class Ics implements Generator
 
         $this->options = $options;
         $this->presentationOptions = $presentationOptions;
+        $this->withTimezones = $withTimezones;
     }
 
     /**
@@ -545,6 +552,9 @@ class Ics implements Generator
     /**
      * Whether the endpoints are written as local times named by a TZID, rather than as UTC instants.
      *
+     * The default retains the 2.x policy: distinct zones and recurrences in changing zones are named.
+     * The opt-in policy names every resolvable timed event, unless that would change its instants.
+     *
      * RFC 5545 resolves a repeated local time to its first occurrence. A second occurrence cannot
      * be represented with TZID, so keep both endpoints in UTC rather than changing the event's
      * instants or duration. A recurrence on this fallback path consequently repeats in UTC.
@@ -557,8 +567,29 @@ class Ics implements Generator
             return false;
         }
 
+        if (! $this->withTimezones) {
+            return $link->hasDistinctTimezones()
+                || (isset($this->options['RRULE']) && $this->observesAChange($link->fromTimezone, $link));
+        }
+
         return ! $this->isRepeatedInstant($link->from, $link->fromTimezone)
             && ! $this->isRepeatedInstant($link->to, $this->endTimezone($link));
+    }
+
+    private function observesAChange(DateTimeZone $timezone, Link $link): bool
+    {
+        $windowStart = $link->from->modify('-1 year')->getTimestamp();
+        $windowEnd = $link->to->modify('+1 year')->getTimestamp() + self::RULE_PROBE_YEARS * self::SECONDS_PER_YEAR;
+
+        $key = $timezone->getName()."\0".$windowStart."\0".$windowEnd;
+
+        if (! isset($this->observedChanges[$key])) {
+            $transitions = $timezone->getTransitions($windowStart, $windowEnd);
+
+            $this->observedChanges[$key] = is_array($transitions) && count($transitions) > 1;
+        }
+
+        return $this->observedChanges[$key];
     }
 
     private function isRepeatedInstant(DateTimeImmutable $date, DateTimeZone $timezone): bool

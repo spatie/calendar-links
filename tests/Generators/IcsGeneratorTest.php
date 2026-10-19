@@ -216,13 +216,13 @@ final class IcsGeneratorTest extends TestCase
     }
 
     #[Test]
-    public function it_names_utc_once_for_two_spellings_of_utc(): void
+    public function it_emits_plain_utc_endpoints_for_two_spellings_of_utc(): void
     {
         $output = $this->generator()->generate($this->createEventAcrossUtcAliasesLink());
 
-        $this->assertStringContainsString('DTSTART;TZID=UTC:20260101T100000', $output);
-        $this->assertStringContainsString('DTEND;TZID=UTC:20260101T110000', $output);
-        $this->assertSame(1, substr_count($output, "TZID:UTC\r\n"));
+        $this->assertStringContainsString('DTSTART:20260101T100000Z', $output);
+        $this->assertStringContainsString('DTEND:20260101T110000Z', $output);
+        $this->assertStringNotContainsString('TZID=', $output);
     }
 
     #[Test]
@@ -446,12 +446,12 @@ final class IcsGeneratorTest extends TestCase
     }
 
     #[Test]
-    public function it_defines_a_timezone_when_the_endpoints_share_a_zone(): void
+    public function it_defines_no_timezone_when_the_endpoints_share_a_zone(): void
     {
         $output = $this->generator()->generate($this->createShortEventLink());
 
-        $this->assertStringContainsString('BEGIN:VTIMEZONE', $output);
-        $this->assertStringContainsString('TZID=UTC', $output);
+        $this->assertStringNotContainsString('VTIMEZONE', $output);
+        $this->assertStringContainsString('DTSTART:20180201T090000Z', $output);
     }
 
     #[Test]
@@ -941,7 +941,7 @@ final class IcsGeneratorTest extends TestCase
     }
 
     #[Test]
-    public function it_names_timezone_for_a_recurring_event_in_a_zone_that_never_changes(): void
+    public function it_keeps_utc_endpoints_for_a_recurring_event_in_a_zone_that_never_changes(): void
     {
         $link = Link::create(
             'Standup',
@@ -951,9 +951,8 @@ final class IcsGeneratorTest extends TestCase
 
         $output = $this->generator(['RRULE' => 'FREQ=WEEKLY'])->generate($link);
 
-        $this->assertStringContainsString('DTSTART;TZID=Asia/Tokyo:20260323T090000', $output);
-        $this->assertStringContainsString('DTEND;TZID=Asia/Tokyo:20260323T093000', $output);
-        $this->assertStringContainsString('BEGIN:VTIMEZONE', $output);
+        $this->assertStringContainsString("DTSTART:20260323T000000Z\r\n", $output);
+        $this->assertStringNotContainsString('BEGIN:VTIMEZONE', $output);
     }
 
     #[Test]

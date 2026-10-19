@@ -10,7 +10,7 @@ it('names a shared resolvable timezone with one complete definition', function (
     $from = new DateTimeImmutable('2026-01-15 09:10:00', new DateTimeZone($zone));
     $link = Link::create('Meeting', $from, $from->modify('+45 minutes'));
 
-    $output = $link->ics([], ['format' => Ics::FORMAT_FILE]);
+    $output = $link->icsWithTimezones([], ['format' => Ics::FORMAT_FILE]);
 
     expect($output)
         ->toContain("DTSTART;TZID={$zone}:20260115T091000\r\n")
@@ -20,7 +20,7 @@ it('names a shared resolvable timezone with one complete definition', function (
         ->and(substr_count($output, 'BEGIN:VTIMEZONE'))->toBe(1)
         ->and(substr_count($output, 'END:VTIMEZONE'))->toBe(1);
 
-    $uri = $link->ics();
+    $uri = $link->icsWithTimezones();
     expect(base64_decode(substr($uri, strlen('data:text/calendar;charset=utf-8;base64,')), true))->toBe($output);
 })->with([
     'UTC' => ['UTC', '+0000'],
@@ -45,7 +45,7 @@ it('preserves exact instants around backward clock changes', function (
     $to = (new DateTimeImmutable($toUtc))->setTimezone(new DateTimeZone($endZone));
     $link = Link::create('Clock change', $from, $to);
 
-    $output = $link->ics([], ['format' => Ics::FORMAT_FILE]);
+    $output = $link->icsWithTimezones([], ['format' => Ics::FORMAT_FILE]);
 
     expect($output)
         ->toContain("{$expectedStart}\r\n")
@@ -71,7 +71,7 @@ it('keeps an unrepresentable recurring start exact rather than moving its first 
     $from = (new DateTimeImmutable('2026-10-25T01:30:00Z'))->setTimezone(new DateTimeZone('Europe/Brussels'));
     $link = Link::create('Weekly meeting', $from, $from->modify('+15 minutes'));
 
-    $output = $link->ics(['RRULE' => 'FREQ=WEEKLY;COUNT=3'], ['format' => Ics::FORMAT_FILE]);
+    $output = $link->icsWithTimezones(['RRULE' => 'FREQ=WEEKLY;COUNT=3'], ['format' => Ics::FORMAT_FILE]);
 
     expect($output)
         ->toContain("DTSTART:20261025T013000Z\r\n")
@@ -83,7 +83,7 @@ it('keeps an unrepresentable recurring start exact rather than moving its first 
 it('keeps all-day events date-only in a named DST region', function (): void {
     $link = Link::createAllDay('Holiday', new DateTimeImmutable('2026-10-25', new DateTimeZone('Europe/Brussels')), 2);
 
-    $output = $link->ics([], ['format' => Ics::FORMAT_FILE]);
+    $output = $link->icsWithTimezones([], ['format' => Ics::FORMAT_FILE]);
 
     expect($output)
         ->toContain("DTSTART;VALUE=DATE:20261025\r\n")
@@ -91,4 +91,84 @@ it('keeps all-day events date-only in a named DST region', function (): void {
         ->toContain("DTSTAMP:20261024T220000Z\r\n")
         ->and(str_contains($output, 'TZID'))->toBeFalse()
         ->and(str_contains($output, 'VTIMEZONE'))->toBeFalse();
+});
+
+it('keeps the legacy timezone policy unless explicitly opted in', function (string $zone, bool $recurring, string $expectedStart): void {
+    assert($zone !== '');
+    $from = new DateTimeImmutable('2026-01-15 09:10:00', new DateTimeZone($zone));
+    $link = Link::create('Meeting', $from, $from->modify('+45 minutes'));
+    $options = $recurring ? ['RRULE' => 'FREQ=WEEKLY;COUNT=3'] : [];
+    $presentation = ['format' => Ics::FORMAT_FILE];
+    $before = $link->ics($options, $presentation);
+
+    $named = $link->icsWithTimezones($options, $presentation);
+
+    expect($before)
+        ->toContain("{$expectedStart}\r\n")
+        ->toBe((new Ics($options, $presentation))->generate($link))
+        ->toBe($link->ics($options, $presentation))
+        ->and($named)->toContain("DTSTART;TZID={$zone}:20260115T091000\r\n");
+})->with([
+    'single UTC' => ['UTC', false, 'DTSTART:20260115T091000Z'],
+    'recurring UTC' => ['UTC', true, 'DTSTART:20260115T091000Z'],
+    'single fixed region' => ['Asia/Tokyo', false, 'DTSTART:20260115T001000Z'],
+    'recurring fixed region' => ['Asia/Tokyo', true, 'DTSTART:20260115T001000Z'],
+    'single DST region' => ['Europe/Brussels', false, 'DTSTART:20260115T081000Z'],
+    'recurring DST region' => ['Europe/Brussels', true, 'DTSTART;TZID=Europe/Brussels:20260115T091000'],
+]);
+
+it('does not change legacy repeated-time recurrences when opting in on the same link', function (): void {
+    $from = (new DateTimeImmutable('2026-10-25T01:30:00Z'))->setTimezone(new DateTimeZone('Europe/Brussels'));
+    $link = Link::create('Weekly meeting', $from, $from->modify('+15 minutes'));
+    $options = ['RRULE' => 'FREQ=WEEKLY;COUNT=3'];
+    $presentation = ['format' => Ics::FORMAT_FILE];
+    $legacy = $link->ics($options, $presentation);
+
+    $named = $link->icsWithTimezones($options, $presentation);
+
+    expect($legacy)->toContain("DTSTART;TZID=Europe/Brussels:20261025T023000\r\n")
+        ->and($named)->toContain("DTSTART:20261025T013000Z\r\n")
+        ->and($link->ics($options, $presentation))->toBe($legacy);
+});
+
+it('forwards event options in file and HTML formats', function (): void {
+    $from = new DateTimeImmutable('2026-01-15 09:10:00', new DateTimeZone('Asia/Tokyo'));
+    $link = Link::create('Meeting', $from, $from->modify('+45 minutes'));
+    $options = [
+        'UID' => 'custom-uid',
+        'DTSTAMP' => new DateTimeImmutable('2026-01-01T12:00:00Z'),
+        'RRULE' => 'FREQ=WEEKLY;BYHOUR=9;COUNT=3',
+        'REMINDER' => ['DESCRIPTION' => 'Join meeting'],
+    ];
+
+    $file = $link->icsWithTimezones($options, ['format' => Ics::FORMAT_FILE]);
+    $uri = $link->icsWithTimezones($options);
+
+    expect($file)->toContain("UID:custom-uid\r\n")
+        ->toContain("DTSTAMP:20260101T120000Z\r\n")
+        ->toContain("RRULE:FREQ=WEEKLY;BYHOUR=9;COUNT=3\r\n")
+        ->toContain("DESCRIPTION:Join meeting\r\n")
+        ->and(base64_decode(substr($uri, strlen('data:text/calendar;charset=utf-8;base64,')), true))->toBe($file);
+});
+
+it('retains UTC fallback for unresolvable zones when opting in', function (): void {
+    $from = new DateTimeImmutable('2026-01-15T09:10:00+05:30');
+    $link = Link::create('Meeting', $from, $from->modify('+45 minutes'));
+    $presentation = ['format' => Ics::FORMAT_FILE];
+
+    expect($link->icsWithTimezones([], $presentation))
+        ->toBe($link->ics([], $presentation))
+        ->toContain("DTSTART:20260115T034000Z\r\n");
+});
+
+it('preserves subclasses that configure the generator without calling its constructor', function (): void {
+    $from = new DateTimeImmutable('2026-01-15 09:10:00', new DateTimeZone('UTC'));
+    $link = Link::create('Meeting', $from, $from->modify('+45 minutes'));
+    $generator = new class () extends Ics {
+        public function __construct()
+        {
+        }
+    };
+
+    expect($link->formatWith($generator))->toBe($link->ics());
 });
