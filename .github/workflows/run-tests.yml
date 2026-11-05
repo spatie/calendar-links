@@ -44,6 +44,9 @@ jobs:
           coverage: none
           ini-values: assert.exception=1, zend.assertions=1
 
+      - name: Install legacy timezone data
+        run: sudo apt-get update && sudo apt-get install -y tzdata-legacy
+
       - name: Install dependencies
         run: |
           composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction
