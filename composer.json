@@ -25,11 +25,11 @@
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.93",
-        "pestphp/pest": "^4.7",
-        "phpunit/phpunit": "^12.5",
-        "psalm/plugin-phpunit": "^0.19.7",
-        "spatie/phpunit-snapshot-assertions": "^5.3",
-        "vimeo/psalm": "^6.15"
+        "pestphp/pest": "^4.7 || ^5.3",
+        "phpunit/phpunit": "^12.5 || ^13.4",
+        "psalm/plugin-phpunit": "^0.21",
+        "spatie/phpunit-snapshot-assertions": "^5.4",
+        "vimeo/psalm": "^7.0"
     },
     "autoload": {
         "psr-4": {
